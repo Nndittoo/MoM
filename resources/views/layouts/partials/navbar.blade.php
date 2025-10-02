@@ -4,7 +4,7 @@
             <div class="flex items-center justify-start rtl:justify-end">
                 <button data-drawer-target="logo-sidebar" data-drawer-toggle="logo-sidebar" type="button" class="inline-flex items-center p-2 text-sm text-text-secondary rounded-lg sm:hidden hover:bg-primary/10 dark:text-dark-text-secondary dark:hover:bg-primary/20"><i class="fa-solid fa-bars w-6 h-6"></i></button>
                 <a href="{{ url('/') }}" class="flex ms-2 md:me-24 items-center">
-                    <img src="{{ asset('logo.png') }}" class="h-12 mr-3" alt="Telkom Logo" />
+                    <img src="{{ asset('img/LOGO_TELKOM.png') }}" class="h-12 mr-3" alt="Telkom Logo" />
                 </a>
             </div>
             <div class="flex items-center">

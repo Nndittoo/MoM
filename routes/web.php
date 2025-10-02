@@ -29,3 +29,11 @@ Route::get('/calendar', function () {
 Route::get('/notifications', function () {
     return view('user.notifikasi');
 })->name('user.notifications');
+
+Route::get('/detail', function () {
+    return view('user.detail');
+})->name('user.detail');
+
+Route::get('/admin', function () {
+    return view('admin.dashboard');
+})->name('admin.dashboard');

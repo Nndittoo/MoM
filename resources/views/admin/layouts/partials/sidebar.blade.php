@@ -1,0 +1,37 @@
+<aside id="admin-sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full bg-component-bg border-r border-border-light sm:translate-x-0 dark:bg-dark-component-bg dark:border-border-dark" aria-label="Sidebar">
+    <div class="h-full px-4 pb-6 overflow-y-auto flex flex-col justify-between">
+        <ul class="space-y-2 font-medium">
+            <li>
+                <a href="{{ url('admin/dashboard') }}" class="flex items-center p-3 rounded-lg group transition {{ request()->is('admin') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
+                    <i class="fa-solid fa-tachometer-alt w-5 h-5"></i>
+                    <span class="ms-3">Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url('admin/approvals') }}" class="flex items-center p-3 rounded-lg group transition relative {{ request()->is('admin/approvals') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
+                    <i class="fa-solid fa-check-to-slot w-5 h-5"></i>
+                    <span class="ms-3">Persetujuan MoM</span>
+                    {{-- Badge Notifikasi --}}
+                    <span class="absolute right-3 inline-flex items-center justify-center w-6 h-6 text-xs font-medium text-white bg-red-500 rounded-full">5</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url('mom') }}" class="flex items-center p-3 rounded-lg group transition {{ request()->is('mom') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
+                    <i class="fa-solid fa-box-archive w-5 h-5"></i>
+                    <span class="ms-3">Repository MoM</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="flex items-center p-3 rounded-lg group transition {{ request()->is('admin/users') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
+                    <i class="fa-solid fa-users w-5 h-5"></i>
+                    <span class="ms-3">Manajemen Pengguna</span>
+                </a>
+            </li>
+        </ul>
+        <div class="border-t border-border-light dark:border-border-dark pt-4">
+            <a href="#" class="flex items-center gap-5 p-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 group transition font-medium">
+                <i class="fa-solid fa-arrow-right-from-bracket w-3 h-3"></i><p>Log Out</p>
+            </a>
+        </div>
+    </div>
+</aside>
