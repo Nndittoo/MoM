@@ -31,6 +31,19 @@
                         'border-light': '#E5E7EB', // Gray-200
                         'border-dark': '#374151', // Gray-700
                     }
+                        'primary': '#DC2626', // Red-600
+                        'primary-dark': '#B91C1C', // Red-700
+                        'body-bg': '#F9FAFB', // Gray-50
+                        'dark-body-bg': '#111827', // Gray-900
+                        'component-bg': '#ffffff', // White
+                        'dark-component-bg': '#1F2937', // Gray-800
+                        'text-primary': '#1F2937', // Gray-800
+                        'dark-text-primary': '#F3F4F6', // Gray-100
+                        'text-secondary': '#6B7280', // Gray-500
+                        'dark-text-secondary': '#9CA3AF', // Gray-400
+                        'border-light': '#E5E7EB', // Gray-200
+                        'border-dark': '#374151', // Gray-700
+                    }
                     }
                 }
             }
@@ -39,88 +52,72 @@
         .text-gradient { color: #DC2626; }
         .bg-gradient-primary { background-color: #DC2626; }
     </style>
+        .text-gradient { color: #DC2626; }
+        .bg-gradient-primary { background-color: #DC2626; }
+    </style>
     </head>
     <body class="bg-body-bg dark:bg-dark-body-bg">
-        <nav
-            class="fixed top-0 z-50 w-full bg-component-bg border-b border-border-light dark:bg-dark-component-bg dark:border-border-dark shadow-sm">
-            <div class="px-3 py-3 lg:px-5 lg:pl-3">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center justify-start rtl:justify-end">
-                        <button
-                            data-drawer-target="logo-sidebar"
-                            data-drawer-toggle="logo-sidebar"
-                            aria-controls="logo-sidebar"
-                            type="button"
-                            class="inline-flex items-center p-2 text-sm text-text-secondary rounded-lg sm:hidden hover:bg-primary/10 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:text-dark-text-secondary dark:hover:bg-primary/20 dark:focus:ring-primary/50">
-                            <span class="sr-only">Open sidebar</span>
-                            <i class="fa-solid fa-bars w-6 h-6"></i>
-                        </button>
-                        <a href="" class="flex ms-2 md:me-24 items-center">
-                            <i class="fa-solid fa-box-archive text-3xl text-gradient"></i>
-                            <span
-                                class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white ml-3">Sofbox</span>
+        <nav class="fixed top-0 z-50 w-full bg-component-bg border-b border-border-light dark:bg-dark-component-bg dark:border-border-dark shadow-sm">
+        <div class="px-3 py-3 lg:px-5 lg:pl-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center justify-start rtl:justify-end">
+                    <button data-drawer-target="logo-sidebar" data-drawer-toggle="logo-sidebar" type="button" class="inline-flex items-center p-2 text-sm text-text-secondary rounded-lg sm:hidden hover:bg-primary/10 dark:text-dark-text-secondary dark:hover:bg-primary/20"><i class="fa-solid fa-bars w-6 h-6"></i></button>
+                    <a href="" class="flex ms-2 md:me-24 items-center">
+                        <img src="logo.png" class="h-12 mr-3" alt="Telkom Logo" />
+                    </a>
+                </div>
+                <div class="flex items-center">
+                    <div class="relative hidden md:block w-64 lg:w-96 mr-4"><div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"><i class="fa-solid fa-search text-text-secondary"></i></div><input type="text" id="search-navbar" class="block w-full p-2 pl-10 text-sm text-text-primary border border-border-light rounded-lg bg-body-bg focus:ring-primary focus:border-primary dark:bg-dark-component-bg dark:border-border-dark" placeholder="Search..."></div>
+
+                    <button type="button" data-dropdown-toggle="notification-dropdown" class="p-2 mr-3 text-text-secondary rounded-full hover:bg-primary/10 relative dark:text-dark-text-secondary dark:hover:bg-primary/20">
+                        <i class="fa-solid fa-bell fa-lg"></i>
+                        <span class="absolute top-1 right-1 flex h-3 w-3">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                        </span>
+                    </button>
+
+                    <div id="notification-dropdown" class="z-50 hidden max-w-sm my-4 overflow-hidden text-base list-none bg-component-bg divide-y divide-border-light rounded-lg shadow-lg dark:bg-dark-component-bg dark:divide-border-dark">
+                        <div class="block px-4 py-2 text-base font-medium text-center text-text-primary bg-body-bg dark:bg-dark-component-bg/50 dark:text-dark-text-primary">
+                            Notifications
+                        </div>
+                        <div>
+                            <a href="#" class="flex px-4 py-3 border-b hover:bg-body-bg dark:hover:bg-dark-body-bg dark:border-border-dark">
+                                <div class="flex-shrink-0">
+                                    <div class="inline-flex items-center justify-center w-8 h-8 bg-green-100 rounded-full dark:bg-green-900">
+                                        <i class="fa-solid fa-calendar-check text-green-500"></i>
+                                    </div>
+                                </div>
+                                <div class="w-full ps-3">
+                                    <div class="text-text-secondary text-sm mb-1.5 dark:text-dark-text-secondary"><span class="font-semibold text-text-primary dark:text-white">KOM Project NIQE 2025:</span> Dijadwalkan pada 1 Okt 2025, 08:30.</div>
+                                    <div class="text-xs text-blue-600 dark:text-blue-500">1 hari yang lalu</div>
+                                </div>
+                            </a>
+                            <a href="#" class="flex px-4 py-3 hover:bg-body-bg dark:hover:bg-dark-body-bg">
+                                <div class="flex-shrink-0">
+                                    <div class="inline-flex items-center justify-center w-8 h-8 bg-yellow-100 rounded-full dark:bg-yellow-900">
+                                        <i class="fa-solid fa-file-lines text-yellow-500"></i>
+                                    </div>
+                                </div>
+                                <div class="w-full ps-3">
+                                    <div class="text-text-secondary text-sm mb-1.5 dark:text-dark-text-secondary"><span class="font-semibold text-text-primary dark:text-white">Notulen Siap:</span> "VALIDASI NEW ORDER MINI OLT" sudah tersedia.</div>
+                                    <div class="text-xs text-blue-600 dark:text-blue-500">15 September 2025</div>
+                                </div>
+                            </a>
+                        </div>
+                        <a href="notifikasi.html" class="block py-2 text-sm font-medium text-center text-text-primary rounded-b-lg bg-body-bg hover:bg-border-light dark:bg-dark-component-bg/50 dark:hover:bg-dark-body-bg dark:text-white">
+                            <div class="inline-flex items-center "><i class="fa-solid fa-eye mr-2"></i>View all</div>
                         </a>
                     </div>
-                    <div class="flex items-center">
-                        <div class="relative hidden md:block w-64 lg:w-96 mr-4">
-                            <div
-                                class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <i class="fa-solid fa-search text-text-secondary"></i>
-                            </div>
-                            <input
-                                type="text"
-                                id="search-navbar"
-                                class="block w-full p-2 pl-10 text-sm text-text-primary border border-border-light rounded-lg bg-body-bg focus:ring-primary focus:border-primary dark:bg-dark-component-bg dark:border-border-dark dark:placeholder-dark-text-secondary dark:text-white dark:focus:ring-primary dark:focus:border-primary"
-                                placeholder="Search...">
-                        </div>
-                        <button
-                            type="button"
-                            class="p-2 mr-3 text-text-secondary rounded-full hover:bg-primary/10 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:text-dark-text-secondary dark:hover:bg-primary/20 dark:focus:ring-primary/50 relative">
-                            <span class="sr-only">View notifications</span>
-                            <i class="fa-solid fa-bell fa-lg"></i>
-                            <span class="absolute top-1 right-1 flex h-3 w-3">
-                                <span
-                                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                            </span>
-                        </button>
-                        <div class="flex items-center ms-3">
-                            <div>
-                                <button
-                                    type="button"
-                                    class="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-primary/50"
-                                    aria-expanded="false"
-                                    data-dropdown-toggle="dropdown-user">
-                                    <span class="sr-only">Open user menu</span>
-                                    <img
-                                        class="w-8 h-8 rounded-full"
-                                        src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-                                        alt="user photo">
-                                </button>
-                            </div>
-                            <div
-                                class="z-50 hidden my-4 text-base list-none bg-component-bg divide-y divide-border-light rounded-md shadow-lg dark:bg-dark-component-bg dark:divide-border-dark"
-                                id="dropdown-user">
-                                <div class="px-4 py-3" role="none">
-                                    <p class="text-sm text-text-primary dark:text-dark-text-primary" role="none">Neil Sims</p>
-                                    <p
-                                        class="text-sm font-medium text-text-secondary truncate dark:text-dark-text-secondary"
-                                        role="none">neil.sims@flowbite.com</p>
-                                </div>
-                                <ul class="py-1" role="none">
-                                    <li>
-                                        <a
-                                            href="#"
-                                            class="block px-4 py-2 text-sm text-text-secondary hover:bg-primary/10"
-                                            role="menuitem">Sign out</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
+
+                    <div class="flex items-center ms-3">
+                        <button type="button" class="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-primary/50" data-dropdown-toggle="dropdown-user"><img class="w-8 h-8 rounded-full" src="https://flowbite.com/docs/images/people/profile-picture-5.jpg" alt="user photo"></button>
+                        <div class="z-50 hidden my-4 text-base list-none bg-component-bg divide-y divide-border-light rounded-md shadow-lg dark:bg-dark-component-bg dark:divide-border-dark" id="dropdown-user"><div class="px-4 py-3"><p class="text-sm text-text-primary dark:text-dark-text-primary">Neil Sims</p><p class="text-sm font-medium text-text-secondary truncate dark:text-dark-text-secondary">neil.sims@flowbite.com</p></div><ul class="py-1"><li><a href="#" class="block px-4 py-2 text-sm text-text-secondary hover:bg-body-bg">Sign out</a></li></ul></div>
                     </div>
                 </div>
             </div>
-        </nav>
+        </div>
+    </nav>
         <aside
             id="logo-sidebar"
             class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full
@@ -162,7 +159,7 @@
 
                     <li>
                         <a
-                            href="#"
+                            href="reminder.html"
                             class="flex items-center p-3 rounded-lg text-text-secondary dark:text-dark-text-secondary
               hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary group transition relative">
                             <i class="fa-solid fa-bell w-5 h-5 group-hover:text-primary"></i>
@@ -178,6 +175,7 @@
                     <li>
                         <a
                             href="calendar"
+                            href="calendar.html"
                             class="flex items-center p-3 rounded-lg text-text-secondary dark:text-dark-text-secondary
               hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary group transition">
                             <i class="fa-solid fa-calendar-alt w-5 h-5 group-hover:text-primary"></i>
@@ -188,7 +186,7 @@
 
                 <div class="border-t border-border-light dark:border-border-dark pt-4">
                     <a
-                        href="#"
+                        href="sign-in.html"
                         class="flex items-center gap-5 p-3 rounded-lg text-red-600 dark:text-red-400
                   hover:bg-red-100 dark:hover:bg-red-500/20 group transition font-medium">
                         <i class="fa-solid fa-arrow-right-from-bracket w-3 h-3"></i>
@@ -246,57 +244,6 @@
                             <img
                                 class="w-full h-48 object-cover transform hover:scale-105 transition duration-500"
                                 src="lampiran.png"
-                                alt="Dokumentasi Rapat Brainstorming">
-                            <span
-                                class="absolute top-3 right-3 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
-                                25 Sep 2025
-                            </span>
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                        </div>
-
-                        <!-- Konten -->
-                        <div class="p-5 flex flex-col">
-                            <h3
-                                class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-2">
-                                Brainstorming Fitur Baru Aplikasi
-                            </h3>
-
-                            <div
-                                class="flex items-center text-sm text-text-secondary dark:text-dark-text-secondary mb-3">
-                                <i class="fa-solid fa-user-pen mr-2 text-primary"></i>
-                                Dibuat oleh
-                                <span class="ml-1 font-medium">Bonnie Green</span>
-                            </div>
-
-                            <p
-                                class="text-sm text-text-secondary dark:text-dark-text-secondary mb-4 line-clamp-2">
-                                Sesi kreatif untuk mengumpulkan ide-ide inovatif untuk pengembangan fitur pada
-                                kuartal berikutnya.
-                            </p>
-
-                            <!-- Peserta -->
-                            <div class="pt-4 border-t border-border-light dark:border-border-dark">
-                                <h4
-                                    class="text-sm font-semibold text-text-primary dark:text-dark-text-primary mb-3">Peserta</h4>
-                                <div class="flex items-center justify-between">
-                                    <div
-                                        class="text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed">
-                                        • Lana Byrd<br>
-                                        • Thomas Lean
-                                    </div>
-                                    <a
-                                        href="detail"
-                                        class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div
-                        class="bg-component-bg dark:bg-dark-component-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2">
-                        <!-- Gambar -->
-                        <div class="relative">
-                            <img
-                                class="w-full h-48 object-cover transform hover:scale-105 transition duration-500"
                                 src="lampiran.png"
                                 alt="Dokumentasi Rapat Brainstorming">
                             <span
@@ -339,6 +286,9 @@
                                     <a
                                         href="detail"
                                         class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
+                                    <a
+                                        href="detail.html"
+                                        class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
                                 </div>
                             </div>
                         </div>
@@ -349,6 +299,7 @@
                         <div class="relative">
                             <img
                                 class="w-full h-48 object-cover transform hover:scale-105 transition duration-500"
+                                src="lampiran.png"
                                 src="lampiran.png"
                                 alt="Dokumentasi Rapat Brainstorming">
                             <span
@@ -391,6 +342,9 @@
                                     <a
                                         href="detail"
                                         class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
+                                    <a
+                                        href="detail.html"
+                                        class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
                                 </div>
                             </div>
                         </div>
@@ -401,6 +355,7 @@
                         <div class="relative">
                             <img
                                 class="w-full h-48 object-cover transform hover:scale-105 transition duration-500"
+                                src="lampiran.png"
                                 src="lampiran.png"
                                 alt="Dokumentasi Rapat Brainstorming">
                             <span
@@ -443,6 +398,9 @@
                                     <a
                                         href="detail"
                                         class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
+                                    <a
+                                        href="detail.html"
+                                        class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
                                 </div>
                             </div>
                         </div>
@@ -453,6 +411,7 @@
                         <div class="relative">
                             <img
                                 class="w-full h-48 object-cover transform hover:scale-105 transition duration-500"
+                                src="lampiran.png"
                                 src="lampiran.png"
                                 alt="Dokumentasi Rapat Brainstorming">
                             <span
@@ -495,6 +454,9 @@
                                     <a
                                         href="detail"
                                         class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
+                                    <a
+                                        href="detail.html"
+                                        class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
                                 </div>
                             </div>
                         </div>
@@ -505,6 +467,7 @@
                         <div class="relative">
                             <img
                                 class="w-full h-48 object-cover transform hover:scale-105 transition duration-500"
+                                src="lampiran.png"
                                 src="lampiran.png"
                                 alt="Dokumentasi Rapat Brainstorming">
                             <span
@@ -546,6 +509,65 @@
                                     </div>
                                     <a
                                         href="detail"
+                                        class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
+                                    <a
+                                        href="detail.html"
+                                        class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-component-bg dark:bg-dark-component-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2">
+                        <!-- Gambar -->
+                        <div class="relative">
+                            <img
+                                class="w-full h-48 object-cover transform hover:scale-105 transition duration-500"
+                                src="lampiran.png"
+                                src="lampiran.png"
+                                alt="Dokumentasi Rapat Brainstorming">
+                            <span
+                                class="absolute top-3 right-3 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
+                                25 Sep 2025
+                            </span>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                        </div>
+
+                        <!-- Konten -->
+                        <div class="p-5 flex flex-col">
+                            <h3
+                                class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-2">
+                                Brainstorming Fitur Baru Aplikasi
+                            </h3>
+
+                            <div
+                                class="flex items-center text-sm text-text-secondary dark:text-dark-text-secondary mb-3">
+                                <i class="fa-solid fa-user-pen mr-2 text-primary"></i>
+                                Dibuat oleh
+                                <span class="ml-1 font-medium">Bonnie Green</span>
+                            </div>
+
+                            <p
+                                class="text-sm text-text-secondary dark:text-dark-text-secondary mb-4 line-clamp-2">
+                                Sesi kreatif untuk mengumpulkan ide-ide inovatif untuk pengembangan fitur pada
+                                kuartal berikutnya.
+                            </p>
+
+                            <!-- Peserta -->
+                            <div class="pt-4 border-t border-border-light dark:border-border-dark">
+                                <h4
+                                    class="text-sm font-semibold text-text-primary dark:text-dark-text-primary mb-3">Peserta</h4>
+                                <div class="flex items-center justify-between">
+                                    <div
+                                        class="text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed">
+                                        • Lana Byrd<br>
+                                        • Thomas Lean
+                                    </div>
+                                    <a
+                                        href="detail"
+                                        class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
+                                    <a
+                                        href="detail.html"
                                         class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
                                 </div>
                             </div>
@@ -553,7 +575,27 @@
                     </div>
                 </div>
             </div>
+                    </div>
+                </div>
+            </div>
 
+            <div name="pagination" class="flex justify-center mb-6">
+                <div class="flex items-center gap-8">
+                    <button
+                        disabled="disabled"
+                        class="rounded-md border border-slate-300 p-2.5 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+                        type="button">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewbox="0 0 24 24"
+                            fill="currentColor"
+                            class="w-4 h-4">
+                            <path
+                                fill-rule="evenodd"
+                                d="M11.03 3.97a.75.75 0 0 1 0 1.06l-6.22 6.22H21a.75.75 0 0 1 0 1.5H4.81l6.22 6.22a.75.75 0 1 1-1.06 1.06l-7.5-7.5a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 0 1 1.06 0Z"
+                                clip-rule="evenodd"/>
+                        </svg>
+                    </button>
             <div name="pagination" class="flex justify-center mb-6">
                 <div class="flex items-center gap-8">
                     <button
@@ -577,7 +619,28 @@
                         <strong class="text-slate-800">1</strong>
                         of&nbsp;<strong class="text-slate-800">10</strong>
                     </p>
+                    <p class="text-slate-600">
+                        Page
+                        <strong class="text-slate-800">1</strong>
+                        of&nbsp;<strong class="text-slate-800">10</strong>
+                    </p>
 
+                    <button
+                        class="rounded-md border border-slate-300 p-2.5 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+                        type="button">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewbox="0 0 24 24"
+                            fill="currentColor"
+                            class="w-4 h-4">
+                            <path
+                                fill-rule="evenodd"
+                                d="M12.97 3.97a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 1 1-1.06-1.06l6.22-6.22H3a.75.75 0 0 1 0-1.5h16.19l-6.22-6.22a.75.75 0 0 1 0-1.06Z"
+                                clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
                     <button
                         class="rounded-md border border-slate-300 p-2.5 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
                         type="button">
@@ -654,5 +717,66 @@
                 }
             }
         </script>
+        </body>
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+        <script>
+            function switchTab(tab) {
+                // Tab buttons
+                const allBtn = document.getElementById("tab-allmom-btn");
+                const myBtn = document.getElementById("tab-mymom-btn");
+
+                // Tab contents
+                const allTab = document.getElementById("tab-allmom");
+                const myTab = document.getElementById("tab-mymom");
+
+                if (tab === "allmom") {
+                    allBtn
+                        .classList
+                        .add("text-primary", "border-primary");
+                    allBtn
+                        .classList
+                        .remove("text-text-secondary");
+
+                    myBtn
+                        .classList
+                        .remove("text-primary", "border-primary");
+                    myBtn
+                        .classList
+                        .add("text-text-secondary");
+
+                    allTab
+                        .classList
+                        .remove("hidden");
+                    myTab
+                        .classList
+                        .add("hidden");
+                } else {
+                    myBtn
+                        .classList
+                        .add("text-primary", "border-primary");
+                    myBtn
+                        .classList
+                        .remove("text-text-secondary");
+
+                    allBtn
+                        .classList
+                        .remove("text-primary", "border-primary");
+                    allBtn
+                        .classList
+                        .add("text-text-secondary");
+
+                    myTab
+                        .classList
+                        .remove("hidden");
+                    allTab
+                        .classList
+                        .add("hidden");
+                }
+            }
+        </script>
+
+    </html>
 
     </html>
