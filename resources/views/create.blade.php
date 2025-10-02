@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create MoM | Sofbox Style</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet"/>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#DC2626', // Red-600
+                        'primary-dark': '#B91C1C', // Red-700
+                        'body-bg': '#F9FAFB', // Gray-50
+                        'dark-body-bg': '#111827', // Gray-900
+                        'component-bg': '#ffffff', // White
+                        'dark-component-bg': '#1F2937', // Gray-800
+                        'text-primary': '#1F2937', // Gray-800
+                        'dark-text-primary': '#F3F4F6', // Gray-100
+                        'text-secondary': '#6B7280', // Gray-500
+                        'dark-text-secondary': '#9CA3AF', // Gray-400
+                        'border-light': '#E5E7EB', // Gray-200
+                        'border-dark': '#374151', // Gray-700
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .text-gradient { color: #DC2626; }
+        .bg-gradient-primary { background-color: #DC2626; }
+    </style>
+</head>
+<body class="bg-body-bg dark:bg-dark-body-bg">
+
+    <nav class="fixed top-0 z-50 w-full bg-component-bg border-b border-border-light dark:bg-dark-component-bg dark:border-border-dark shadow-sm">
+        <div class="px-3 py-3 lg:px-5 lg:pl-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center justify-start rtl:justify-end">
+                    <button data-drawer-target="logo-sidebar" data-drawer-toggle="logo-sidebar" aria-controls="logo-sidebar" type="button" class="inline-flex items-center p-2 text-sm text-text-secondary rounded-lg sm:hidden hover:bg-primary/10 dark:text-dark-text-secondary dark:hover:bg-primary/20"><i class="fa-solid fa-bars w-6 h-6"></i></button>
+                    <a href="" class="flex ms-2 md:me-24 items-center"><i class="fa-solid fa-box-archive text-3xl text-gradient"></i><span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white ml-3">Sofbox</span></a>
+                </div>
+                <div class="flex items-center">
+                    <div class="relative hidden md:block w-64 lg:w-96 mr-4"><div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"><i class="fa-solid fa-search text-text-secondary"></i></div><input type="text" id="search-navbar" class="block w-full p-2 pl-10 text-sm text-text-primary border border-border-light rounded-lg bg-body-bg focus:ring-primary focus:border-primary dark:bg-dark-component-bg dark:border-border-dark" placeholder="Search..."></div>
+                    <button type="button" class="p-2 mr-3 text-text-secondary rounded-full hover:bg-primary/10 relative dark:text-dark-text-secondary dark:hover:bg-primary/20"><i class="fa-solid fa-bell fa-lg"></i><span class="absolute top-1 right-1 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span></span></button>
+                    <div class="flex items-center ms-3">
+                        <button type="button" class="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-primary/50" data-dropdown-toggle="dropdown-user"><img class="w-8 h-8 rounded-full" src="https://flowbite.com/docs/images/people/profile-picture-5.jpg" alt="user photo"></button>
+                        <div class="z-50 hidden my-4 text-base list-none bg-component-bg divide-y divide-border-light rounded-md shadow-lg dark:bg-dark-component-bg dark:divide-border-dark" id="dropdown-user"><div class="px-4 py-3"><p class="text-sm text-text-primary dark:text-dark-text-primary">Neil Sims</p><p class="text-sm font-medium text-text-secondary truncate dark:text-dark-text-secondary">neil.sims@flowbite.com</p></div><ul class="py-1"><li><a href="#" class="block px-4 py-2 text-sm text-text-secondary hover:bg-primary/10">Sign out</a></li></ul></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <aside id="logo-sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full bg-component-bg border-r border-border-light sm:translate-x-0 dark:bg-dark-component-bg dark:border-border-dark" aria-label="Sidebar">
+        <div class="h-full px-4 pb-6 overflow-y-auto flex flex-col justify-between">
+            <ul class="space-y-2 font-medium">
+                <li><a href="index" class="flex items-center p-3 rounded-lg text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary group transition"><i class="fa-solid fa-chart-pie w-5 h-5"></i><span class="ms-3">Dashboard</span></a></li>
+                <li><a href="draft" class="flex items-center p-3 rounded-lg text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary group transition"><i class="fa-solid fa-note-sticky w-5 h-5 group-hover:text-primary"></i><span class="ms-3">Draft MoM</span></a></li>
+                <li><a href="#" class="flex items-center p-3 rounded-lg bg-primary/20 text-primary font-semibold group"><i class="fa-solid fa-notes-medical w-5 h-5 group-hover:text-primary"></i><span class="ms-3">Create MoM</span></a></li>
+                <li><a href="#" class="flex items-center p-3 rounded-lg text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary group transition relative"><i class="fa-solid fa-bell w-5 h-5 group-hover:text-primary"></i><span class="ms-3">Reminder</span><span class="absolute right-3 inline-flex items-center justify-center w-6 h-6 text-xs font-medium text-white bg-gradient-primary rounded-full">3</span></a></li>
+                <li><a href="calendar" class="flex items-center p-3 rounded-lg text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary group transition"><i class="fa-solid fa-calendar-alt w-5 h-5 group-hover:text-primary"></i><span class="ms-3">Calendar</span></a></li>
+            </ul>
+            <div class="border-t border-border-light dark:border-border-dark pt-4"><a href="#" class="flex items-center gap-5 p-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 group transition font-medium"><i class="fa-solid fa-arrow-right-from-bracket w-3 h-3"></i><p>Log Out</p></a></div>
+        </div>
+    </aside>
+
+    <main class="p-4 sm:ml-64 pt-20">
+        <div class="max-w-4xl mx-auto">
+            <div id="toast" class="hidden fixed top-24 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg bg-white dark:bg-dark-component-bg border border-border-light dark:border-border-dark text-text-primary dark:text-dark-text-primary transition-all duration-500 opacity-0"><div class="flex-shrink-0"><i class="fa-solid fa-circle-check text-green-500 text-lg"></i></div><div class="text-sm font-medium">MoM berhasil disubmit!</div></div>
+
+            <div
+                    class="flex flex-col md:flex-row items-center justify-between p-6 md:p-8 overflow-hidden rounded-lg shadow-md bg-component-bg dark:bg-dark-component-bg border-l-4 border-primary mb-6">
+                    <div class="flex items-center space-x-4">
+                        <div>
+                            <h1 class="text-3xl font-bold text-text-primary dark:text-dark-text-primary">
+                                Create New MoM
+                            </h1>
+                            <p class="mt-1 text-text-secondary dark:text-dark-text-secondary">
+                                Buat notulensi rapat baru dengan mengisi form di bawah ini.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            <div class="bg-component-bg dark:bg-dark-component-bg p-6 md:p-8 rounded-2xl shadow-lg">
+                <form id="mom-form" class="space-y-10">
+
+                    <div class="space-y-6">
+                        <h2 class="text-base font-semibold text-text-primary dark:text-dark-text-primary border-b border-border-light dark:border-border-dark pb-3">Informasi Rapat</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label for="judul" class="block mb-2 text-sm font-medium">Judul Rapat</label><input type="text" id="judul" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Contoh: Rapat Progres Proyek Q3" required></div>
+                            <div><label for="tempat" class="block mb-2 text-sm font-medium">Tempat</label><input type="text" id="tempat" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Contoh: Ruang Rapat Lt. 5 / Online" required></div>
+                            <div><label for="pimpinan" class="block mb-2 text-sm font-medium">Pimpinan Rapat</label><input type="text" id="pimpinan" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Nama pimpinan" required></div>
+                            <div><label for="notulen" class="block mb-2 text-sm font-medium">Notulen</label><input type="text" id="notulen" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Nama pencatat notulensi" required></div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div><label for="tanggal" class="block mb-2 text-sm font-medium">Tanggal</label><input type="date" id="tanggal" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark"></div>
+                            <div><label for="waktu_mulai" class="block mb-2 text-sm font-medium">Waktu Mulai</label><input type="time" id="waktu_mulai" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark"></div>
+                            <div><label for="waktu_selesai" class="block mb-2 text-sm font-medium">Waktu Selesai</label><input type="time" id="waktu_selesai" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark"></div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <h2 class="text-base font-semibold text-text-primary dark:text-dark-text-primary border-b border-border-light dark:border-border-dark pb-3">Peserta & Agenda</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div><label class="block mb-2 text-sm font-medium">Peserta</label><div class="flex gap-2"><input type="text" id="input-peserta" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Ketik nama lalu Enter..."><button type="button" id="btn-add-peserta" class="px-4 py-2 text-sm font-medium text-white bg-gradient-primary rounded-lg hover:opacity-90">Add</button></div><div id="list-peserta" class="flex flex-wrap gap-2 mt-3"></div></div>
+                            <div><label class="block mb-2 text-sm font-medium">Agenda</label><div class="flex gap-2"><input type="text" id="input-agenda" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Ketik agenda lalu Enter..."><button type="button" id="btn-add-agenda" class="px-4 py-2 text-sm font-medium text-white bg-gradient-primary rounded-lg hover:opacity-90">Add</button></div><ol id="list-agenda" class="mt-3 space-y-2 list-decimal list-inside text-sm"></ol></div>
+                        </div>
+                    </div>
+
+                    <div><h2 class="text-base font-semibold text-text-primary dark:text-dark-text-primary border-b border-border-light dark:border-border-dark pb-3 mb-6">Pembahasan</h2><div id="pembahasan-editor"></div><input type="hidden" name="pembahasan" id="pembahasan"></div>
+
+                    <div class="space-y-4">
+                        <h2 class="text-base font-semibold text-text-primary dark:text-dark-text-primary border-b border-border-light dark:border-border-dark pb-3">Tindak Lanjut (Action Items)</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                            <div class="md:col-span-2"><label for="input-task" class="text-xs font-medium text-text-secondary">Deskripsi Task</label><input type="text" id="input-task" class="mt-1 bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Contoh: Finalisasi desain UI/UX"></div>
+                            <div><label for="input-deadline" class="text-xs font-medium text-text-secondary">Deadline</label><input type="date" id="input-deadline" class="mt-1 bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark"></div>
+                        </div>
+                        <div class="text-right"><button type="button" id="btn-add-task" class="inline-flex items-center px-4 py-2 text-xs font-semibold text-primary border border-primary/50 rounded-lg hover:bg-primary/10 dark:text-primary dark:hover:bg-primary/20">+ Tambah Tindak Lanjut</button></div>
+                        <div id="list-tindak-lanjut" class="space-y-3 pt-3 border-t border-border-light dark:border-border-dark"></div>
+                    </div>
+
+                    <div><h2 class="text-base font-semibold text-text-primary dark:text-dark-text-primary border-b border-border-light dark:border-border-dark pb-3 mb-6">Lampiran</h2><input class="block w-full text-sm text-text-primary border border-border-light rounded-lg cursor-pointer bg-body-bg dark:text-dark-text-secondary focus:outline-none dark:bg-dark-component-bg dark:border-border-dark" id="lampiran" type="file" multiple><p class="mt-1 text-xs text-text-secondary">PNG, JPG, PDF, DOCX (MAX. 5MB per file).</p></div>
+
+                    <div class="flex justify-end gap-4 pt-6 border-t border-border-light dark:border-border-dark">
+                        <button type="button" id="btn-submit" class="text-white bg-gradient-primary hover:opacity-90 font-medium rounded-lg text-sm px-8 py-2.5 text-center">Submit MoM</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // --- Setup Peserta (Pills) ---
+            function setupParticipantPills() {
+                const input = document.getElementById('input-peserta');
+                const addButton = document.getElementById('btn-add-peserta');
+                const listContainer = document.getElementById('list-peserta');
+                const addItem = () => {
+                    const value = input.value.trim();
+                    if (value === '') return;
+                    const pill = document.createElement('span');
+                    pill.className = 'inline-flex items-center gap-x-2 bg-primary/20 text-primary text-sm font-medium px-3 py-1.5 rounded-full dark:bg-primary/30 dark:text-primary';
+                    pill.textContent = value;
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.innerHTML = '<i class="fa-solid fa-times w-3 h-3"></i>';
+                    removeBtn.onclick = () => pill.remove();
+                    pill.appendChild(removeBtn);
+                    listContainer.appendChild(pill);
+                    input.value = '';
+                    input.focus();
+                };
+                addButton.addEventListener('click', addItem);
+                input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addItem(); } });
+            }
+            setupParticipantPills();
+
+            // --- Setup Agenda (List) ---
+            function setupAgendaList() {
+                const input = document.getElementById('input-agenda');
+                const addButton = document.getElementById('btn-add-agenda');
+                const listContainer = document.getElementById('list-agenda');
+                const addItem = () => {
+                    const value = input.value.trim();
+                    if (value === '') return;
+                    const listItem = document.createElement('li');
+                    listItem.className = 'flex items-center justify-between text-text-secondary dark:text-dark-text-secondary';
+                    listItem.textContent = value;
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.innerHTML = '<i class="fa-solid fa-times text-red-500 hover:text-red-700 fa-sm"></i>';
+                    removeBtn.className = 'ml-4';
+                    removeBtn.onclick = () => listItem.remove();
+                    listItem.appendChild(removeBtn);
+                    listContainer.appendChild(listItem);
+                    input.value = '';
+                    input.focus();
+                };
+                addButton.addEventListener('click', addItem);
+                input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addItem(); } });
+            }
+            setupAgendaList();
+
+            // --- Setup Action Items (Tindak Lanjut) ---
+            function setupActionItems() {
+                const taskInput = document.getElementById('input-task');
+                const deadlineInput = document.getElementById('input-deadline');
+                const addButton = document.getElementById('btn-add-task');
+                const listContainer = document.getElementById('list-tindak-lanjut');
+                const addItem = () => {
+                    const taskValue = taskInput.value.trim();
+                    const deadlineValue = deadlineInput.value;
+                    if (!taskValue || !deadlineValue) { alert('Deskripsi Task dan Deadline harus diisi!'); return; }
+                    const formattedDate = new Date(deadlineValue).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+                    const newItem = document.createElement('div');
+                    newItem.className = 'flex justify-between items-center bg-body-bg dark:bg-dark-body-bg p-3 rounded-md border border-border-light dark:border-border-dark';
+                    newItem.innerHTML = `<div><p class="font-medium text-text-primary dark:text-dark-text-primary">${taskValue}</p><p class="text-xs text-text-secondary dark:text-dark-text-secondary"><i class="fa-solid fa-flag-checkered fa-xs mr-1 opacity-75"></i>Deadline: ${formattedDate}</p></div><button type="button" class="remove-btn text-red-500 hover:text-red-700 ml-4"><i class="fa-solid fa-trash-alt"></i></button>`;
+                    newItem.querySelector('.remove-btn').addEventListener('click', () => newItem.remove());
+                    listContainer.appendChild(newItem);
+                    taskInput.value = '';
+                    deadlineInput.value = '';
+                    taskInput.focus();
+                };
+                addButton.addEventListener('click', addItem);
+            }
+            setupActionItems();
+
+            // --- Inisialisasi Quill JS ---
+            const quill = new Quill('#pembahasan-editor', { theme: 'snow', placeholder: "Tuliskan hasil pembahasan, keputusan, dan poin penting lainnya...", modules: { toolbar: [[{ 'header': [1, 2, false] }], ['bold', 'italic', 'underline'], [{ 'list': 'ordered' }, { 'list': 'bullet' }], ['link'], ['clean']] } });
+            document.getElementById('mom-form').addEventListener("submit", (e) => { e.preventDefault(); document.getElementById('pembahasan').value = quill.root.innerHTML; });
+
+            // --- Toast Notification ---
+            const btnSubmit = document.getElementById("btn-submit");
+            const toast = document.getElementById("toast");
+            btnSubmit.addEventListener("click", () => {
+                toast.classList.remove("hidden", "opacity-0");
+                toast.classList.add("opacity-100");
+                setTimeout(() => {
+                    toast.classList.remove("opacity-100");
+                    toast.classList.add("opacity-0");
+                    setTimeout(() => { toast.classList.add("hidden"); }, 500);
+                }, 2000);
+            });
+        });
+    </script>
+</body>
+</html>

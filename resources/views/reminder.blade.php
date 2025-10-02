@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | MoM Telkom</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet"/>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#DC2626', // Red-600
+                        'primary-dark': '#B91C1C', // Red-700
+                        'body-bg': '#F9FAFB', // Gray-50
+                        'dark-body-bg': '#111827', // Gray-900
+                        'component-bg': '#ffffff', // White
+                        'dark-component-bg': '#1F2937', // Gray-800
+                        'text-primary': '#1F2937', // Gray-800
+                        'dark-text-primary': '#F3F4F6', // Gray-100
+                        'text-secondary': '#6B7280', // Gray-500
+                        'dark-text-secondary': '#9CA3AF', // Gray-400
+                        'border-light': '#E5E7EB', // Gray-200
+                        'border-dark': '#374151', // Gray-700
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .text-gradient { color: #DC2626; }
+        .bg-gradient-primary { background-color: #DC2626; }
+    </style>
+</head>
+<body class="bg-body-bg dark:bg-dark-body-bg">
+
+    <nav class="fixed top-0 z-50 w-full bg-component-bg border-b border-border-light dark:bg-dark-component-bg dark:border-border-dark shadow-sm">
+        <div class="px-3 py-3 lg:px-5 lg:pl-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center justify-start rtl:justify-end">
+                    <button data-drawer-target="logo-sidebar" data-drawer-toggle="logo-sidebar" type="button" class="inline-flex items-center p-2 text-sm text-text-secondary rounded-lg sm:hidden hover:bg-primary/10 dark:text-dark-text-secondary dark:hover:bg-primary/20"><i class="fa-solid fa-bars w-6 h-6"></i></button>
+                    <a href="" class="flex ms-2 md:me-24 items-center">
+                        <img src="logo.png" class="h-12 mr-3" alt="Telkom Logo" />
+                    </a>
+                </div>
+                <div class="flex items-center">
+                    <div class="relative hidden md:block w-64 lg:w-96 mr-4"><div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"><i class="fa-solid fa-search text-text-secondary"></i></div><input type="text" id="search-navbar" class="block w-full p-2 pl-10 text-sm text-text-primary border border-border-light rounded-lg bg-body-bg focus:ring-primary focus:border-primary dark:bg-dark-component-bg dark:border-border-dark" placeholder="Search..."></div>
+                    <button type="button" class="p-2 mr-3 text-text-secondary rounded-full hover:bg-primary/10 relative dark:text-dark-text-secondary dark:hover:bg-primary/20"><i class="fa-solid fa-bell fa-lg"></i><span class="absolute top-1 right-1 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span></span></button>
+                    <div class="flex items-center ms-3">
+                        <button type="button" class="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-primary/50" data-dropdown-toggle="dropdown-user"><img class="w-8 h-8 rounded-full" src="https://flowbite.com/docs/images/people/profile-picture-5.jpg" alt="user photo"></button>
+                        <div class="z-50 hidden my-4 text-base list-none bg-component-bg divide-y divide-border-light rounded-md shadow-lg dark:bg-dark-component-bg dark:divide-border-dark" id="dropdown-user"><div class="px-4 py-3"><p class="text-sm text-text-primary dark:text-dark-text-primary">Neil Sims</p><p class="text-sm font-medium text-text-secondary truncate dark:text-dark-text-secondary">neil.sims@flowbite.com</p></div><ul class="py-1"><li><a href="#" class="block px-4 py-2 text-sm text-text-secondary hover:bg-body-bg">Sign out</a></li></ul></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <aside id="logo-sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full bg-component-bg border-r border-border-light sm:translate-x-0 dark:bg-dark-component-bg dark:border-border-dark" aria-label="Sidebar">
+        <div class="h-full px-4 pb-6 overflow-y-auto flex flex-col justify-between">
+            <ul class="space-y-2 font-medium">
+                <li><a href="index" class="flex items-center p-3 rounded-lg text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary group transition"><i class="fa-solid fa-chart-pie w-5 h-5"></i><span class="ms-3">Dashboard</span></a></li>
+                <li><a href="draft" class="flex items-center p-3 rounded-lg text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary group transition"><i class="fa-solid fa-note-sticky w-5 h-5 group-hover:text-primary"></i><span class="ms-3">Draft MoM</span></a></li>
+                <li><a href="create" class="flex items-center p-3 rounded-lg text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary group transition"><i class="fa-solid fa-notes-medical w-5 h-5 group-hover:text-primary"></i><span class="ms-3">Create MoM</span></a></li>
+                <li><a href="#" class="flex items-center p-3 rounded-lg bg-primary/20 text-primary font-semibold group"><i class="fa-solid fa-bell w-5 h-5 group-hover:text-primary"></i><span class="ms-3">Reminder</span><span class="absolute right-10 inline-flex items-center justify-center w-6 h-6 text-xs font-medium text-white bg-red-500 rounded-full">3</span></a></li>
+                <li><a href="calendar" class="flex items-center p-3 rounded-lg text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary group transition"><i class="fa-solid fa-calendar-alt w-5 h-5 group-hover:text-primary"></i><span class="ms-3">Calendar</span></a></li>
+            </ul>
+            <div class="border-t border-border-light dark:border-border-dark pt-4"><a href="#" class="flex items-center gap-5 p-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 group transition font-medium"><i class="fa-solid fa-arrow-right-from-bracket w-3 h-3"></i><p>Log Out</p></a></div>
+        </div>
+    </aside>
+
+    <div class="p-4 sm:p-6 sm:ml-64 sm:mt-[55px] lg:mt-[55px] mt-[80px]">
+    <div class="flex flex-col md:flex-row items-center justify-between p-6 md:p-8 overflow-hidden rounded-lg shadow-md bg-component-bg dark:bg-dark-component-bg border-l-4 border-primary mb-6">
+            <div class="flex items-center space-x-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-text-primary dark:text-dark-text-primary">📌 Reminder Tugas</h1>
+                    <p class="mt-1 text-text-secondary dark:text-dark-text-secondary">Lihat tugas yang sudah mendekati deadline.</p>
+                </div>
+            </div>
+        </div>
+    <!-- NOTIF BANNER -->
+    <div class="mb-4 flex items-center bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded-lg">
+      <svg class="w-6 h-6 mr-2 text-yellow-600" fill="none" stroke="currentColor" stroke-width="2"
+           viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round"
+              d="M12 9v2m0 4h.01M21 12A9 9 0 113 12a9 9 0 0118 0z"></path>
+      </svg>
+      <span class="text-sm font-medium">⚠️ Ada 2 tugas mendekati deadline!</span>
+    </div>
+    <!-- SCROLLABLE LIST -->
+    <div class="flex flex-col gap-4">
+
+      <!-- CARD 1 - Deadline Hari Ini -->
+      <div class="flex items-center justify-between bg-white shadow-md rounded-xl p-5 hover:shadow-lg transition">
+        <div class="flex items-center space-x-4">
+          <div class="w-12 h-12 flex items-center justify-center rounded-lg bg-red-100 text-red-600">
+            <!-- Icon Bell -->
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                 viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                 class="w-7 h-7">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M14 10V6a4 4 0 00-8 0v4H4l1 9h14l1-9h-2z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold">Backup Data</h3>
+            <p class="text-sm text-gray-500">Deadline: Hari ini • 20:00</p>
+            <div class="mt-1 flex space-x-2">
+              <span class="px-2 py-0.5 text-xs rounded-full bg-red-200 text-red-700">High</span>
+            </div>
+          </div>
+        </div>
+        <div class="text-right">
+          <p class="text-sm font-medium text-gray-700">1 Oct 2025</p>
+          <p class="text-xs text-red-500">Hari ini</p>
+        </div>
+      </div>
+
+      <!-- CARD 2 - Besok -->
+      <div class="flex items-center justify-between bg-white shadow-md rounded-xl p-5 hover:shadow-lg transition">
+        <div class="flex items-center space-x-4">
+          <div class="w-12 h-12 flex items-center justify-center rounded-lg bg-yellow-100 text-yellow-600">
+            <!-- Icon Bolt -->
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                 viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                 class="w-7 h-7">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold">Fiber Optic Installation</h3>
+            <p class="text-sm text-gray-500">Deadline: Besok • 09:00</p>
+            <div class="mt-1 flex space-x-2">
+              <span class="px-2 py-0.5 text-xs rounded-full bg-yellow-200 text-yellow-700">Medium</span>
+            </div>
+          </div>
+        </div>
+        <div class="text-right">
+          <p class="text-sm font-medium text-gray-700">2 Oct 2025</p>
+          <p class="text-xs text-orange-500">Besok</p>
+        </div>
+      </div>
+
+      <!-- CARD 3 - 3 Hari Lagi -->
+      <div class="flex items-center justify-between bg-white shadow-md rounded-xl p-5 hover:shadow-lg transition">
+        <div class="flex items-center space-x-4">
+          <div class="w-12 h-12 flex items-center justify-center rounded-lg bg-purple-100 text-purple-600">
+            <!-- Icon Globe -->
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                 viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                 class="w-7 h-7">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M12 21c4.97 0 9-4.03 9-9s-4.03-9-9-9-9 4.03-9 9 4.03 9 9 9z" />
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M3.6 9h16.8M3.6 15h16.8M12 3v18" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold">MINI OLT</h3>
+            <p class="text-sm text-gray-500">Deadline: 3 hari lagi • 17:10</p>
+            <div class="mt-1 flex space-x-2">
+              <span class="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-600">Urgent</span>
+              <span class="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-600">Reminder</span>
+            </div>
+          </div>
+        </div>
+        <div class="text-right">
+          <p class="text-sm font-medium text-gray-700">4 Oct 2025</p>
+          <p class="text-xs text-gray-400">3 hari lagi</p>
+        </div>
+      </div>
+
+      <!-- CARD 4 - 7 Hari Lagi -->
+      <div class="flex items-center justify-between bg-white shadow-md rounded-xl p-5 hover:shadow-lg transition">
+        <div class="flex items-center space-x-4">
+          <div class="w-12 h-12 flex items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+            <!-- Icon Wrench -->
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                 viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                 class="w-7 h-7">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M15.232 5.232a4 4 0 00-5.464 5.464L4.5 16.5 7.5 19.5l5.268-5.268a4 4 0 005.464-5.464L15.232 5.232z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold">Maintenance Server</h3>
+            <p class="text-sm text-gray-500">Deadline: 7 hari lagi • 22:00</p>
+            <div class="mt-1 flex space-x-2">
+              <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-600">Normal</span>
+            </div>
+          </div>
+        </div>
+        <div class="text-right">
+          <p class="text-sm font-medium text-gray-700">8 Oct 2025</p>
+          <p class="text-xs text-gray-400">7 hari lagi</p>
+        </div>
+      </div>
+
+      <!-- CARD 5 - 14 Hari Lagi -->
+      <div class="flex items-center justify-between bg-white shadow-md rounded-xl p-5 hover:shadow-lg transition">
+        <div class="flex items-center space-x-4">
+          <div class="w-12 h-12 flex items-center justify-center rounded-lg bg-green-100 text-green-600">
+            <!-- Icon Clipboard -->
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                 viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                 class="w-7 h-7">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M9 5h6M9 3h6a2 2 0 012 2v14a2 2 0 01-2 2H9a2 2 0 01-2-2V5a2 2 0 012-2z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold">Laporan Bulanan</h3>
+            <p class="text-sm text-gray-500">Deadline: 14 hari lagi • 10:00</p>
+            <div class="mt-1 flex space-x-2">
+              <span class="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-600">Reminder</span>
+            </div>
+          </div>
+        </div>
+        <div class="text-right">
+          <p class="text-sm font-medium text-gray-700">15 Oct 2025</p>
+          <p class="text-xs text-gray-400">14 hari lagi</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script>
+        const chartOptions = {
+            series: [{ name: "Approved", color: "#DC2626", data: [{ x: "Mon", y: 231 }, { x: "Tue", y: 122 }, { x: "Wed", y: 63 }, { x: "Thu", y: 421 }, { x: "Fri", y: 122 }, { x: "Sat", y: 323 }, { x: "Sun", y: 111 }] }, { name: "Pending", color: "#facc15", data: [{ x: "Mon", y: 232 }, { x: "Tue", y: 113 }, { x: "Wed", y: 341 }, { x: "Thu", y: 224 }, { x: "Fri", y: 522 }, { x: "Sat", y: 411 }, { x: "Sun", y: 243 }] }],
+            chart: { type: "bar", height: "320px", fontFamily: "Inter, sans-serif", toolbar: { show: false } },
+            plotOptions: { bar: { horizontal: false, columnWidth: "70%", borderRadiusApplication: "end", borderRadius: 8 } },
+            tooltip: { shared: true, intersect: false, style: { fontFamily: "Inter, sans-serif" } },
+            states: { hover: { filter: { type: "darken", value: 1 } } },
+            stroke: { show: true, width: 0, colors: ["transparent"] },
+            grid: { show: false },
+            dataLabels: { enabled: false },
+            legend: { show: false },
+            xaxis: { floating: false, labels: { show: true, style: { fontFamily: "Inter, sans-serif", cssClass: 'text-xs font-normal fill-text-secondary dark:fill-dark-text-secondary' } }, axisBorder: { show: false }, axisTicks: { show: false } },
+            yaxis: { show: false },
+            fill: { opacity: 1 }
+        }
+        if (document.getElementById("column-chart") && typeof ApexCharts !== 'undefined') {
+            const chart = new ApexCharts(document.getElementById("column-chart"), chartOptions);
+            chart.render();
+        }
+    </script>
+</body>
+</html>

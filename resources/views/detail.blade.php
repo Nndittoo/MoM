@@ -14,32 +14,26 @@
             theme: {
                 extend: {
                     colors: {
-                        'primary': '#50b5ff',
-                        'primary-dark': '#5983fb',
-                        'body-bg': '#f7f8fa',
-                        'dark-body-bg': '#15181e',
-                        'component-bg': '#ffffff',
-                        'dark-component-bg': '#272d3b',
-                        'text-primary': '#272d3b',
-                        'dark-text-primary': '#e0e0e0',
-                        'text-secondary': '#8a92a6',
-                        'dark-text-secondary': '#a0a0a0',
-                        'border-light': '#efefef',
-                        'border-dark': '#3d414c'
+                        'primary': '#DC2626', // Red-600
+                        'primary-dark': '#B91C1C', // Red-700
+                        'body-bg': '#F9FAFB', // Gray-50
+                        'dark-body-bg': '#111827', // Gray-900
+                        'component-bg': '#ffffff', // White
+                        'dark-component-bg': '#1F2937', // Gray-800
+                        'text-primary': '#1F2937', // Gray-800
+                        'dark-text-primary': '#F3F4F6', // Gray-100
+                        'text-secondary': '#6B7280', // Gray-500
+                        'dark-text-secondary': '#9CA3AF', // Gray-400
+                        'border-light': '#E5E7EB', // Gray-200
+                        'border-dark': '#374151', // Gray-700
                     }
                 }
             }
         }
     </script>
     <style>
-        .text-gradient {
-            background: linear-gradient(to right, #50b5ff 0%, #5983fb 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .bg-gradient-primary {
-            background-image: linear-gradient(to right, #50b5ff 0%, #5983fb 100%);
-        }
+        .text-gradient { color: #DC2626; }
+        .bg-gradient-primary { background-color: #DC2626; }
     </style>
 </head>
 <body class="bg-body-bg dark:bg-dark-body-bg">
@@ -98,11 +92,11 @@
     <aside id="logo-sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full bg-component-bg border-r border-border-light sm:translate-x-0 dark:bg-dark-component-bg dark:border-border-dark" aria-label="Sidebar">
         <div class="h-full px-4 pb-6 overflow-y-auto flex flex-col justify-between">
             <ul class="space-y-2 font-medium">
-                <li><a href="index.html" class="flex items-center p-3 rounded-lg text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary group transition"><i class="fa-solid fa-chart-pie w-5 h-5"></i><span class="ms-3">Dashboard</span></a></li>
-                <li><a href="draft.html" class="flex items-center p-3 rounded-lg bg-primary/20 text-primary font-semibold group"><i class="fa-solid fa-note-sticky w-5 h-5 group-hover:text-primary"></i><span class="ms-3">Draft MoM</span></a></li>
-                <li><a href="create.html" class="flex items-center p-3 rounded-lg text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary group transition"><i class="fa-solid fa-notes-medical w-5 h-5 group-hover:text-primary"></i><span class="ms-3">Create MoM</span></a></li>
+                <li><a href="index" class="flex items-center p-3 rounded-lg text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary group transition"><i class="fa-solid fa-chart-pie w-5 h-5"></i><span class="ms-3">Dashboard</span></a></li>
+                <li><a href="draft" class="flex items-center p-3 rounded-lg bg-primary/20 text-primary font-semibold group"><i class="fa-solid fa-note-sticky w-5 h-5 group-hover:text-primary"></i><span class="ms-3">Draft MoM</span></a></li>
+                <li><a href="create" class="flex items-center p-3 rounded-lg text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary group transition"><i class="fa-solid fa-notes-medical w-5 h-5 group-hover:text-primary"></i><span class="ms-3">Create MoM</span></a></li>
                 <li><a href="#" class="flex items-center p-3 rounded-lg text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary group transition relative"><i class="fa-solid fa-bell w-5 h-5 group-hover:text-primary"></i><span class="ms-3">Reminder</span><span class="absolute right-3 inline-flex items-center justify-center w-6 h-6 text-xs font-medium text-white bg-gradient-primary rounded-full">3</span></a></li>
-                <li><a href="#" class="flex items-center p-3 rounded-lg text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary group transition"><i class="fa-solid fa-calendar-alt w-5 h-5 group-hover:text-primary"></i><span class="ms-3">Calendar</span></a></li>
+                <li><a href="calendar" class="flex items-center p-3 rounded-lg text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary group transition"><i class="fa-solid fa-calendar-alt w-5 h-5 group-hover:text-primary"></i><span class="ms-3">Calendar</span></a></li>
             </ul>
             <div class="border-t border-border-light dark:border-border-dark pt-4">
                 <a href="#" class="flex items-center gap-5 p-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 group transition font-medium"><i class="fa-solid fa-arrow-right-from-bracket w-3 h-3"></i><p>Log Out</p></a>
@@ -112,14 +106,14 @@
 
     <main class="p-4 sm:ml-64">
         <div class="p-4 rounded-lg mt-14">
-            
+
             <div class="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between mb-6">
                 <div>
                     <h1 class="text-3xl font-bold text-text-primary dark:text-dark-text-primary">Detail Minute of Meeting</h1>
                     <p class="mt-1 text-text-secondary dark:text-dark-text-secondary">EVALUASI PROGRESS PROJECT OTN TR1</p>
                 </div>
                 <div class="flex space-x-2 mt-4 sm:mt-0 w-full sm:w-auto">
-                    <a href="draft.html" class="flex-1 sm:flex-initial inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-text-secondary bg-component-bg border border-border-light rounded-lg hover:bg-body-bg dark:bg-dark-component-bg dark:text-dark-text-secondary dark:border-border-dark dark:hover:text-white dark:hover:bg-dark-body-bg">
+                    <a href="draft" class="flex-1 sm:flex-initial inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-text-secondary bg-component-bg border border-border-light rounded-lg hover:bg-body-bg dark:bg-dark-component-bg dark:text-dark-text-secondary dark:border-border-dark dark:hover:text-white dark:hover:bg-dark-body-bg">
                         <i class="fa-solid fa-arrow-left mr-2"></i>Kembali
                     </a>
                     <button id="export-pdf-button" class="flex-1 sm:flex-initial inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-white bg-gradient-primary rounded-lg hover:opacity-90">
@@ -130,7 +124,7 @@
 
             <div class="bg-component-bg dark:bg-dark-component-bg rounded-lg shadow-md overflow-x-auto">
                 <div id="pdf-preview" class="p-6 md:p-8 min-w-[800px] bg-white text-gray-900 font-sans">
-                    
+
                     <table class="w-full mb-4 border-collapse">
                         <tbody>
                             <tr>
