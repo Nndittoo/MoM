@@ -23,7 +23,7 @@
       <!-- Left Side Form -->
       <div class="w-1/2 p-6 sm:p-12 flex flex-col justify-center relative z-10">
         <div>
-          <img src="LOGO_TELKOM.png" class="w-32 mx-auto" alt="Telkom Logo" />
+          <img src="{{ asset("img/logo.png") }}" class="w-32 mx-auto" alt="Telkom Logo" />
         </div>
         <div class="mt-12 flex flex-col items-center">
           <h1 class="text-2xl xl:text-3xl font-extrabold text-red-600">
@@ -66,11 +66,8 @@
 
       <!-- Right Side -->
       <div class="w-1/2 relative flex z-10">
-        <!-- Background Image -->
-        <div class="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-90"
-          style="background-image: url('telkom2.png');"></div>
         <!-- Overlay merah transparan -->
-        <div class="absolute inset-0 bg-red-700 bg-opacity-30"></div>
+        <div class="absolute inset-0 bg-[#000000]"></div>
         <div class="relative w-full flex items-center justify-center">
           <h2 class="text-white font-bold text-3xl drop-shadow-lg">Welcome to MoM</h2>
         </div>

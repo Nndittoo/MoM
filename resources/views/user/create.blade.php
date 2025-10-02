@@ -73,24 +73,102 @@
 @endsection
 
 @push('scripts')
-<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-<script>
-    // All the JavaScript from the bottom of create.html goes here
-    document.addEventListener("DOMContentLoaded", () => {
-        // --- Setup Peserta (Pills) ---
-        function setupParticipantPills() { /* ... */ }
-        setupParticipantPills();
-        // --- Setup Agenda (List) ---
-        function setupAgendaList() { /* ... */ }
-        setupAgendaList();
-        // --- Setup Action Items ---
-        function setupActionItems() { /* ... */ }
-        setupActionItems();
-        // --- Inisialisasi Quill JS ---
-        const quill = new Quill('#pembahasan-editor', { /* ... */ });
-        // --- Toast Notification ---
-        const btnSubmit = document.getElementById("btn-submit");
-        // ... rest of the script
-    });
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // --- Setup Peserta (Pills) ---
+            function setupParticipantPills() {
+                const input = document.getElementById('input-peserta');
+                const addButton = document.getElementById('btn-add-peserta');
+                const listContainer = document.getElementById('list-peserta');
+                const addItem = () => {
+                    const value = input.value.trim();
+                    if (value === '') return;
+                    const pill = document.createElement('span');
+                    pill.className = 'inline-flex items-center gap-x-2 bg-primary/20 text-primary text-sm font-medium px-3 py-1.5 rounded-full dark:bg-primary/30 dark:text-primary';
+                    pill.textContent = value;
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.innerHTML = '<i class="fa-solid fa-times w-3 h-3"></i>';
+                    removeBtn.onclick = () => pill.remove();
+                    pill.appendChild(removeBtn);
+                    listContainer.appendChild(pill);
+                    input.value = '';
+                    input.focus();
+                };
+                addButton.addEventListener('click', addItem);
+                input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addItem(); } });
+            }
+            setupParticipantPills();
+
+            // --- Setup Agenda (List) ---
+            function setupAgendaList() {
+                const input = document.getElementById('input-agenda');
+                const addButton = document.getElementById('btn-add-agenda');
+                const listContainer = document.getElementById('list-agenda');
+                const addItem = () => {
+                    const value = input.value.trim();
+                    if (value === '') return;
+                    const listItem = document.createElement('li');
+                    listItem.className = 'flex items-center justify-between text-text-secondary dark:text-dark-text-secondary';
+                    listItem.textContent = value;
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.innerHTML = '<i class="fa-solid fa-times text-red-500 hover:text-red-700 fa-sm"></i>';
+                    removeBtn.className = 'ml-4';
+                    removeBtn.onclick = () => listItem.remove();
+                    listItem.appendChild(removeBtn);
+                    listContainer.appendChild(listItem);
+                    input.value = '';
+                    input.focus();
+                };
+                addButton.addEventListener('click', addItem);
+                input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addItem(); } });
+            }
+            setupAgendaList();
+
+            // --- Setup Action Items (Tindak Lanjut) ---
+            function setupActionItems() {
+                const taskInput = document.getElementById('input-task');
+                const deadlineInput = document.getElementById('input-deadline');
+                const addButton = document.getElementById('btn-add-task');
+                const listContainer = document.getElementById('list-tindak-lanjut');
+                const addItem = () => {
+                    const taskValue = taskInput.value.trim();
+                    const deadlineValue = deadlineInput.value;
+                    if (!taskValue || !deadlineValue) { alert('Deskripsi Task dan Deadline harus diisi!'); return; }
+                    const formattedDate = new Date(deadlineValue).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+                    const newItem = document.createElement('div');
+                    newItem.className = 'flex justify-between items-center bg-body-bg dark:bg-dark-body-bg p-3 rounded-md border border-border-light dark:border-border-dark';
+                    newItem.innerHTML = `<div><p class="font-medium text-text-primary dark:text-dark-text-primary">${taskValue}</p><p class="text-xs text-text-secondary dark:text-dark-text-secondary"><i class="fa-solid fa-flag-checkered fa-xs mr-1 opacity-75"></i>Deadline: ${formattedDate}</p></div><button type="button" class="remove-btn text-red-500 hover:text-red-700 ml-4"><i class="fa-solid fa-trash-alt"></i></button>`;
+                    newItem.querySelector('.remove-btn').addEventListener('click', () => newItem.remove());
+                    listContainer.appendChild(newItem);
+                    taskInput.value = '';
+                    deadlineInput.value = '';
+                    taskInput.focus();
+                };
+                addButton.addEventListener('click', addItem);
+            }
+            setupActionItems();
+
+            // --- Inisialisasi Quill JS ---
+            const quill = new Quill('#pembahasan-editor', { theme: 'snow', placeholder: "Tuliskan hasil pembahasan, keputusan, dan poin penting lainnya...", modules: { toolbar: [[{ 'header': [1, 2, false] }], ['bold', 'italic', 'underline'], [{ 'list': 'ordered' }, { 'list': 'bullet' }], ['link'], ['clean']] } });
+            document.getElementById('mom-form').addEventListener("submit", (e) => { e.preventDefault(); document.getElementById('pembahasan').value = quill.root.innerHTML; });
+
+            // --- Toast Notification ---
+            const btnSubmit = document.getElementById("btn-submit");
+            const toast = document.getElementById("toast");
+            btnSubmit.addEventListener("click", () => {
+                toast.classList.remove("hidden", "opacity-0");
+                toast.classList.add("opacity-100");
+                setTimeout(() => {
+                    toast.classList.remove("opacity-100");
+                    toast.classList.add("opacity-0");
+                    setTimeout(() => { toast.classList.add("hidden"); }, 500);
+                }, 2000);
+            });
+        });
+    </script>
 @endpush

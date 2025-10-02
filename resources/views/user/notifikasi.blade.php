@@ -34,16 +34,6 @@
                     <span class="text-xs text-text-secondary dark:text-dark-text-secondary/70">15 September 2025</span>
                 </div>
             </div>
-
-            <div class="p-4 bg-body-bg border border-border-light rounded-lg shadow-sm dark:bg-dark-body-bg dark:border-border-dark flex items-start gap-4">
-                <i class="fa-solid fa-user-plus text-blue-500 text-xl mt-1"></i>
-                <div>
-                    <h2 class="font-semibold text-text-primary dark:text-dark-text-primary">Anggota Baru Bergabung</h2>
-                    <p class="text-sm text-text-secondary dark:text-dark-text-secondary">Yamin baru saja bergabung ke dalam grup MoM Anda.</p>
-                    <span class="text-xs text-text-secondary dark:text-dark-text-secondary/70">5 jam yang lalu</span>
-                </div>
-            </div>
-
         </div>
     </div>
 </div>
