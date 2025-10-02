@@ -29,9 +29,14 @@
             </li>
         </ul>
         <div class="border-t border-border-light dark:border-border-dark pt-4">
-            <a href="#" class="flex items-center gap-5 p-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 group transition font-medium">
-                <i class="fa-solid fa-arrow-right-from-bracket w-3 h-3"></i><p>Log Out</p>
-            </a>
-        </div>
+    <form method="POST" action="{{ route('logout') }}">
+        @csrf
+        <button type="submit"
+            class="w-full flex items-center gap-5 p-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 group transition font-medium">
+            <i class="fa-solid fa-arrow-right-from-bracket w-3 h-3"></i>
+            <p>Log Out</p>
+        </button>
+    </form>
+</div>
     </div>
 </aside>
