@@ -18,33 +18,27 @@
                 theme: {
                     extend: {
                         colors: {
-                            'primary': '#50b5ff',
-                            'primary-dark': '#5983fb',
-                            'body-bg': '#f7f8fa',
-                            'dark-body-bg': '#15181e',
-                            'component-bg': '#ffffff',
-                            'dark-component-bg': '#272d3b',
-                            'text-primary': '#272d3b',
-                            'dark-text-primary': '#e0e0e0',
-                            'text-secondary': '#8a92a6',
-                            'dark-text-secondary': '#a0a0a0',
-                            'border-light': '#efefef',
-                            'border-dark': '#3d414c'
-                        }
+                        'primary': '#DC2626', // Red-600
+                        'primary-dark': '#B91C1C', // Red-700
+                        'body-bg': '#F9FAFB', // Gray-50
+                        'dark-body-bg': '#111827', // Gray-900
+                        'component-bg': '#ffffff', // White
+                        'dark-component-bg': '#1F2937', // Gray-800
+                        'text-primary': '#1F2937', // Gray-800
+                        'dark-text-primary': '#F3F4F6', // Gray-100
+                        'text-secondary': '#6B7280', // Gray-500
+                        'dark-text-secondary': '#9CA3AF', // Gray-400
+                        'border-light': '#E5E7EB', // Gray-200
+                        'border-dark': '#374151', // Gray-700
+                    }
                     }
                 }
             }
         </script>
         <style>
-            .text-gradient {
-                background: linear-gradient(to right, #50b5ff 0%, #5983fb 100%);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-            }
-            .bg-gradient-primary {
-                background-image: linear-gradient(to right, #50b5ff 0%, #5983fb 100%);
-            }
-        </style>
+        .text-gradient { color: #DC2626; }
+        .bg-gradient-primary { background-color: #DC2626; }
+    </style>
     </head>
     <body class="bg-body-bg dark:bg-dark-body-bg">
         <nav
@@ -183,7 +177,7 @@
 
                     <li>
                         <a
-                            href="#"
+                            href="calendar.html"
                             class="flex items-center p-3 rounded-lg text-text-secondary dark:text-dark-text-secondary
               hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary group transition">
                             <i class="fa-solid fa-calendar-alt w-5 h-5 group-hover:text-primary"></i>
@@ -242,28 +236,6 @@
                             <i class="fa-solid fa-clock fa-xl text-yellow-500"></i>
                         </div>
                     </div>
-                    <div
-                        class="flex items-center justify-between p-6 rounded-lg bg-component-bg dark:bg-dark-component-bg shadow-md transition-transform hover:scale-105">
-                        <div>
-                            <p class="text-3xl font-bold text-text-primary dark:text-dark-text-primary">3</p>
-                            <p class="text-md text-text-secondary mt-1">Tasks Due</p>
-                        </div>
-                        <div
-                            class="flex items-center justify-center h-16 w-16 rounded-full bg-red-100 dark:bg-red-500/20">
-                            <i class="fa-solid fa-triangle-exclamation fa-xl text-red-500"></i>
-                        </div>
-                    </div>
-                    <div
-                        class="flex items-center justify-between p-6 rounded-lg bg-component-bg dark:bg-dark-component-bg shadow-md transition-transform hover:scale-105">
-                        <div>
-                            <p class="text-3xl font-bold text-text-primary dark:text-dark-text-primary">24</p>
-                            <p class="text-md text-text-secondary mt-1">Tasks Completed</p>
-                        </div>
-                        <div
-                            class="flex items-center justify-center h-16 w-16 rounded-full bg-primary/20">
-                            <i class="fa-solid fa-clipboard-check fa-xl text-primary"></i>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
@@ -273,7 +245,7 @@
                         <div class="relative">
                             <img
                                 class="w-full h-48 object-cover transform hover:scale-105 transition duration-500"
-                                src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=2070&auto=format&fit=crop"
+                                src="lampiran.png"
                                 alt="Dokumentasi Rapat Brainstorming">
                             <span
                                 class="absolute top-3 right-3 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
@@ -312,7 +284,9 @@
                                         • Lana Byrd<br>
                                         • Thomas Lean
                                     </div>
-                                    <a href="detail.html" class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
+                                    <a
+                                        href="detail.html"
+                                        class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
                                 </div>
                             </div>
                         </div>
@@ -323,7 +297,7 @@
                         <div class="relative">
                             <img
                                 class="w-full h-48 object-cover transform hover:scale-105 transition duration-500"
-                                src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=2070&auto=format&fit=crop"
+                                src="lampiran.png"
                                 alt="Dokumentasi Rapat Brainstorming">
                             <span
                                 class="absolute top-3 right-3 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
@@ -362,7 +336,9 @@
                                         • Lana Byrd<br>
                                         • Thomas Lean
                                     </div>
-                                    <a href="detail.html" class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
+                                    <a
+                                        href="detail.html"
+                                        class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
                                 </div>
                             </div>
                         </div>
@@ -373,7 +349,7 @@
                         <div class="relative">
                             <img
                                 class="w-full h-48 object-cover transform hover:scale-105 transition duration-500"
-                                src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=2070&auto=format&fit=crop"
+                                src="lampiran.png"
                                 alt="Dokumentasi Rapat Brainstorming">
                             <span
                                 class="absolute top-3 right-3 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
@@ -412,7 +388,9 @@
                                         • Lana Byrd<br>
                                         • Thomas Lean
                                     </div>
-                                    <a href="detail.html" class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
+                                    <a
+                                        href="detail.html"
+                                        class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
                                 </div>
                             </div>
                         </div>
@@ -423,7 +401,7 @@
                         <div class="relative">
                             <img
                                 class="w-full h-48 object-cover transform hover:scale-105 transition duration-500"
-                                src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=2070&auto=format&fit=crop"
+                                src="lampiran.png"
                                 alt="Dokumentasi Rapat Brainstorming">
                             <span
                                 class="absolute top-3 right-3 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
@@ -462,7 +440,9 @@
                                         • Lana Byrd<br>
                                         • Thomas Lean
                                     </div>
-                                    <a href="detail.html" class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
+                                    <a
+                                        href="detail.html"
+                                        class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
                                 </div>
                             </div>
                         </div>
@@ -473,7 +453,7 @@
                         <div class="relative">
                             <img
                                 class="w-full h-48 object-cover transform hover:scale-105 transition duration-500"
-                                src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=2070&auto=format&fit=crop"
+                                src="lampiran.png"
                                 alt="Dokumentasi Rapat Brainstorming">
                             <span
                                 class="absolute top-3 right-3 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
@@ -512,7 +492,9 @@
                                         • Lana Byrd<br>
                                         • Thomas Lean
                                     </div>
-                                    <a href="detail.html" class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
+                                    <a
+                                        href="detail.html"
+                                        class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
                                 </div>
                             </div>
                         </div>
@@ -523,7 +505,7 @@
                         <div class="relative">
                             <img
                                 class="w-full h-48 object-cover transform hover:scale-105 transition duration-500"
-                                src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=2070&auto=format&fit=crop"
+                                src="lampiran.png"
                                 alt="Dokumentasi Rapat Brainstorming">
                             <span
                                 class="absolute top-3 right-3 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
@@ -562,110 +544,115 @@
                                         • Lana Byrd<br>
                                         • Thomas Lean
                                     </div>
-                                    <a href="detail.html" class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
+                                    <a
+                                        href="detail.html"
+                                        class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div
-                        class="bg-component-bg dark:bg-dark-component-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2">
-                        <!-- Gambar -->
-                        <div class="relative">
-                            <img
-                                class="w-full h-48 object-cover transform hover:scale-105 transition duration-500"
-                                src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=2070&auto=format&fit=crop"
-                                alt="Dokumentasi Rapat Brainstorming">
-                            <span
-                                class="absolute top-3 right-3 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
-                                25 Sep 2025
-                            </span>
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                        </div>
-
-                        <!-- Konten -->
-                        <div class="p-5 flex flex-col">
-                            <h3
-                                class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-2">
-                                Brainstorming Fitur Baru Aplikasi
-                            </h3>
-
-                            <div
-                                class="flex items-center text-sm text-text-secondary dark:text-dark-text-secondary mb-3">
-                                <i class="fa-solid fa-user-pen mr-2 text-primary"></i>
-                                Dibuat oleh
-                                <span class="ml-1 font-medium">Bonnie Green</span>
-                            </div>
-
-                            <p
-                                class="text-sm text-text-secondary dark:text-dark-text-secondary mb-4 line-clamp-2">
-                                Sesi kreatif untuk mengumpulkan ide-ide inovatif untuk pengembangan fitur pada
-                                kuartal berikutnya.
-                            </p>
-
-                            <!-- Peserta -->
-                            <div class="pt-4 border-t border-border-light dark:border-border-dark">
-                                <h4
-                                    class="text-sm font-semibold text-text-primary dark:text-dark-text-primary mb-3">Peserta</h4>
-                                <div class="flex items-center justify-between">
-                                    <div
-                                        class="text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed">
-                                        • Lana Byrd<br>
-                                        • Thomas Lean
-                                    </div>
-                                    <a href="detail.html" class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
             </div>
-        </div>
 
-        <div name="pagination" class="flex justify-center mb-6">
-            <div class="flex items-center gap-8">
-                <button
-                    disabled="disabled"
-                    class="rounded-md border border-slate-300 p-2.5 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-                    type="button">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewbox="0 0 24 24"
-                        fill="currentColor"
-                        class="w-4 h-4">
-                        <path
-                            fill-rule="evenodd"
-                            d="M11.03 3.97a.75.75 0 0 1 0 1.06l-6.22 6.22H21a.75.75 0 0 1 0 1.5H4.81l6.22 6.22a.75.75 0 1 1-1.06 1.06l-7.5-7.5a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 0 1 1.06 0Z"
-                            clip-rule="evenodd"/>
-                    </svg>
-                </button>
+            <div name="pagination" class="flex justify-center mb-6">
+                <div class="flex items-center gap-8">
+                    <button
+                        disabled="disabled"
+                        class="rounded-md border border-slate-300 p-2.5 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+                        type="button">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewbox="0 0 24 24"
+                            fill="currentColor"
+                            class="w-4 h-4">
+                            <path
+                                fill-rule="evenodd"
+                                d="M11.03 3.97a.75.75 0 0 1 0 1.06l-6.22 6.22H21a.75.75 0 0 1 0 1.5H4.81l6.22 6.22a.75.75 0 1 1-1.06 1.06l-7.5-7.5a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 0 1 1.06 0Z"
+                                clip-rule="evenodd"/>
+                        </svg>
+                    </button>
 
-                <p class="text-slate-600">
-                    Page
-                    <strong class="text-slate-800">1</strong>
-                    of&nbsp;<strong class="text-slate-800">10</strong>
-                </p>
+                    <p class="text-slate-600">
+                        Page
+                        <strong class="text-slate-800">1</strong>
+                        of&nbsp;<strong class="text-slate-800">10</strong>
+                    </p>
 
-                <button
-                    class="rounded-md border border-slate-300 p-2.5 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-                    type="button">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewbox="0 0 24 24"
-                        fill="currentColor"
-                        class="w-4 h-4">
-                        <path
-                            fill-rule="evenodd"
-                            d="M12.97 3.97a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 1 1-1.06-1.06l6.22-6.22H3a.75.75 0 0 1 0-1.5h16.19l-6.22-6.22a.75.75 0 0 1 0-1.06Z"
-                            clip-rule="evenodd"/>
-                    </svg>
-                </button>
+                    <button
+                        class="rounded-md border border-slate-300 p-2.5 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+                        type="button">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewbox="0 0 24 24"
+                            fill="currentColor"
+                            class="w-4 h-4">
+                            <path
+                                fill-rule="evenodd"
+                                d="M12.97 3.97a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 1 1-1.06-1.06l6.22-6.22H3a.75.75 0 0 1 0-1.5h16.19l-6.22-6.22a.75.75 0 0 1 0-1.06Z"
+                                clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
-        </div>
 
-    </body>
-    <script
-        src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+        </body>
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+        <script>
+            function switchTab(tab) {
+                // Tab buttons
+                const allBtn = document.getElementById("tab-allmom-btn");
+                const myBtn = document.getElementById("tab-mymom-btn");
 
-</html>
+                // Tab contents
+                const allTab = document.getElementById("tab-allmom");
+                const myTab = document.getElementById("tab-mymom");
+
+                if (tab === "allmom") {
+                    allBtn
+                        .classList
+                        .add("text-primary", "border-primary");
+                    allBtn
+                        .classList
+                        .remove("text-text-secondary");
+
+                    myBtn
+                        .classList
+                        .remove("text-primary", "border-primary");
+                    myBtn
+                        .classList
+                        .add("text-text-secondary");
+
+                    allTab
+                        .classList
+                        .remove("hidden");
+                    myTab
+                        .classList
+                        .add("hidden");
+                } else {
+                    myBtn
+                        .classList
+                        .add("text-primary", "border-primary");
+                    myBtn
+                        .classList
+                        .remove("text-text-secondary");
+
+                    allBtn
+                        .classList
+                        .remove("text-primary", "border-primary");
+                    allBtn
+                        .classList
+                        .add("text-text-secondary");
+
+                    myTab
+                        .classList
+                        .remove("hidden");
+                    allTab
+                        .classList
+                        .add("hidden");
+                }
+            }
+        </script>
+
+    </html>
