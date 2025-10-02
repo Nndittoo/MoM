@@ -3,45 +3,29 @@
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('index');
+    return view('auth.sign-in');
 });
 
-Route::get('/index', function () {
-    return view('index');
-});
+Route::get('/user', function () {
+    return view('user.dashboard');
+})->name('user.index');
 
 Route::get('/draft', function () {
-    return view('draft');
-});
+    return view('user.draft');
+})->name('user.draft');
 
 Route::get('/create', function () {
-    return view('create');
-});
+    return view('user.create');
+})->name('user.create');
 
 Route::get('/reminder', function () {
-    return view('reminder');
-});
-
-Route::get('/detail', function () {
-    return view('detail');
-});
-
-Route::get('/sign-in', function () {
-    return view('sign-in');
-});
-
-Route::get('/sign-up', function () {
-    return view('sign-up');
-});
-
-Route::get('/reminder1', function () {
-    return view('reminder1');
-});
+    return view('user.reminder');
+})->name('user.reminder');
 
 Route::get('/calendar', function () {
-    return view('calendar');
-});
+    return view('user.calendar');
+})->name('user.calendar');
 
-Route::get('/notifikasi', function () {
-    return view('notifikasi');
-});
+Route::get('/notifications', function () {
+    return view('user.notifikasi');
+})->name('user.notifications');
