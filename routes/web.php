@@ -23,5 +23,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/calendar', fn () => view('user.calendar'))->name('user.calendar');
     Route::get('/notifications', fn () => view('user.notifikasi'))->name('user.notifications');
     Route::get('/detail', fn () => view('user.detail'))->name('user.detail');
+
     Route::get('/admin', fn () => view('admin.dashboard'))->name('admin.dashboard');
+    Route::get('/approvals', fn () => view('admin.approvals'))->name('admin.approvals');
+    Route::get('/calendar', fn () => view('admin.calendar'))->name('admin.calendar');
+    Route::get('/mom', fn () => view('admin.mom'))->name('admin.mom');
+    Route::get('/users', fn () => view('admin.users'))->name('admin.users');
+
 });

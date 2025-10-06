@@ -64,7 +64,6 @@
                 {{-- My MoM Content --}}
                 <div id="my-mom-content">
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        {{-- My MoM Card - Pending --}}
                         <div class="bg-component-bg dark:bg-dark-component-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2">
                             <div class="relative">
                                 <img class="w-full h-48 object-cover" src="{{ asset('img/lampiran.png') }}" alt="Dokumentasi Rapat">

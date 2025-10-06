@@ -10,7 +10,6 @@
                 <img src="https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3b284ZXpvZHVrcmwxZnc0MHRxN284anlsdmNtY3E1MDg1dWQ2c2txdCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/8MiY7r4EfWVINa8LiK/giphy.gif" alt="Welcome GIF" class="w-16 h-16 rounded-full shadow-md object-cover">
                 <div>
                     <h1 class="text-3xl font-bold text-text-primary dark:text-dark-text-primary">Selamat Pagi! 👋</h1>
-                    {{-- You can make this date dynamic with Carbon --}}
                     <p class="mt-1 text-text-secondary dark:text-dark-text-secondary">{{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}.</p>
                 </div>
             </div>
@@ -28,9 +27,25 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-2 w-full bg-component-bg rounded-lg shadow-md dark:bg-dark-component-bg p-4 md:p-6"><h5 class="text-2xl font-bold text-text-primary dark:text-white pb-1">MoM Statistics</h5><p class="text-sm text-text-secondary dark:text-dark-text-secondary">Progress per week</p><div id="column-chart" class="mt-4"></div></div>
+            {{-- MoM Statistics Chart with Filters --}}
+            <div class="lg:col-span-2 w-full bg-component-bg rounded-lg shadow-md dark:bg-dark-component-bg p-4 md:p-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                    <div>
+                        <h5 class="text-2xl font-bold text-text-primary dark:text-white pb-1">MoM Statistics</h5>
+                        <p id="chart-subtitle" class="text-sm text-text-secondary dark:text-dark-text-secondary">Progress per minggu</p>
+                    </div>
+                    <div class="flex items-center space-x-1 text-sm mt-3 sm:mt-0 p-1 bg-body-bg dark:bg-dark-body-bg rounded-lg">
+                        <button id="filter-week" class="chart-filter-btn px-3 py-1 rounded-md bg-primary text-white">Minggu</button>
+                        <button id="filter-month" class="chart-filter-btn px-3 py-1 rounded-md">Bulan</button>
+                        <button id="filter-year" class="chart-filter-btn px-3 py-1 rounded-md">Tahun</button>
+                    </div>
+                </div>
+                <div id="column-chart" class="mt-4"></div>
+            </div>
+            
             <div class="lg:col-span-1 bg-component-bg rounded-lg shadow-md dark:bg-dark-component-bg p-4 md:p-6 h-full"><h5 class="text-xl font-bold text-text-primary dark:text-white mb-4">Recent Activity</h5><ol class="relative border-s border-border-light dark:border-border-dark"><li class="mb-6 ms-6"><span class="absolute flex items-center justify-center w-6 h-6 bg-green-100 rounded-full -start-3 ring-8 ring-component-bg dark:ring-dark-component-bg dark:bg-green-900"><i class="fa-solid fa-check text-green-500"></i></span><h3 class="flex items-center mb-1 text-lg font-semibold text-text-primary dark:text-white">MoM #1024 Approved</h3><time class="block mb-2 text-sm text-text-secondary dark:text-dark-text-secondary">Sept 29th, 2025</time></li><li class="mb-6 ms-6"><span class="absolute flex items-center justify-center w-6 h-6 bg-yellow-100 rounded-full -start-3 ring-8 ring-component-bg dark:ring-dark-component-bg dark:bg-yellow-900"><i class="fa-solid fa-hourglass-half text-yellow-500"></i></span><h3 class="text-lg font-semibold text-text-primary dark:text-white">Task "Prototype UI"</h3><time class="block mb-2 text-sm text-text-secondary dark:text-dark-text-secondary">Due on Oct 1st, 2025</time></li><li class="ms-6"><span class="absolute flex items-center justify-center w-6 h-6 bg-red-100 dark:bg-red-900 rounded-full -start-3 ring-8 ring-component-bg dark:ring-dark-component-bg"><i class="fa-solid fa-plus text-primary"></i></span><h3 class="text-lg font-semibold text-text-primary dark:text-white">New MoM #1025 Created</h3><time class="block mb-2 text-sm text-text-secondary dark:text-dark-text-secondary">2 hours ago</time></li></ol></div>
         </div>
+
         <div class="bg-component-bg dark:bg-dark-component-bg shadow-md sm:rounded-lg overflow-hidden"><div class="p-4"><h5 class="text-xl font-bold text-text-primary dark:text-white">Recent MoM</h5><div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 mt-4"><div class="w-full md:w-1/2"><form class="flex items-center"><label for="simple-search" class="sr-only">Search</label><div class="relative w-full"><div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"><i class="fa-solid fa-search text-text-secondary"></i></div><input type="text" id="simple-search" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-2 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Search MoM"></div></form></div><div class="w-full md:w-auto flex items-center space-x-3"><button id="dropdownActionButton" data-dropdown-toggle="dropdownAction" class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-text-primary focus:outline-none bg-component-bg rounded-lg border border-border-light hover:bg-body-bg focus:z-10 focus:ring-4 focus:ring-primary/20 dark:bg-dark-component-bg dark:text-dark-text-secondary dark:border-border-dark" type="button">Filter<i class="fa-solid fa-chevron-down w-2.5 h-2.5 ms-2.5"></i></button><div id="dropdownAction" class="z-10 hidden bg-component-bg divide-y divide-border-light rounded-lg shadow-md w-44 dark:bg-dark-component-bg"><ul><li><a href="#" class="block px-4 py-2 hover:bg-body-bg dark:hover:bg-dark-body-bg">Approved</a></li><li><a href="#" class="block px-4 py-2 hover:bg-body-bg dark:hover:bg-dark-body-bg">Pending</a></li><li><a href="#" class="block px-4 py-2 hover:bg-body-bg dark:hover:bg-dark-body-bg">Rejected</a></li></ul></div></div></div></div><div class="overflow-x-auto"><table class="w-full text-sm text-left text-text-secondary dark:text-dark-text-secondary"><thead class="text-xs uppercase bg-body-bg dark:bg-dark-component-bg/50"><tr><th scope="col" class="px-6 py-3">No</th><th scope="col" class="px-6 py-3">Judul MoM</th><th scope="col" class="px-6 py-3">Created At</th><th scope="col" class="px-6 py-3">Status</th></tr></thead><tbody><tr class="border-b dark:border-border-dark"><td class="px-6 py-4">1</td><th scope="row" class="px-6 py-4 font-medium text-text-primary dark:text-white whitespace-nowrap">Review Progres Project Mini OLT</th><td class="px-6 py-4">14 Sep 2025</td><td class="px-6 py-4"><span class="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300">Approved</span></td></tr><tr class="border-b dark:border-border-dark"><td class="px-6 py-4">2</td><th scope="row" class="px-6 py-4 font-medium text-text-primary dark:text-white whitespace-nowrap">Evaluasi Kinerja Tim Q3</th><td class="px-6 py-4">12 Sep 2025</td><td class="px-6 py-4"><span class="bg-yellow-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-yellow-900 dark:text-yellow-300">Pending</span></td></tr><tr class="border-b dark:border-border-dark"><td class="px-6 py-4">3</td><th scope="row" class="px-6 py-4 font-medium text-text-primary dark:text-white whitespace-nowrap">Perencanaan Sprint Oktober</th><td class="px-6 py-4">11 Sep 2025</td><td class="px-6 py-4"><span class="bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-red-900 dark:text-red-300">Rejected</span></td></tr></tbody></table></div></div>
     </div>
 </div>
@@ -39,8 +54,25 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
+document.addEventListener("DOMContentLoaded", () => {
+    // Data dummy untuk chart
+    const data = {
+        week: {
+            series: [{ name: "Approved", data: [231, 122, 63, 421, 122, 323, 111] }, { name: "Pending", data: [232, 113, 341, 224, 522, 411, 243] }],
+            categories: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        },
+        month: {
+            series: [{ name: "Approved", data: [800, 750, 900, 850] }, { name: "Pending", data: [950, 700, 850, 900] }],
+            categories: ["Minggu 1", "Minggu 2", "Minggu 3", "Minggu 4"]
+        },
+        year: {
+            series: [{ name: "Approved", data: [2100, 2400, 2200, 2800, 2500, 3000, 2700, 3200, 3100, 3500, 3300, 3800] }, { name: "Pending", data: [2200, 2300, 2100, 2700, 2600, 2900, 2800, 3100, 3000, 3400, 3200, 3700] }],
+            categories: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"]
+        }
+    };
+
     const chartOptions = {
-        series: [{ name: "Approved", color: "#DC2626", data: [{ x: "Mon", y: 231 }, { x: "Tue", y: 122 }, { x: "Wed", y: 63 }, { x: "Thu", y: 421 }, { x: "Fri", y: 122 }, { x: "Sat", y: 323 }, { x: "Sun", y: 111 }] }, { name: "Pending", color: "#facc15", data: [{ x: "Mon", y: 232 }, { x: "Tue", y: 113 }, { x: "Wed", y: 341 }, { x: "Thu", y: 224 }, { x: "Fri", y: 522 }, { x: "Sat", y: 411 }, { x: "Sun", y: 243 }] }],
+        series: [{ name: "Approved", color: "#DC2626", data: data.week.series[0].data }, { name: "Pending", color: "#facc15", data: data.week.series[1].data }],
         chart: { type: "bar", height: "320px", fontFamily: "Inter, sans-serif", toolbar: { show: false } },
         plotOptions: { bar: { horizontal: false, columnWidth: "70%", borderRadiusApplication: "end", borderRadius: 8 } },
         tooltip: { shared: true, intersect: false, style: { fontFamily: "Inter, sans-serif" } },
@@ -49,13 +81,50 @@
         grid: { show: false },
         dataLabels: { enabled: false },
         legend: { show: false },
-        xaxis: { floating: false, labels: { show: true, style: { fontFamily: "Inter, sans-serif", cssClass: 'text-xs font-normal fill-text-secondary dark:fill-dark-text-secondary' } }, axisBorder: { show: false }, axisTicks: { show: false } },
+        xaxis: { categories: data.week.categories, floating: false, labels: { show: true, style: { fontFamily: "Inter, sans-serif", cssClass: 'text-xs font-normal fill-text-secondary dark:fill-dark-text-secondary' } }, axisBorder: { show: false }, axisTicks: { show: false } },
         yaxis: { show: false },
         fill: { opacity: 1 }
-    }
-    if (document.getElementById("column-chart") && typeof ApexCharts !== 'undefined') {
-        const chart = new ApexCharts(document.getElementById("column-chart"), chartOptions);
-        chart.render();
-    }
+    };
+
+    const chart = new ApexCharts(document.getElementById("column-chart"), chartOptions);
+    chart.render();
+
+    // Logika untuk filter button
+    const filterButtons = document.querySelectorAll('.chart-filter-btn');
+    const chartSubtitle = document.getElementById('chart-subtitle');
+    const subtitles = {
+        week: 'Progress per minggu',
+        month: 'Progress per bulan',
+        year: 'Progress per tahun'
+    };
+
+    filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const filter = button.id.split('-')[1]; // 'day', 'week', 'month', atau 'year'
+            
+            // Update style tombol
+            filterButtons.forEach(btn => {
+                btn.classList.remove('bg-primary', 'text-white');
+                btn.classList.add('hover:bg-body-bg', 'dark:hover:bg-dark-body-bg');
+            });
+            button.classList.add('bg-primary', 'text-white');
+            button.classList.remove('hover:bg-body-bg', 'dark:hover:bg-dark-body-bg');
+
+            // Update subtitle chart
+            chartSubtitle.textContent = subtitles[filter];
+
+            // Update data chart
+            chart.updateOptions({
+                series: [
+                    { data: data[filter].series[0].data },
+                    { data: data[filter].series[1].data }
+                ],
+                xaxis: {
+                    categories: data[filter].categories
+                }
+            });
+        });
+    });
+});
 </script>
 @endpush

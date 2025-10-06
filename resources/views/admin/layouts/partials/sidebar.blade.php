@@ -2,13 +2,13 @@
     <div class="h-full px-4 pb-6 overflow-y-auto flex flex-col justify-between">
         <ul class="space-y-2 font-medium">
             <li>
-                <a href="{{ url('admin/dashboard') }}" class="flex items-center p-3 rounded-lg group transition {{ request()->is('admin') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
+                <a href="{{ route('admin.dashboard') }}" class="flex items-center p-3 rounded-lg group transition {{ request()->is('admin') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
                     <i class="fa-solid fa-tachometer-alt w-5 h-5"></i>
                     <span class="ms-3">Dashboard</span>
                 </a>
             </li>
             <li>
-                <a href="{{ url('admin/approvals') }}" class="flex items-center p-3 rounded-lg group transition relative {{ request()->is('admin/approvals') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
+                <a href="{{ route('admin.approvals') }}" class="flex items-center p-3 rounded-lg group transition relative {{ request()->is('approvals') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
                     <i class="fa-solid fa-check-to-slot w-5 h-5"></i>
                     <span class="ms-3">Persetujuan MoM</span>
                     {{-- Badge Notifikasi --}}
@@ -16,13 +16,19 @@
                 </a>
             </li>
             <li>
-                <a href="{{ url('mom') }}" class="flex items-center p-3 rounded-lg group transition {{ request()->is('mom') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
+                <a href="{{ route('admin.mom') }}" class="flex items-center p-3 rounded-lg group transition {{ request()->is('mom') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
                     <i class="fa-solid fa-box-archive w-5 h-5"></i>
-                    <span class="ms-3">Repository MoM</span>
+                    <span class="ms-3">MoM</span>
                 </a>
             </li>
             <li>
-                <a href="#" class="flex items-center p-3 rounded-lg group transition {{ request()->is('admin/users') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
+                <a href="{{ route('admin.calendar') }}" class="flex items-center p-3 rounded-lg group transition {{ request()->is('calendar') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
+                    <i class="fa-solid fa-calendar w-5 h-5"></i>
+                    <span class="ms-3">Calendar</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ route("admin.users") }}" class="flex items-center p-3 rounded-lg group transition {{ request()->is('users') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
                     <i class="fa-solid fa-users w-5 h-5"></i>
                     <span class="ms-3">Manajemen Pengguna</span>
                 </a>
