@@ -2,19 +2,33 @@
 
 @section('title', 'Detail MoM | MoM Telkom')
 
+@php 
+    use Carbon\Carbon;
+    use Illuminate\Support\Facades\Auth;
+
+    // Ambil attachment pertama untuk ditampilkan sebagai thumbnail
+    $attachment = $mom->attachments->first();
+    $imageUrl = $attachment 
+        ? asset('storage/' . $attachment->file_path) 
+        : asset('img/lampiran-kosong.png'); 
+    
+    $statusText = $mom->status->status ?? 'Unknown';
+@endphp
+
 @section('content')
 <div class="p-4 rounded-lg mt-14">
     {{-- Header --}}
     <div class="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between mb-6">
         <div>
             <h1 class="text-3xl font-bold text-text-primary dark:text-dark-text-primary">Detail Minute of Meeting</h1>
-            <p class="mt-1 text-text-secondary dark:text-dark-text-secondary">EVALUASI PROGRESS PROJECT OTN TR1</p>
+            <p class="mt-1 text-text-secondary dark:text-dark-text-secondary">{{ $mom->title }}</p>
         </div>
         <div class="flex space-x-2 mt-4 sm:mt-0 w-full sm:w-auto">
             <a href="{{ url()->previous() }}" class="flex-1 sm:flex-initial inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-text-secondary bg-component-bg border border-border-light rounded-lg hover:bg-body-bg dark:bg-dark-component-bg dark:text-dark-text-secondary dark:border-border-dark dark:hover:bg-dark-body-bg">
                 <i class="fa-solid fa-arrow-left mr-2"></i>Kembali
             </a>
-            <a href="{{ url('/export') }}" target="_blank" class="flex-1 sm:flex-initial inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-white bg-gradient-primary rounded-lg hover:opacity-90">
+            {{-- Sesuaikan route export jika sudah dibuat --}}
+            <a href="{{ url('/export/' . $mom->version_id) }}" target="_blank" class="flex-1 sm:flex-initial inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-white bg-gradient-primary rounded-lg hover:opacity-90">
                 <i class="fa-solid fa-file-pdf mr-2"></i>Export
             </a>
         </div>
@@ -22,75 +36,106 @@
 
     {{-- Konten Detail dalam Bentuk Card --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {{-- Kolom Kiri: Informasi Utama & Tindak Lanjut --}}
+        
+        {{-- Kolom Kiri: Informasi Utama, Pembahasan & Lampiran --}}
         <div class="lg:col-span-2 space-y-6">
+            
             {{-- Card Informasi Rapat --}}
             <div class="bg-component-bg dark:bg-dark-component-bg rounded-lg shadow-md p-6">
                 <h3 class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-4 border-b dark:border-border-dark pb-3">Informasi Rapat</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                    <div><p class="text-text-secondary"><strong>Pimpinan:</strong></p><p>PED TR1</p></div>
-                    <div><p class="text-text-secondary"><strong>Notulen:</strong></p><p>M. Hanif A</p></div>
-                    <div><p class="text-text-secondary"><strong>Waktu:</strong></p><p>Senin, 15 Sep 2025 | 09.00 – 10.50</p></div>
-                    <div><p class="text-text-secondary"><strong>Tempat:</strong></p><p>Meeting Zoom</p></div>
+                    <div><p class="text-text-secondary"><strong>Pimpinan:</strong></p><p>{{ $mom->leader->name }}</p></div>
+                    <div><p class="text-text-secondary"><strong>Notulen:</strong></p><p>{{ $mom->notulen->name }}</p></div>
+                    <div>
+                        <p class="text-text-secondary"><strong>Waktu:</strong></p>
+                        <p>{{ Carbon::parse($mom->meeting_date)->translatedFormat('l, d M Y') }} | {{ Carbon::parse($mom->start_time)->format('H:i') }} – {{ Carbon::parse($mom->end_time)->format('H:i') }}</p>
+                    </div>
+                    <div><p class="text-text-secondary"><strong>Tempat:</strong></p><p>{{ $mom->location }}</p></div>
                 </div>
             </div>
 
             {{-- Card Hasil Pembahasan --}}
             <div class="bg-component-bg dark:bg-dark-component-bg rounded-lg shadow-md p-6">
-                 <h3 class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-4 border-b dark:border-border-dark pb-3">Hasil Pembahasan</h3>
+                <h3 class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-4 border-b dark:border-border-dark pb-3">Hasil Pembahasan</h3>
                 <div class="prose dark:prose-invert max-w-none text-sm">
-                    <pre class="font-sans whitespace-pre-wrap bg-transparent p-0">
-1. rap058
-   - osp berstatus drop dan perlu survei ulang terkait perizinan warga.
-   - remark: request mengubah lokasi ke sidamanik desa sibontuan.
-2. kis768
-   - osp berstatus drop dan perlu survei ulang.
-   - status osp matdel.
-</pre>
+                    {!! $mom->pembahasan !!}
                 </div>
             </div>
 
-             {{-- Card Lampiran --}}
+            {{-- Card Lampiran --}}
             <div class="bg-component-bg dark:bg-dark-component-bg rounded-lg shadow-md p-6">
                 <h3 class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-4 border-b dark:border-border-dark pb-3">Lampiran</h3>
-                <img src="{{ asset('img/lampiran.png') }}" alt="Lampiran Rapat" class="w-full rounded-lg">
+                @if($mom->attachments->isNotEmpty())
+                    {{-- Tampilkan thumbnail gambar pertama --}}
+                    @if($attachment && str_starts_with($attachment->mime_type, 'image/'))
+                        <img src="{{ $imageUrl }}" alt="Lampiran Rapat" class="w-full rounded-lg max-w-md mb-4">
+                    @endif
+                    
+                    <ul class="space-y-2 text-sm">
+                        @foreach($mom->attachments as $attachment)
+                        <li>
+                            <a href="{{ asset('storage/' . $attachment->file_path) }}" target="_blank" class="text-primary hover:underline flex items-center">
+                                <i class="fa-solid fa-paperclip mr-2"></i> {{ $attachment->file_name }} ({{ strtoupper($attachment->mime_type) }})
+                            </a>
+                        </li>
+                        @endforeach
+                    </ul>
+                @else
+                    <p class="text-sm text-text-secondary">Tidak ada lampiran terlampir.</p>
+                @endif
             </div>
+            
         </div>
 
-        {{-- Kolom Kanan: Peserta & Agenda --}}
-        <div class="space-y-6">
+        {{-- Kolom Kanan: Peserta, Agenda, & Tindak Lanjut --}}
+        <div class="lg:col-span-1 space-y-6">
+            
+            {{-- Card Peserta --}}
             <div class="bg-component-bg dark:bg-dark-component-bg rounded-lg shadow-md p-6">
-                <h3 class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-4"><i class="fa-solid fa-users mr-2"></i>Peserta</h3>
+                <h3 class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-4"><i class="fa-solid fa-users mr-2"></i>Peserta ({{ $mom->attendees->count() }})</h3>
                 <ul class="space-y-2 text-sm list-disc list-inside">
-                    <li>Bg @satriasitorus</li>
-                    <li>Anggota Tim A</li>
-                    <li>Anggota Tim B</li>
+                    @foreach($mom->attendees as $attendee)
+                        <li>{{ $attendee->name }}</li>
+                    @endforeach
                 </ul>
             </div>
+
+            {{-- Card Agenda --}}
             <div class="bg-component-bg dark:bg-dark-component-bg rounded-lg shadow-md p-6">
                 <h3 class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-4"><i class="fa-solid fa-list-check mr-2"></i>Agenda</h3>
-                <ul class="space-y-2 text-sm list-disc list-inside">
-                    <li>Evaluasi Progress Project OTN TR1</li>
-                </ul>
+                <ol class="space-y-2 text-sm list-decimal list-inside">
+                    @foreach($mom->agendas as $agenda)
+                        <li>{{ $agenda->item }}</li>
+                    @endforeach
+                </ol>
             </div>
-            {{-- Card Tindak Lanjut --}}
+            
+            {{-- ⭐️ Card Tindak Lanjut (Sudah dipindahkan ke Kolom Kanan) ⭐️ --}}
             <div class="bg-component-bg dark:bg-dark-component-bg rounded-lg shadow-md p-6">
                 <h3 class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-4"><i class="fa-solid fa-bullseye mr-2"></i>Tindak Lanjut</h3>
                 <div id="tindak-lanjut-list" class="space-y-3">
-                    <div class="p-3 bg-body-bg dark:bg-dark-body-bg rounded-lg">
-                        <p class="font-semibold text-sm">Plan survei ulang lokasi RAP058</p>
-                        <p class="text-xs text-text-secondary">Deadline: 22 Sep 2025</p>
-                    </div>
+                    @forelse($mom->actionItems as $item)
+                        <div class="p-3 bg-body-bg dark:bg-dark-body-bg rounded-lg">
+                            <p class="font-semibold text-sm">{{ $item->item }}</p>
+                            <p class="text-xs text-text-secondary">Deadline: {{ Carbon::parse($item->due)->translatedFormat('d M Y') }}</p>
+                        </div>
+                    @empty
+                        <p class="text-sm text-text-secondary">Tidak ada tindak lanjut yang dicatat.</p>
+                    @endforelse
                 </div>
-                 <button data-modal-target="tindak-lanjut-modal" data-modal-toggle="tindak-lanjut-modal" class="mt-4 w-full flex justify-center items-center px-4 py-2 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700">
+                
+                {{-- Tombol untuk Tambah Tindak Lanjut (Modal) --}}
+                <button data-modal-target="tindak-lanjut-modal" data-modal-toggle="tindak-lanjut-modal" class="mt-4 w-full flex justify-center items-center px-4 py-2 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700">
                     <i class="fa-solid fa-plus mr-2"></i>Tambah Tindak Lanjut
                 </button>
             </div>
+            {{-- ⭐️ AKHIR CARD TINDAK LANJUT ⭐️ --}}
+
         </div>
     </div>
 </div>
 
-{{-- Modal Form Tambah Tindak Lanjut --}}
+{{-- Modal Form Tambah Tindak Lanjut (Flowbite) --}}
 <div id="tindak-lanjut-modal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
     <div class="relative p-4 w-full max-w-md max-h-full">
         <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
@@ -102,14 +147,18 @@
                 </button>
             </div>
             <form id="tindak-lanjut-form" class="p-4 md:p-5">
+                @csrf
+                {{-- Kirim ID MoM yang sedang dilihat --}}
+                <input type="hidden" name="mom_id" value="{{ $mom->version_id }}"> 
+
                 <div class="grid gap-4 mb-4 grid-cols-1">
                     <div>
                         <label for="task-description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Deskripsi Tugas</label>
-                        <input type="text" name="description" id="task-description" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500" placeholder="Contoh: Finalisasi desain UI/UX" required>
+                        <input type="text" name="item" id="task-description" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500" placeholder="Contoh: Finalisasi desain UI/UX" required>
                     </div>
                     <div>
-                        <label for="task-deadline" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Deadline</label>
-                        <input type="date" name="deadline" id="task-deadline" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500" required>
+                        <label for="task-deadline" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Deadline (YYYY-MM-DD)</label>
+                        <input type="date" name="due" id="task-deadline" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500" required>
                     </div>
                 </div>
                 <button type="submit" class="text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
@@ -127,38 +176,81 @@
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('tindak-lanjut-form');
         const listContainer = document.getElementById('tindak-lanjut-list');
+        // Mendapatkan URL POST dari route yang sudah dibuat (Harus ada: action_items.store)
+        const storeActionItemUrl = "{{ route('action_items.store') }}"; 
+        
+        // Memastikan modal Flowbite dapat diakses
+        const modalElement = document.getElementById('tindak-lanjut-modal');
+        let modalInstance = null;
+        
+        // Inisialisasi modal menggunakan Flowbite.Modal jika Flowbite terdeteksi
+        // Ini mengatasi error Flowbite.getInstance is not a function
+        if (typeof Flowbite !== 'undefined' && Flowbite.Modal) {
+             modalInstance = new Flowbite.Modal(modalElement);
+        }
 
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            const description = document.getElementById('task-description').value;
-            const deadline = document.getElementById('task-deadline').value;
+            const formData = new FormData(form);
+            const description = formData.get('item');
+            const deadline = formData.get('due');
 
             if (!description || !deadline) {
-                alert('Mohon isi semua field.');
+                alert('Mohon isi Deskripsi Tugas dan Deadline.');
                 return;
             }
 
-            // Format tanggal agar lebih mudah dibaca
-            const formattedDate = new Date(deadline).toLocaleDateString('id-ID', {
-                day: '2-digit', month: 'short', year: 'numeric'
-            });
+            try {
+                const response = await fetch(storeActionItemUrl, {
+                    method: 'POST',
+                    headers: {
+                        // Mengambil CSRF token dari hidden input form
+                        'X-CSRF-TOKEN': formData.get('_token'), 
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: formData,
+                });
 
-            // Buat elemen baru untuk ditambahkan ke daftar
-            const newItem = document.createElement('div');
-            newItem.className = 'p-3 bg-body-bg dark:bg-dark-body-bg rounded-lg';
-            newItem.innerHTML = `
-                <p class="font-semibold text-sm">${description}</p>
-                <p class="text-xs text-text-secondary">Deadline: ${formattedDate}</p>
-            `;
+                const data = await response.json();
 
-            // Tambahkan item baru ke dalam list
-            listContainer.appendChild(newItem);
+                if (response.ok) {
+                    // 1. Format tanggal untuk tampilan lokal
+                    const formattedDate = new Date(deadline + 'T00:00:00').toLocaleDateString('id-ID', {
+                        day: '2-digit', month: 'short', year: 'numeric'
+                    });
 
-            // Reset form dan tutup modal (jika menggunakan Flowbite)
-            form.reset();
-            const modal = Flowbite.getInstance('tindak-lanjut-modal');
-            modal.hide();
+                    // 2. Buat elemen baru di daftar
+                    const newItem = document.createElement('div');
+                    newItem.className = 'p-3 bg-body-bg dark:bg-dark-body-bg rounded-lg';
+                    newItem.innerHTML = `
+                        <p class="font-semibold text-sm">${description}</p>
+                        <p class="text-xs text-text-secondary">Deadline: ${formattedDate}</p>
+                    `;
+                    
+                    // Hapus pesan "Tidak ada tindak lanjut" jika ada
+                    const emptyMessage = listContainer.querySelector('.text-text-secondary');
+                    if (emptyMessage && listContainer.children.length === 1) {
+                        listContainer.innerHTML = '';
+                    }
+
+                    listContainer.appendChild(newItem);
+                    
+                    // 3. Reset form dan tutup modal
+                    form.reset();
+                    if (modalInstance) modalInstance.hide();
+                    
+                } else {
+                    let errorMessage = data.message || 'Error server saat menambahkan tugas.';
+                    if (response.status === 422 && data.errors) {
+                        errorMessage = `Validasi Gagal: ${data.errors.item ? data.errors.item[0] : (data.errors.due ? data.errors.due[0] : data.errors.mom_id[0])}`;
+                    }
+                    alert('Gagal menyimpan tugas: ' + errorMessage);
+                }
+            } catch (error) {
+                console.error('Network Error:', error);
+                alert('Terjadi kesalahan koneksi.');
+            }
         });
     });
 </script>

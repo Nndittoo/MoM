@@ -9,14 +9,26 @@ use App\Models\ActionItem;
 use App\Models\MomStatus;
 use App\Models\MomAgenda;
 use App\Models\MomAttachment;
+use App\Models\User; 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-use App\Models\User;
 use Throwable;
 
 class MomController extends Controller
 {
+    /**
+     * Menampilkan form untuk membuat MoM baru.
+     */
+    public function create()
+    {
+        // Mengambil semua user dari database
+        $users = User::all(); 
+
+        // Mengirimkan variabel $users ke view.
+        return view('user/create', compact('users')); 
+    }
+    
     public function store(StoreMomRequest $request)
     {
         $creatorId = auth()->id();
@@ -81,18 +93,15 @@ class MomController extends Controller
                 foreach ($request->file('attachments') as $file) {
                     
                     if (!$file->isValid()) {
-                        throw new \Exception("File '{$file->getClientOriginalName()}' tidak valid. Cek limit PHP (php.ini) dan ukuran file.", 422);
+                        throw new \Exception("File '{$file->getClientOriginalName()}' tidak valid.", 422);
                     }
                     
                     $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
                     $filePath = null;
 
                     try {
-                        // File akan tersimpan di storage/app/public/attachments/filename.png
+                        // Menggunakan disk 'public' secara eksplisit
                         $filePath = $file->storeAs('attachments', $fileName, $disk); 
-
-                        $fullPath = Storage::disk($disk)->path($filePath);
-                        Log::info('File expected location (FINAL CHECK): ' . $fullPath);
 
                     } catch (\Throwable $e) {
                         Log::error("File Upload Failed for MOM {$mom->version_id}: " . $e->getMessage());
@@ -106,7 +115,6 @@ class MomController extends Controller
                     $attachmentsData[] = [
                         'mom_id' => $mom->version_id,
                         'file_name' => $file->getClientOriginalName(),
-                        // Path yang disimpan sudah relatif terhadap root disk 'public'
                         'file_path' => $filePath, 
                         'mime_type' => $file->getMimeType(),
                         'file_size' => $file->getSize(),
@@ -143,8 +151,11 @@ class MomController extends Controller
 
     public function show(Mom $mom)
     {
-        $mom->load(['leader', 'notulen', 'attendees', 'agendas', 'actionItems', 'attachments']);
-        return view('moms.detail', compact('mom')); 
+    // Memuat semua relasi yang diperlukan untuk halaman detail
+    $mom->load(['leader', 'notulen', 'attendees', 'agendas', 'attachments']);
+    
+    // Memanggil view: resources/views/user/show.blade.php
+    return view('user/show', compact('mom')); 
     }
 
     public function edit(Mom $mom)
