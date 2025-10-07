@@ -3,6 +3,7 @@
 @section('title', 'Persetujuan MoM')
 
 @section('content')
+
 <div class="space-y-6">
     {{-- Header --}}
     <div class="flex flex-col md:flex-row items-center justify-between">
@@ -28,19 +29,26 @@
         @forelse ($pendingMoms as $mom)
         <div class="bg-component-bg dark:bg-dark-component-bg shadow rounded-lg p-5 border-l-4 border-yellow-500">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                {{-- Info MoM --}}
                 <div class="flex-grow">
-                    <a href="{{ url('/shows') }}" class="font-bold text-lg text-text-primary dark:text-dark-text-primary hover:underline">{{ $mom['title'] }}</a>
+                    <a href="{{ url('/moms/' . $mom->version_id) }}" class="font-bold text-lg text-text-primary dark:text-dark-text-primary hover:underline">{{ $mom->title }}</a>
                     <p class="text-sm text-text-secondary dark:text-dark-text-secondary mt-1">
-                        Diajukan oleh: <span class="font-medium">{{ $mom['author'] }}</span> pada {{ $mom['date'] }}
+                        Diajukan oleh: <span class="font-medium">{{ $mom->creator->name ?? 'N/A' }}</span> pada {{ $mom->created_at->format('d M Y') }}
                     </p>
                 </div>
-                {{-- Tombol Aksi --}}
+
                 <div class="flex items-center gap-2 w-full sm:w-auto">
-                    <button class="approve-btn w-1/2 sm:w-auto flex justify-center items-center px-4 py-2 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700">
+                    <button data-mom-id="{{ $mom->version_id }}"
+                        data-mom-title="{{ $mom->title }}"
+                        data-approve-url="{{ $mom->version_id ? route('admin.approvals.approve', ['mom' => $mom->version_id]) : '#' }}"
+                        class="approve-btn w-1/2 sm:w-auto flex justify-center items-center px-4 py-2 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700">
                         <i class="fa-solid fa-check mr-2"></i>Approve
                     </button>
-                    <button data-modal-target="rejection-modal" data-modal-toggle="rejection-modal" data-mom-id="{{ $mom['id'] }}" data-mom-title="{{ $mom['title'] }}" class="reject-btn w-1/2 sm:w-auto flex justify-center items-center px-4 py-2 text-sm font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700">
+
+                    <button data-modal-target="rejection-modal" data-modal-toggle="rejection-modal"
+                        data-mom-id="{{ $mom->version_id }}"
+                        data-mom-title="{{ $mom->title }}"
+                        data-reject-url="{{ $mom->version_id ? route('admin.approvals.reject', ['mom' => $mom->version_id]) : '#' }}"
+                        class="reject-btn w-1/2 sm:w-auto flex justify-center items-center px-4 py-2 text-sm font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700">
                         <i class="fa-solid fa-times mr-2"></i>Reject
                     </button>
                 </div>
@@ -67,6 +75,7 @@
                 </button>
             </div>
             <form id="rejection-form" class="p-4 md:p-5">
+                @csrf
                 <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">Anda menolak MoM berjudul:</p>
                 <p id="modal-mom-title" class="font-bold text-gray-800 dark:text-white mb-4"></p>
 
@@ -96,48 +105,82 @@ document.addEventListener('DOMContentLoaded', function () {
         button.addEventListener('click', function() {
             const momId = this.dataset.momId;
             const momTitle = this.dataset.momTitle;
+            const rejectUrl = this.dataset.rejectUrl;
 
-            // Masukkan data MoM ke dalam modal
+            document.getElementById('rejection-form').dataset.url = rejectUrl;
             rejectionModal.querySelector('#modal-mom-id').value = momId;
             rejectionModal.querySelector('#modal-mom-title').textContent = momTitle;
         });
     });
 
-    // Event listener untuk form penolakan
+    // Submit form penolakan
     document.getElementById('rejection-form').addEventListener('submit', function(e) {
         e.preventDefault();
-        const momId = this.querySelector('#modal-mom-id').value;
-        const comment = this.querySelector('#rejection-comment').value;
+        const form = this;
+        const momId = form.querySelector('#modal-mom-id').value;
+        const comment = form.querySelector('#rejection-comment').value;
+        const url = form.dataset.url;
 
-        // (Simulasi) Kirim data ke backend via AJAX
-        console.log(`Menolak MoM ID: ${momId} dengan komentar: "${comment}"`);
-        alert(`MoM #${momId} telah ditolak dengan komentar revisi.`);
+        const successCallback = () => {
+            const modalElement = document.getElementById('rejection-modal');
+            try {
+                const instance = window.Flowbite?.getInstance?.('rejection-modal');
+                if (instance) {
+                    instance.hide();
+                } else {
+                    modalElement.classList.add('hidden');
+                }
+            } catch (e) {
+                modalElement.classList.add('hidden');
+            }
 
-        // Tutup modal dan reset form
-        const modal = Flowbite.getInstance('rejection-modal');
-        modal.hide();
-        this.reset();
+            // Pastikan body bisa discroll lagi
+            document.body.classList.remove('overflow-hidden');
 
-        // Di sini Anda bisa menambahkan logika untuk menghapus card dari tampilan
-        // document.querySelector(`[data-mom-id="${momId}"]`).closest('.bg-component-bg').remove();
-    });
+            // Hapus backdrop setelah delay
+            setTimeout(() => {
+                document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            }, 300);
 
-     // Event listener untuk tombol "Approve" (Simulasi)
-    document.querySelectorAll('.approve-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const card = this.closest('.bg-component-bg');
-            const momTitle = card.querySelector('a').textContent;
+            form.reset();
 
-            if (confirm(`Apakah Anda yakin ingin menyetujui MoM "${momTitle}"?`)) {
-                console.log(`Menyetujui MoM: ${momTitle}`);
-                alert(`MoM "${momTitle}" telah disetujui.`);
-                // Hapus card dari tampilan
+            // Hapus kartu MoM
+            const card = document.querySelector(`.reject-btn[data-mom-id="${momId}"]`).closest('.bg-component-bg');
+            if (card) {
                 card.style.transition = 'opacity 0.5s ease';
                 card.style.opacity = '0';
                 setTimeout(() => card.remove(), 500);
             }
+        };
+
+        handleAjaxAction(url, 'POST', { comment: comment }, successCallback, 'menolak MoM');
+    });
+
+    // Tombol approve
+    document.querySelectorAll('.approve-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const momId = this.dataset.momId;
+            const card = this.closest('.bg-component-bg');
+            const momTitle = card.querySelector('a').textContent;
+            const url = this.dataset.approveUrl;
+
+            if (confirm(`Apakah Anda yakin ingin menyetujui MoM "${momTitle}"?`)) {
+                const successCallback = () => {
+                    card.style.transition = 'opacity 0.5s ease';
+                    card.style.opacity = '0';
+                    setTimeout(() => card.remove(), 500);
+                };
+
+                handleAjaxAction(url, 'POST', null, successCallback, 'menyetujui MoM');
+            }
         });
     });
+
+    // Jaga-jaga: hapus backdrop tertinggal
+    setInterval(() => {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('overflow-hidden');
+    }, 1000);
 });
 </script>
 @endpush
