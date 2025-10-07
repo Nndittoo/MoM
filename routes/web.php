@@ -33,6 +33,7 @@ Route::middleware(['auth', 'role:user,admin'])->group(function () {
     Route::get('/notifications', fn () => view('user.notifikasi'))->name('user.notifications');
     Route::get('/show', fn () => view('user.show'))->name('user.show');
     Route::get('/export', fn () => view('user.export'))->name('user.export');
+    Route::get('/mom/export', fn () => view('admin.export'))->name('admin.export');
 
     Route::get('/admin', fn () => view('admin.dashboard'))->name('admin.dashboard');
     Route::get('/approvals', fn () => view('admin.approvals'))->name('admin.approvals');
@@ -43,6 +44,7 @@ Route::middleware(['auth', 'role:user,admin'])->group(function () {
     Route::get('/notification', fn () => view('admin.notification'))->name('admin.notification');
     Route::get('/details', fn () => view('admin.details'))->name('admin.details');
     Route::get('/shows', fn () => view('admin.shows'))->name('admin.shows');
+    Route::get('/creates', fn () => view('admin.create'))->name('admin.creates');
 
     Route::get('/create', function () {
         $users = App\Models\User::all(['id', 'name']);

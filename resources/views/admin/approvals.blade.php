@@ -20,6 +20,8 @@
                 ['id' => 101, 'title' => 'Evaluasi Kinerja Tim Q3', 'author' => 'Neil Sims', 'date' => '30 Sep 2025'],
                 ['id' => 102, 'title' => 'Perencanaan Fitur Baru v2.1', 'author' => 'Bonnie Green', 'date' => '29 Sep 2025'],
                 ['id' => 103, 'title' => 'Kick-off Meeting Project Alpha', 'author' => 'Michael Gough', 'date' => '28 Sep 2025'],
+                ['id' => 103, 'title' => 'Kick-off Meeting Project Alpha', 'author' => 'Michael Gough', 'date' => '28 Sep 2025'],
+                ['id' => 103, 'title' => 'Kick-off Meeting Project Alpha', 'author' => 'Michael Gough', 'date' => '28 Sep 2025'],
             ];
         @endphp
 
