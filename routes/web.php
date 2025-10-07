@@ -7,6 +7,7 @@ use App\Http\Controllers\MomController;
 use App\Http\Controllers\DraftController;
 use App\Http\Controllers\ActionItemController;
 use App\Models\User;
+use App\Http\Controllers\DashboardController;
 
 Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -19,7 +20,13 @@ Route::post('/logout', [AuthController::class, 'logout'])
  * USER AREA
  */
 Route::middleware(['auth', 'role:user,admin'])->group(function () {
-    Route::get('/user', fn () => view('user.dashboard'))->name('user.index');
+    // Dashboard routes - pindahkan ke dalam middleware
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/search', [DashboardController::class, 'searchMoms'])->name('dashboard.search');
+
+        Route::get('/user', function() {
+        return redirect()->route('dashboard');
+    })->name('user.index');
     Route::get('/draft', fn () => view('user.draft'))->name('user.draft');
     Route::get('/reminder', fn () => view('user.reminder'))->name('user.reminder');
     Route::get('/calendar', fn () => view('user.calendar'))->name('user.calendar');
@@ -38,12 +45,12 @@ Route::middleware(['auth', 'role:user,admin'])->group(function () {
     Route::get('/shows', fn () => view('admin.shows'))->name('admin.shows');
 
     Route::get('/create', function () {
-        $users = App\Models\User::all(['id', 'name']); 
-        return view('user.create', compact('users')); 
-    })->name('user.create'); 
+        $users = App\Models\User::all(['id', 'name']);
+        return view('user.create', compact('users'));
+    })->name('user.create');
 
     // POST route tetap sama, tetapi namanya lebih jelas
-    Route::post('/moms', [MomController::class, 'store'])->name('moms.store'); 
+    Route::post('/moms', [MomController::class, 'store'])->name('moms.store');
 });
 
 /**
@@ -60,7 +67,7 @@ Route::prefix('admin')->middleware(['auth','role:admin'])->group(function () {
 
 Route::get('/draft', [DraftController::class, 'index'])->name('draft.index')->middleware('auth');
 // Route for viewing details (moms.detail)
-Route::get('/moms/{mom}', [MomController::class, 'show'])->name('moms.detail'); 
+Route::get('/moms/{mom}', [MomController::class, 'show'])->name('moms.detail');
 // Route for editing/revising (moms.edit)
-Route::get('/moms/{mom}/edit', [MomController::class, 'edit'])->name('moms.edit'); 
+Route::get('/moms/{mom}/edit', [MomController::class, 'edit'])->name('moms.edit');
 Route::post('/action-items', [ActionItemController::class, 'store'])->name('action_items.store');
