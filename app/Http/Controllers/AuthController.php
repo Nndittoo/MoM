@@ -9,75 +9,72 @@ use App\Models\User;
 
 class AuthController extends Controller
 {
-    // Tampilkan halaman login
     public function showLogin()
     {
+        // optional: kalau sudah login, langsung ke dashboard
+        if (Auth::check()) {
+            return Auth::user()->role === 'admin'
+                ? redirect()->route('admin.dashboard')
+                : redirect()->route('user.index');
+        }
         return view('auth.sign-in');
     }
 
-    // Proses login
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required'
+            'email'    => ['required','email'],
+            'password' => ['required'],
         ]);
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
-            // cek role user
-            if (Auth::user()->role === 'admin') {
-                return redirect()->route('admin.dashboard');
-            }
-            return redirect()->route('user.index');
+            return Auth::user()->role === 'admin'
+                ? redirect()->route('admin.dashboard')
+                : redirect()->route('user.index');
         }
 
-        return back()->withErrors([
-            'email' => 'Email atau password salah.',
-        ]);
+        return back()->withErrors(['email' => 'Email atau password salah.'])->withInput();
     }
 
-    // Logout
+    public function showRegister()
+    {
+        // optional: kalau sudah login, jangan bisa buka register
+        if (Auth::check()) {
+            return Auth::user()->role === 'admin'
+                ? redirect()->route('admin.dashboard')
+                : redirect()->route('user.index');
+        }
+        return view('auth.sign-up');
+    }
+
+    public function register(Request $request)
+    {
+        $data = $request->validate([
+            'name'                  => ['required','string','max:255'],
+            'email'                 => ['required','email','max:255','unique:users,email'],
+            'password'              => ['required','min:6','confirmed'], // butuh input password_confirmation
+        ]);
+
+        $user = User::create([
+            'name'     => $data['name'],
+            'email'    => $data['email'],
+            'password' => Hash::make($data['password']),
+            'role'     => 'user', // default role
+        ]);
+
+        // redirect ke login + flash message
+        return redirect()
+        ->route('login')
+        ->with('success', 'Akun berhasil dibuat. Silakan masuk dengan email & password Anda.');
+}
+
     public function logout(Request $request)
     {
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-
-        return redirect('/');
-    }
-
-    // ==========================
-    // FITUR SIGN UP
-    // ==========================
-
-    // Tampilkan halaman sign up
-    public function showSignUp()
-    {
-        return view('auth.sign-up');
-    }
-
-    // Proses registrasi user baru
-    public function signUp(Request $request)
-    {
-        $request->validate([
-            'name'                  => 'required|string|max:255',
-            'email'                 => 'required|string|email|max:255|unique:users',
-            'password'              => 'required|string|min:6|confirmed', // butuh password_confirmation
-        ]);
-
-        // Buat user baru
-        $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'password' => Hash::make($request->password),
-            'role'     => 'user', // default role = user
-        ]);
-
-        // Auto login setelah daftar
-        Auth::login($user);
-
-        return redirect()->route('user.index');
+        return redirect()->route('login');
     }
 }

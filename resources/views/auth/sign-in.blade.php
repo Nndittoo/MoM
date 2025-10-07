@@ -23,7 +23,11 @@
                         <h1 class="text-2xl xl:text-3xl font-extrabold text-center md:text-left text-gray-800">
                             Sign In
                         </h1>
-
+                        @if (session('success'))
+                        <div class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+                        {{ session('success') }}
+                        </div>
+                        @endif
                         <form action="{{ route('login.post') }}" method="POST" class="mx-auto max-w-xs mt-8">
                             @csrf
 
@@ -58,7 +62,7 @@
 
                         <p class="mt-6 text-sm text-gray-600 text-center">
                             Don't have an account yet?
-                            <a href="{{ route("signup") }}" class="font-semibold text-red-600 hover:text-red-700">
+                            <a href="{{ route("register") }}" class="font-semibold text-red-600 hover:text-red-700">
                                 Sign Up
                             </a>
                         </p>

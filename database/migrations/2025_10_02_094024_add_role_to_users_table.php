@@ -1,30 +1,26 @@
+// database/migrations/2025_10_02_000000_add_role_to_users_table.php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
-    /**
-     * Run the migrations.
-     */
+return new class extends Migration {
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // tambahkan kolom role
-            $table->string('role')->default('user')->after('password');
+            if (!Schema::hasColumn('users', 'role')) {
+                $table->string('role', 20)->default('user')->after('password');
+            }
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // hapus kolom role kalau rollback
-            $table->dropColumn('role');
+            if (Schema::hasColumn('users', 'role')) {
+                $table->dropColumn('role');
+            }
         });
     }
 };
