@@ -16,6 +16,7 @@ class ActionItem extends Model
         'mom_id',
         'item',
         'due',
+        'status',
     ];
     
     public function mom()
