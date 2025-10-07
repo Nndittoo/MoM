@@ -11,13 +11,14 @@ use App\Models\MomAgenda;
 use App\Models\MomAttachment;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use App\Models\User;
 use Throwable;
 
 class MomController extends Controller
 {
     public function store(StoreMomRequest $request)
     {
-        // Pastikan user terautentikasi, creator_id diambil dari user login
         $creatorId = auth()->id();
         
         if (!$creatorId) {
@@ -27,10 +28,10 @@ class MomController extends Controller
         DB::beginTransaction();
         
         try {
-            // 1. Dapatkan status default 'Draft'
+            // Status default MoM adalah 'Menunggu'
             $defaultStatus = MomStatus::where('status', 'Menunggu')->firstOrFail();
             
-            // 2. Buat MoM utama
+            // Membuat MoM utama
             $mom = Mom::create([
                 'title' => $request->title,
                 'meeting_date' => $request->meeting_date, 
@@ -44,7 +45,7 @@ class MomController extends Controller
                 'status_id' => $defaultStatus->status_id,
             ]);
 
-            // 3. Simpan Action Items (Tindak Lanjut)
+            // Menyimpan Action Items (Tindak Lanjut)
             if ($request->filled('action_items')) {
                 $actionItemsData = collect($request->action_items)->map(fn ($item) => [
                     'mom_id' => $mom->version_id,
@@ -56,7 +57,7 @@ class MomController extends Controller
                 ActionItem::insert($actionItemsData);
             }
             
-            // 4. Simpan Agenda
+            // Menyimpan Agenda
             if ($request->filled('agendas')) {
                 $agendasData = collect($request->agendas)->map(fn ($item, $index) => [
                     'mom_id' => $mom->version_id,
@@ -68,24 +69,45 @@ class MomController extends Controller
                 MomAgenda::insert($agendasData);
             }
 
-            // 5. Sinkronkan Peserta Rapat (Attendees)
-            // Menggunakan sync untuk relasi Many-to-Many
+            // Sinkron Peserta Rapat (Attendees)
             $mom->attendees()->sync($request->attendees);
 
 
-            // 6. Handle Lampiran (File Upload)
+            // Handle Lampiran (File Upload)
             if ($request->hasFile('attachments')) {
                 $attachmentsData = [];
+                $disk = 'public'; 
+                
                 foreach ($request->file('attachments') as $file) {
+                    
+                    if (!$file->isValid()) {
+                        throw new \Exception("File '{$file->getClientOriginalName()}' tidak valid. Cek limit PHP (php.ini) dan ukuran file.", 422);
+                    }
+                    
                     $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                    $filePath = null;
+
+                    try {
+                        // File akan tersimpan di storage/app/public/attachments/filename.png
+                        $filePath = $file->storeAs('attachments', $fileName, $disk); 
+
+                        $fullPath = Storage::disk($disk)->path($filePath);
+                        Log::info('File expected location (FINAL CHECK): ' . $fullPath);
+
+                    } catch (\Throwable $e) {
+                        Log::error("File Upload Failed for MOM {$mom->version_id}: " . $e->getMessage());
+                        throw new \Exception("Gagal menyimpan file {$file->getClientOriginalName()}. Kemungkinan masalah Izin Disk.", 500);
+                    }
                     
-                    // Simpan file di storage/app/public/attachments
-                    $filePath = $file->storeAs('public/attachments', $fileName); 
-                    
+                    if (!$filePath) {
+                         throw new \Exception("Penyimpanan file mengembalikan nilai kosong.");
+                    }
+
                     $attachmentsData[] = [
                         'mom_id' => $mom->version_id,
                         'file_name' => $file->getClientOriginalName(),
-                        'file_path' => str_replace('public/', '', $filePath), // Path relatif untuk database
+                        // Path yang disimpan sudah relatif terhadap root disk 'public'
+                        'file_path' => $filePath, 
                         'mime_type' => $file->getMimeType(),
                         'file_size' => $file->getSize(),
                         'uploader_id' => $creatorId,
@@ -94,10 +116,9 @@ class MomController extends Controller
                     ];
                 }
                 MomAttachment::insert($attachmentsData);
-                // NOTE: Jangan lupa jalankan php artisan storage:link
             }
 
-            // 7. Commit transaksi
+            // Commit transaksi
             DB::commit();
 
             return response()->json([
@@ -108,16 +129,27 @@ class MomController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error("MOM Creation Failed: " . $e->getMessage() . " on file " . $e->getFile() . " line " . $e->getLine()); 
+            
             return response()->json([
                 'message' => 'Gagal membuat Minutes of Meeting.',
                 'error_detail' => $e->getMessage(),
-            // ⭐️ Tambahkan code status juga jika perlu
                 'error_code' => $e->getCode(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine()
             ], 500);
-
-        
         }
+    }
+
+    public function show(Mom $mom)
+    {
+        $mom->load(['leader', 'notulen', 'attendees', 'agendas', 'actionItems', 'attachments']);
+        return view('moms.detail', compact('mom')); 
+    }
+
+    public function edit(Mom $mom)
+    {
+        $users = User::all();
+        return view('moms.edit', compact('mom', 'users')); 
     }
 }

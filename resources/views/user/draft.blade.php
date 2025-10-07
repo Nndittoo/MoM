@@ -2,6 +2,9 @@
 
 @section('title', 'Draft MoM | MoM Telkom')
 
+{{-- Import Str untuk memotong teks pembahasan --}}
+@php use Illuminate\Support\Str; @endphp
+
 @section('content')
 <div class="p-4 rounded-lg mt-14">
     <div class="space-y-6">
@@ -61,78 +64,95 @@
 
             {{-- Tab Content --}}
             <div class="pt-6">
-                {{-- My MoM Content --}}
+                
+                {{--START: My MoM Content--}}
                 <div id="my-mom-content">
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        <div class="bg-component-bg dark:bg-dark-component-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2">
-                            <div class="relative">
-                                <img class="w-full h-48 object-cover" src="{{ asset('img/lampiran.png') }}" alt="Dokumentasi Rapat">
-                                <span class="absolute top-3 right-3 bg-yellow-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">Pending</span>
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                            </div>
-                            <div class="p-5 flex flex-col">
-                                <h3 class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-2">Sprint Review Meeting</h3>
-                                <div class="flex items-center text-sm text-text-secondary dark:text-dark-text-secondary mb-3">
-                                    <i class="fa-solid fa-user-pen mr-2 text-primary"></i>Dibuat oleh<span class="ml-1 font-medium">Anda</span>
+                        
+                        {{-- Cek apakah ada data $myMoms yang dikirim dari controller --}}
+                        @forelse($myMoms as $mom)
+                            @php
+                                // Tentukan warna status berdasarkan nilai status dari database
+                                $statusText = $mom->status->status ?? 'Unknown';
+                                $statusColor = match ($statusText) {
+                                    'Menunggu' => 'bg-yellow-500',
+                                    'Ditolak'  => 'bg-red-500',
+                                    'Disetujui'=> 'bg-green-500',
+                                    default    => 'bg-gray-500', 
+                                };
+                                
+                                // Tentukan URL aksi (Revisi jika ditolak, Detail jika menunggu/disetujui)
+                                $actionRouteName = ($statusText === 'Ditolak') ? 'moms.edit' : 'moms.detail';
+                                $actionUrl = route($actionRouteName, $mom->version_id);
+
+                                
+                                $attachment = $mom->attachments->first();
+                                // 'file_path' adalah kolom di mom_attachments, dan file disimpan di storage/app/public/attachments
+                                $imageUrl = $attachment 
+                                    ? asset('storage/' . $attachment->file_path) 
+                                    : asset('img/lampiran-kosong.png'); // Gambar default jika tidak ada attachment
+                            @endphp
+                            
+                            <div class="bg-component-bg dark:bg-dark-component-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2">
+                                <div class="relative">
+                                    {{-- Image --}}
+                                    <img class="w-full h-48 object-cover" src="{{ $imageUrl }}" alt="Dokumentasi Rapat">
+                                    
+                                    {{-- Status Badge --}}
+                                    <span class="absolute top-3 right-3 {{ $statusColor }} text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
+                                        {{ $statusText }}
+                                    </span>
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                                 </div>
-                                <p class="text-sm text-text-secondary dark:text-dark-text-secondary mb-4 line-clamp-2">Review hasil sprint 5 dan evaluasi backlog untuk persiapan sprint berikutnya.</p>
-                                <div class="pt-4 border-t border-border-light dark:border-border-dark">
-                                    <h4 class="text-sm font-semibold text-text-primary dark:text-dark-text-primary mb-3">Peserta</h4>
-                                    <div class="flex items-center justify-between">
-                                        <div class="text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed">• Lana Byrd<br>• Thomas Lean</div>
-                                        <a href="{{ url('/detail') }}" class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
+                                
+                                <div class="p-5 flex flex-col">
+                                    <h3 class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-2">{{ $mom->title }}</h3>
+                                    
+                                    <div class="flex items-center text-sm text-text-secondary dark:text-dark-text-secondary mb-3">
+                                        <i class="fa-solid fa-user-pen mr-2 text-primary"></i>Dibuat oleh
+                                        <span class="ml-1 font-medium">{{ $mom->creator->name === Auth::user()->name ? 'Anda' : $mom->creator->name }}</span>
+                                    </div>
+                                    
+                                    <p class="text-sm text-text-secondary dark:text-dark-text-secondary mb-4 line-clamp-2">
+                                        {{-- Menampilkan isi pembahasan tanpa tag HTML dan dibatasi --}}
+                                        {!! Str::limit(strip_tags($mom->pembahasan), 100) !!}
+                                    </p>
+                                    
+                                    <div class="pt-4 border-t border-border-light dark:border-border-dark">
+                                        <h4 class="text-sm font-semibold text-text-primary dark:text-dark-text-primary mb-3">Peserta</h4>
+                                        <div class="flex items-center justify-between">
+                                            <div class="text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed">
+                                                {{-- Tampilkan 2 peserta pertama --}}
+                                                @foreach($mom->attendees->take(2) as $attendee)
+                                                    • {{ $attendee->name }}<br>
+                                                @endforeach
+                                                @if($mom->attendees->count() > 2)
+                                                    ... (+{{ $mom->attendees->count() - 2 }} lainnya)
+                                                @endif
+                                            </div>
+                                            <a href="{{ $actionUrl }}" class="text-sm font-medium text-primary hover:underline ml-4">
+                                                {{ $statusText === 'Ditolak' ? 'Revisi' : 'Lihat Detail' }}
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        {{-- My MoM Card - Rejected --}}
-                        <div class="bg-component-bg dark:bg-dark-component-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2">
-                            <div class="relative">
-                                <img class="w-full h-48 object-cover" src="{{ asset('img/lampiran.png') }}" alt="Dokumentasi Rapat">
-                                <span class="absolute top-3 right-3 bg-red-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">Rejected</span>
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                        @empty
+                            <div class="col-span-3 text-center py-10 bg-body-bg dark:bg-dark-body-bg rounded-xl">
+                                <p class="text-lg text-text-secondary dark:text-dark-text-secondary">Tidak ada MoM yang dibuat oleh Anda dalam status Draft atau Revisi.</p>
+                                <a href="{{ url('/create') }}" class="mt-3 inline-block text-sm font-medium text-primary hover:underline">Buat MoM baru?</a>
                             </div>
-                            <div class="p-5 flex flex-col">
-                                <h3 class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-2">Perencanaan Sprint Oktober</h3>
-                                <div class="flex items-center text-sm text-text-secondary dark:text-dark-text-secondary mb-3">
-                                    <i class="fa-solid fa-user-pen mr-2 text-primary"></i>Dibuat oleh<span class="ml-1 font-medium">Anda</span>
-                                </div>
-                                <p class="text-sm text-text-secondary dark:text-dark-text-secondary mb-4 line-clamp-2">Perlu revisi pada alokasi sumber daya. Mohon diperbarui dan ajukan kembali.</p>
-                                <div class="pt-4 border-t border-border-light dark:border-border-dark">
-                                    <h4 class="text-sm font-semibold text-primary dark:text-dark-text-primary mb-3">Bagian yang salah</h4>
-                                    <div class="flex items-center justify-between">
-                                        <div class="text-sm bg-red-500 p-1 text-white rounded-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed"> Pimpinan dan Peserta ada yang kurang. </div>
-                                        <a href="{{ url('/create') }}" class="text-sm font-medium text-primary hover:underline ml-4">Revisi</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        @endforelse
+                        
                     </div>
                 </div>
-                {{-- All MoM Content --}}
+                {{--END: My MoM Content--}}
+                
+                
+                {{-- All MoM Content (Biarkan statis/kosong jika tidak ada data $allMoms) --}}
                 <div id="all-mom-content" class="hidden">
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        <div class="bg-component-bg dark:bg-dark-component-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2">
-                            <div class="relative">
-                                <img class="w-full h-48 object-cover" src="{{ asset('img/lampiran.png') }}" alt="Dokumentasi Rapat">
-                                <span class="absolute top-3 right-3 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">25 Sep 2025</span>
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                            </div>
-                            <div class="p-5 flex flex-col">
-                                <h3 class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-2">Brainstorming Fitur Baru</h3>
-                                <div class="flex items-center text-sm text-text-secondary dark:text-dark-text-secondary mb-3">
-                                    <i class="fa-solid fa-user-pen mr-2 text-primary"></i>Dibuat oleh<span class="ml-1 font-medium">Bonnie Green</span>
-                                </div>
-                                <p class="text-sm text-text-secondary dark:text-dark-text-secondary mb-4 line-clamp-2">Sesi kreatif untuk mengumpulkan ide-ide inovatif untuk pengembangan fitur pada kuartal berikutnya.</p>
-                                <div class="pt-4 border-t border-border-light dark:border-border-dark">
-                                    <h4 class="text-sm font-semibold text-text-primary dark:text-dark-text-primary mb-3">Peserta</h4>
-                                    <div class="flex items-center justify-between">
-                                        <div class="text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed">• Lana Byrd<br>• Thomas Lean</div>
-                                        <a href="{{ url('/detail') }}" class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        {{-- Card statis/looping data $allMoms di sini --}}
                     </div>
                 </div>
             </div>
@@ -140,22 +160,17 @@
 
         {{-- Pagination --}}
         <div class="flex justify-center mt-8 mb-6">
-            <div class="flex items-center gap-8">
-                <button disabled class="rounded-md border border-slate-300 p-2.5 text-center text-sm transition-all shadow-sm text-slate-600 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none" type="button">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M11.03 3.97a.75.75 0 0 1 0 1.06l-6.22 6.22H21a.75.75 0 0 1 0 1.5H4.81l6.22 6.22a.75.75 0 1 1-1.06 1.06l-7.5-7.5a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd"/></svg>
-                </button>
-                <p class="text-slate-600">Page <strong class="text-slate-800">1</strong> of&nbsp;<strong class="text-slate-800">10</strong></p>
-                <button class="rounded-md border border-slate-300 p-2.5 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 focus:text-white focus:bg-slate-800" type="button">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M12.97 3.97a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 1 1-1.06-1.06l6.22-6.22H3a.75.75 0 0 1 0-1.5h16.19l-6.22-6.22a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/></svg>
-                </button>
-            </div>
+            {{-- Mengganti div statis dengan link pagination Laravel --}}
+            {{ $myMoms->links() }} 
         </div>
+        
     </div>
 </div>
 @endsection
 
 @push('scripts')
 <script>
+    
     function switchTab(tabId) {
         const myMomTab = document.getElementById('my-mom-tab');
         const allMomTab = document.getElementById('all-mom-tab');
@@ -182,7 +197,7 @@
             myMomTab.classList.remove(...inactiveClasses);
             myMomContent.classList.remove('hidden');
             allMomContent.classList.add('hidden');
-        } else { // 'all-mom'
+        } else { 
             allMomTab.classList.add(...activeClasses);
             allMomTab.classList.remove(...inactiveClasses);
             allMomContent.classList.remove('hidden');

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\MomController;
+use App\Http\Controllers\DraftController;
 use App\Models\User;
 
 Route::get('/', [AuthController::class, 'showLogin'])->name('login');
@@ -59,3 +60,12 @@ Route::prefix('admin')->middleware(['auth','role:admin'])->group(function () {
     Route::post('/users/{id}/update-role', [UserController::class, 'updateRole'])->name('admin.users.updateRole');
     Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('admin.users.destroy');
 });
+
+Route::get('/draft', [DraftController::class, 'index'])->name('draft.index')->middleware('auth');
+// 1. Route for viewing details (moms.detail)
+// Assumes you have a 'show' method in MomController to display the detail view
+Route::get('/moms/{mom}', [MomController::class, 'show'])->name('moms.detail'); 
+
+// 2. Route for editing/revising (moms.edit)
+// Assumes you have an 'edit' method in MomController to display the edit form
+Route::get('/moms/{mom}/edit', [MomController::class, 'edit'])->name('moms.edit'); 

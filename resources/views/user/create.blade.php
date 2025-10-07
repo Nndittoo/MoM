@@ -32,7 +32,7 @@
         <form id="mom-form" class="space-y-10">
             @csrf {{-- Pastikan CSRF token disertakan --}}
 
-            {{-- 1. Informasi Rapat --}}
+            {{-- Informasi Rapat --}}
             <div class="space-y-6">
                 <h2 class="text-base font-semibold text-text-primary dark:text-dark-text-primary border-b border-border-light dark:border-border-dark pb-3">Informasi Rapat</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -68,7 +68,7 @@
                 </div>
             </div>
 
-            {{-- 2. Peserta & Agenda --}}
+            {{-- Peserta & Agenda --}}
             <div class="space-y-6">
                 <h2 class="text-base font-semibold text-text-primary dark:text-dark-text-primary border-b border-border-light dark:border-border-dark pb-3">Peserta & Agenda</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -102,14 +102,14 @@
                 </div>
             </div>
 
-            {{-- 3. Pembahasan --}}
+            {{-- Pembahasan --}}
             <div>
                 <h2 class="text-base font-semibold text-text-primary dark:text-dark-text-primary border-b border-border-light dark:border-border-dark pb-3 mb-6">Pembahasan</h2>
                 <div id="pembahasan-editor"></div>
                 <input type="hidden" name="pembahasan" id="pembahasan-hidden"> {{-- Hidden input diisi oleh JS --}}
             </div>
 
-            {{-- 4. Tindak Lanjut (Action Items) --}}
+            {{-- Tindak Lanjut (Action Items) --}}
             <div class="space-y-4">
                 <h2 class="text-base font-semibold text-text-primary dark:text-dark-text-primary border-b border-border-light dark:border-border-dark pb-3">Tindak Lanjut (Action Items)</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
@@ -120,7 +120,7 @@
                 <div id="list-tindak-lanjut" class="space-y-3 pt-3 border-t border-border-light dark:border-border-dark"></div>
             </div>
 
-            {{-- 5. Lampiran --}}
+            {{-- Lampiran --}}
             <div>
                 <h2 class="text-base font-semibold text-text-primary dark:text-dark-text-primary border-b border-border-light dark:border-border-dark pb-3 mb-6">Lampiran</h2>
                 <input class="block w-full text-sm text-text-primary border border-border-light rounded-lg cursor-pointer bg-body-bg dark:text-dark-text-secondary focus:outline-none dark:bg-dark-component-bg dark:border-border-dark" id="lampiran" name="attachments[]" type="file" multiple>
@@ -178,14 +178,14 @@
             return;
         }
         
-        // --- 1. SETUP DATA GLOBAL (Action Items, Agenda, Peserta) ---
+        // SETUP DATA GLOBAL (Action Items, Agenda, Peserta)
         const dataStorage = {
             pesertaIDs: [], 
             agendas: [], 
             actionItems: [],
         };
 
-        // --- 2. Setup Peserta (Dropdown + Pills) ---
+        // Setup Peserta (Dropdown + Pills)
         function setupParticipantPills() {
             const select = document.getElementById('select-peserta');
             const addButton = document.getElementById('btn-add-peserta');
@@ -236,7 +236,7 @@
         setupParticipantPills();
 
 
-        // --- 3. Setup Agenda (List) ---
+        // Setup Agenda (List)
         function setupAgendaList() {
             const input = document.getElementById('input-agenda');
             const addButton = document.getElementById('btn-add-agenda');
@@ -279,7 +279,7 @@
         setupAgendaList();
         
 
-        // --- 4. Setup Action Items (Tindak Lanjut) ---
+        // Setup Action Items (Tindak Lanjut)
         function setupActionItems() {
             const taskInput = document.getElementById('input-task');
             const deadlineInput = document.getElementById('input-deadline');
@@ -332,22 +332,21 @@
         setupActionItems();
 
 
-        // --- 5. Inisialisasi Quill JS ---
+        // Inisialisasi Quill JS
         const pembahasanQuill = new Quill('#pembahasan-editor', { theme: 'snow', placeholder: "Tuliskan hasil pembahasan, keputusan, dan poin penting lainnya...", modules: { toolbar: [[{ 'header': [1, 2, false] }], ['bold', 'italic', 'underline'], [{ 'list': 'ordered' }, { 'list': 'bullet' }], ['link'], ['clean']] } });
         
 
-        // --- 6. FUNGSI SUBMIT UTAMA (AJAX) ---
+        // FUNGSI SUBMIT UTAMA (AJAX) 
         const submitForm = async () => {
             const formData = new FormData(form);
-            // formData.append('_token', csrfToken); // ❌ Dihapus, hanya kirim via header
 
-            // A. Data Form Sederhana & Format Tanggal
+            // Data Form Sederhana & Format Tanggal
             const meetingDateRaw = document.getElementById('tanggal').value;
             if (meetingDateRaw) {
                 formData.set('meeting_date', meetingDateRaw);
             }
 
-            // B. Ambil Konten Pembahasan (dari Quill)
+            // Ambil Konten Pembahasan (dari Quill)
             const pembahasanContent = pembahasanQuill.root.innerHTML.trim();
             if (pembahasanContent.length === 0 || pembahasanContent === '<p><br></p>') {
                 showToast('Pembahasan wajib diisi!', true);
@@ -355,18 +354,18 @@
             }
             formData.set('pembahasan', pembahasanContent);
 
-            // C. Cek Peserta & Tambahkan Array dari dataStorage
+            // Cek Peserta & Tambahkan Array dari dataStorage
             if (dataStorage.pesertaIDs.length === 0) {
                  showToast('Peserta Rapat wajib diisi (minimal 1 peserta)!', true);
                  return;
             }
-            // Hapus field yang mungkin ada dari form HTML (meski tidak ada di sini, ini praktik bagus)
+            // Hapus field yang mungkin ada dari form HTML 
             formData.delete('attendees[]'); 
             dataStorage.pesertaIDs.forEach(item => {
                 formData.append('attendees[]', item.id);
             });
 
-            // D. Tambahkan Array Agenda
+            // Menambahkan Array Agenda
             if (dataStorage.agendas.length === 0) {
                  showToast('Agenda Rapat wajib diisi (minimal 1 item)!', true);
                  return;
@@ -388,7 +387,7 @@
                 const response = await fetch('{{ route('moms.store') }}', { 
                     method: 'POST',
                     headers: {
-                        // ✅ Kirim CSRF hanya di header
+                        // Kirim CSRF hanya di header
                         'X-CSRF-TOKEN': csrfToken, 
                         'X-Requested-With': 'XMLHttpRequest'
                     },
@@ -412,7 +411,7 @@
                 } else {
                     let errorMessage = 'Gagal menyimpan MoM.';
                     
-                    // Coba tangani error validasi 422
+                    // Tangani error validasi 422
                     if (response.status === 422 && data.errors) {
                         const firstErrorKey = Object.keys(data.errors)[0];
                         errorMessage = `Validasi Gagal: ${data.errors[firstErrorKey][0]}`;
@@ -429,7 +428,7 @@
             }
         };
 
-        // ⭐️ FIX: Aktifkan listener tombol Submit
+        // Mengaktifkan listener tombol Submit
         btnSubmit.addEventListener('click', (e) => {
             e.preventDefault();
             // Panggil fungsi submitForm yang sudah diperbaiki
