@@ -163,4 +163,13 @@ class MomController extends Controller
         $users = User::all();
         return view('moms.edit', compact('mom', 'users')); 
     }
+
+    public function export(Mom $mom)
+    {
+        // Memuat semua relasi yang diperlukan untuk dokumen export
+        $mom->load(['leader', 'notulen', 'attendees', 'agendas', 'actionItems', 'attachments']);
+
+        // Mengirim data ke view export.blade.php
+        return view('user/export', compact('mom'));
+    }
 }

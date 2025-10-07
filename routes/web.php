@@ -71,3 +71,4 @@ Route::get('/moms/{mom}', [MomController::class, 'show'])->name('moms.detail');
 // Route for editing/revising (moms.edit)
 Route::get('/moms/{mom}/edit', [MomController::class, 'edit'])->name('moms.edit');
 Route::post('/action-items', [ActionItemController::class, 'store'])->name('action_items.store');
+Route::get('/export/{mom}', [MomController::class, 'export'])->name('moms.export');

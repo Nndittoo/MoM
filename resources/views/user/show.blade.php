@@ -28,7 +28,7 @@
                 <i class="fa-solid fa-arrow-left mr-2"></i>Kembali
             </a>
             {{-- Sesuaikan route export jika sudah dibuat --}}
-            <a href="{{ url('/export/' . $mom->version_id) }}" target="_blank" class="flex-1 sm:flex-initial inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-white bg-gradient-primary rounded-lg hover:opacity-90">
+            <a href="{{ route('moms.export', $mom->version_id) }}" target="_blank" class="flex-1 sm:flex-initial inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-white bg-gradient-primary rounded-lg hover:opacity-90">
                 <i class="fa-solid fa-file-pdf mr-2"></i>Export
             </a>
         </div>
@@ -110,7 +110,7 @@
                 </ol>
             </div>
             
-            {{-- ⭐️ Card Tindak Lanjut (Sudah dipindahkan ke Kolom Kanan) ⭐️ --}}
+            {{-- Card Tindak Lanjut --}}
             <div class="bg-component-bg dark:bg-dark-component-bg rounded-lg shadow-md p-6">
                 <h3 class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-4"><i class="fa-solid fa-bullseye mr-2"></i>Tindak Lanjut</h3>
                 <div id="tindak-lanjut-list" class="space-y-3">
@@ -129,7 +129,7 @@
                     <i class="fa-solid fa-plus mr-2"></i>Tambah Tindak Lanjut
                 </button>
             </div>
-            {{-- ⭐️ AKHIR CARD TINDAK LANJUT ⭐️ --}}
+            {{-- AKHIR CARD TINDAK LANJUT --}}
 
         </div>
     </div>
