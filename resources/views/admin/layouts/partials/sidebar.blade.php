@@ -35,21 +35,13 @@
             </li>
 
             <li>
-<<<<<<< HEAD
-                <a href="{{ route('admin.calendar') }}" class="flex items-center p-3 rounded-lg group transition {{ request()->is('calendars') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
-=======
-                <a href="{{ route('admin.calendar') }}"
-                   class="flex items-center p-3 rounded-lg group transition
-                   {{ request()->routeIs('admin.calendar') ? 'bg-primary/20 text-primary font-semibold'
-                                                            : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
->>>>>>> 4a0a9694c33ae42fca35c6d0d94af4ac604faf72
+                <a href="{{ route('admin.calendars') }}" class="flex items-center p-3 rounded-lg group transition {{ request()->is('calendars') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
                     <i class="fa-solid fa-calendar w-5 h-5"></i>
                     <span class="ms-3">Calendar</span>
                 </a>
             </li>
 
             <li>
-<<<<<<< HEAD
                 <a href="{{ route('admin.task') }}" class="flex items-center p-3 rounded-lg group transition {{ request()->is('task') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
                     <i class="fa-solid fa-tasks w-5 h-5"></i>
                     <span class="ms-3">Task</span>
@@ -63,12 +55,6 @@
             </li>
             <li>
                 <a href="{{ route("admin.users") }}" class="flex items-center p-3 rounded-lg group transition {{ request()->is('users') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
-=======
-                <a href="{{ route('admin.users') }}"
-                   class="flex items-center p-3 rounded-lg group transition
-                   {{ request()->routeIs('admin.users') ? 'bg-primary/20 text-primary font-semibold'
-                                                        : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
->>>>>>> 4a0a9694c33ae42fca35c6d0d94af4ac604faf72
                     <i class="fa-solid fa-users w-5 h-5"></i>
                     <span class="ms-3">Manajemen Pengguna</span>
                 </a>
