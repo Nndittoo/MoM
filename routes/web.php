@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\MomController;
+use App\Models\User;
 
 Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -17,11 +19,18 @@ Route::post('/logout', [AuthController::class, 'logout'])
 Route::middleware(['auth', 'role:user,admin'])->group(function () {
     Route::get('/user', fn () => view('user.dashboard'))->name('user.index');
     Route::get('/draft', fn () => view('user.draft'))->name('user.draft');
-    Route::get('/create', fn () => view('user.create'))->name('user.create');
     Route::get('/reminder', fn () => view('user.reminder'))->name('user.reminder');
     Route::get('/calendar', fn () => view('user.calendar'))->name('user.calendar');
     Route::get('/notifications', fn () => view('user.notifikasi'))->name('user.notifications');
     Route::get('/detail', fn () => view('user.detail'))->name('user.detail');
+
+    Route::get('/create', function () {
+        $users = App\Models\User::all(['id', 'name']); 
+        return view('user.create', compact('users')); 
+    })->name('user.create'); 
+
+    // POST route tetap sama, tetapi namanya lebih jelas
+    Route::post('/moms', [MomController::class, 'store'])->name('moms.store'); 
 });
 
 /**
@@ -50,4 +59,3 @@ Route::prefix('admin')->middleware(['auth','role:admin'])->group(function () {
     Route::post('/users/{id}/update-role', [UserController::class, 'updateRole'])->name('admin.users.updateRole');
     Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('admin.users.destroy');
 });
-
