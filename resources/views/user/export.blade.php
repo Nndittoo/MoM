@@ -40,11 +40,14 @@
                     <td class="border border-black p-2">{{ $mom->notulen->name }}</td>
                 </tr>
 
-                {{-- Peserta --}}
+                {{-- ======================================================== --}}
+                {{-- BAGIAN YANG DIMODIFIKASI: PESERTA --}}
+                {{-- ======================================================== --}}
                 <tr>
                     <td class="border border-black p-2 font-semibold">Peserta</td>
                     <td colspan="3" class="border border-black p-2">
-                        <ul class="list-disc ml-5">
+                        {{-- Jika jumlah peserta lebih dari 5, daftar akan diubah menjadi 2 kolom --}}
+                        <ul class="list-disc ml-5 @if($mom->attendees->count() > 7) grid grid-cols-2 gap-x-8 @endif">
                             @foreach($mom->attendees as $attendee)
                                 <li>{{ $attendee->name }}</li>
                             @endforeach
@@ -92,7 +95,6 @@
                 <tr>
                     <td colspan="4" class="border border-black p-4">
                         <div class="font-sans whitespace-pre-wrap text-sm leading-relaxed">
-                            {{-- Output Pembahasan (dari editor QuillJS) --}}
                             {!! $mom->pembahasan !!}
                         </div>
                     </td>
@@ -118,14 +120,12 @@
                     <td colspan="4" class="pt-6">Demikian MoM ini dibuat untuk diketahui dan ditindaklanjuti bersama.</td>
                 </tr>
 
-                {{-- ======================================================== --}}
-                {{-- BAGIAN BARU: TANDA TANGAN PESERTA DENGAN MULTI-NAMA --}}
-                {{-- ======================================================== --}}
+                {{-- TANDA TANGAN PESERTA DENGAN MULTI-NAMA --}}
                 <tr>
                     <td colspan="4" class="pt-10">
-                        <table class="w-full text-center border-black border">
+                        <table class="w-full text-center border-collapse">
                             <thead>
-                                <tr class="">
+                                <tr class="border-b border-black">
                                     <th class="p-2 font-semibold w-1/3">PT TELKOM INDONESIA</th>
                                     <th class="p-2 font-semibold w-1/3">PT. TIF</th>
                                     <th class="p-2 font-semibold w-1/3">PT ZTE INDONESIA</th>
@@ -134,8 +134,7 @@
                             <tbody>
                                 <tr class="align-top">
                                     {{-- Kolom untuk Telkom --}}
-                                    <td class="p-2 border border-black">
-                                        {{-- Ganti bagian ini dengan loop dari data backend Anda --}}
+                                    <td class="p-2">
                                         <div class="flex flex-col">
                                             <p class="pt-16 underline">Denny</p>
                                             <p class="pt-16 underline">Hannif</p>
@@ -143,8 +142,7 @@
                                         </div>
                                     </td>
                                     {{-- Kolom untuk TIF --}}
-                                    <td class="p-2 border border-black">
-                                        {{-- Ganti bagian ini dengan loop dari data backend Anda --}}
+                                    <td class="p-2">
                                         <div class="flex flex-col">
                                             <p class="pt-16 underline">Asido</p>
                                             <p class="pt-16 underline">Bambang</p>
@@ -153,8 +151,7 @@
                                         </div>
                                     </td>
                                     {{-- Kolom untuk ZTE --}}
-                                    <td class="p-2 border border-black">
-                                        {{-- Ganti bagian ini dengan loop dari data backend Anda --}}
+                                    <td class="p-2">
                                         <div class="flex flex-col">
                                             <p class="pt-16 underline">Lukman</p>
                                             <p class="pt-16 underline">Zulkairu</p>
@@ -174,7 +171,6 @@
                     <td colspan="4" class="p-4 border border-black">
                         @if($mom->attachments->isNotEmpty())
                             @foreach($mom->attachments as $attachment)
-                                {{-- Tampilkan hanya jika file adalah gambar --}}
                                 @if(str_starts_with($attachment->mime_type, 'image/'))
                                     <div class="text-center mb-6">
                                         <img src="{{ asset('storage/' . $attachment->file_path) }}" alt="Lampiran Rapat" class="w-full max-w-xl mx-auto border">
