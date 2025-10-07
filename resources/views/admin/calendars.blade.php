@@ -131,14 +131,14 @@
                         <div class="flex-shrink-0 h-12 w-12 flex flex-col items-center justify-center bg-primary/10 dark:bg-primary/20 rounded-lg">
                             <span class="text-xl font-bold text-primary">${String(day).padStart(2, '0')}</span>
                         </div>
-                        <div class="flex-grow">
+                        <a href="/task" class="flex-grow">
                             <p class="font-semibold text-text-primary dark:text-dark-text-primary">${event.task}</p>
                             <p class="text-sm text-text-secondary dark:text-dark-text-secondary">${event.momTitle}</p>
                             <div class="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1.5">
                                 <i class="fa-solid fa-calendar-plus fa-xs mr-1.5"></i>
                                 <span>Dibuat: ${formattedCreatedDate}</span>
                             </div>
-                        </div>
+                        </a>
                         <div class="text-right text-sm">
                             <p class="font-medium text-text-secondary dark:text-dark-text-secondary">Deadline</p>
                             <p class="text-red-500 font-semibold">${formattedDeadline}</p>

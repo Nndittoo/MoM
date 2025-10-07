@@ -3,7 +3,7 @@
 @section('title', 'Repository MoM | MoM Telkom')
 
 @section('content')
-<div class="pt-4">
+<div class="pt-2">
     <div class="space-y-6">
         {{-- Header --}}
         <div class="flex flex-col md:flex-row items-center justify-between">
@@ -11,17 +11,16 @@
                 <h1 class="text-3xl font-bold text-text-primary dark:text-dark-text-primary">Repository MoM</h1>
                 <p class="mt-1 text-text-secondary dark:text-dark-text-secondary">Cari, lihat, dan kelola semua Minute of Meetings.</p>
             </div>
-            <a href="{{ url('/mom/create') }}" class="mt-4 md:mt-0 flex justify-center items-center px-4 py-2 text-sm font-semibold text-white bg-primary rounded-lg shadow-lg hover:bg-primary-dark">
+            <a href="{{ url('/creates') }}" class="mt-4 md:mt-0 flex justify-center items-center px-4 py-2 text-sm font-semibold text-white bg-primary rounded-lg shadow-lg hover:bg-primary-dark">
                 <i class="fa-solid fa-plus mr-2"></i>Buat MoM Baru
             </a>
         </div>
 
         {{-- Search and Filter Section --}}
         <div class="bg-component-bg dark:bg-dark-component-bg p-4 rounded-lg shadow">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <input type="text" placeholder="Cari berdasarkan topik atau proyek..." class="w-full md:col-span-2 bg-body-bg border-border-light rounded-lg text-sm focus:ring-primary focus:border-primary dark:bg-dark-component-bg dark:border-border-dark">
                 <input type="date" class="w-full bg-body-bg border-border-light rounded-lg text-sm focus:ring-primary focus:border-primary dark:bg-dark-component-bg dark:border-border-dark">
-                <input type="text" placeholder="Nama Peserta..." class="w-full bg-body-bg border-border-light rounded-lg text-sm focus:ring-primary focus:border-primary dark:bg-dark-component-bg dark:border-border-dark">
             </div>
         </div>
 
@@ -58,7 +57,7 @@
                                     <h4 class="text-sm font-semibold text-text-primary dark:text-dark-text-primary mb-3">Peserta</h4>
                                     <div class="flex items-center justify-between">
                                         <div class="text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed">• Lana Byrd<br>• Thomas Lean</div>
-                                        <a href="{{ url('/detail') }}" class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
+                                        <a href="{{ url('/details') }}" class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
                                     </div>
                                 </div>
                             </div>
@@ -79,7 +78,7 @@
                                     <h4 class="text-sm font-semibold text-text-primary dark:text-dark-text-primary mb-3">Peserta</h4>
                                     <div class="flex items-center justify-between">
                                         <div class="text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed">• Lana Byrd<br>• Thomas Lean</div>
-                                        <a href="{{ url('/detail') }}" class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
+                                        <a href="{{ url('/details') }}" class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
                                     </div>
                                 </div>
                             </div>
@@ -107,7 +106,7 @@
                                     <h4 class="text-sm font-semibold text-text-primary dark:text-dark-text-primary mb-3">Peserta</h4>
                                     <div class="flex items-center justify-between">
                                         <div class="text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed">• Lana Byrd<br>• Thomas Lean</div>
-                                        <a href="{{ url('/detail') }}" class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
+                                        <a href="{{ url('/details') }}" class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
                                     </div>
                                 </div>
                             </div>
@@ -137,7 +136,7 @@
         allMomTab.classList.remove(...activeClasses);
         myMomTab.classList.add(...inactiveClasses);
         allMomTab.classList.add(...inactiveClasses);
-        
+
         // Sembunyikan kedua konten
         myMomContent.classList.add('hidden');
         allMomContent.classList.add('hidden');
