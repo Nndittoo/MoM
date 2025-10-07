@@ -11,6 +11,54 @@
                 </a>
             </div>
             <div class="flex items-center">
+
+                {{-- Notification Dropdown --}}
+                <button type="button" data-dropdown-toggle="notification-dropdown" class="p-2 mr-3 text-text-secondary rounded-full hover:bg-primary/10 relative dark:text-dark-text-secondary dark:hover:bg-primary/20">
+                    <i class="fa-solid fa-bell fa-lg"></i>
+                    <span class="absolute top-1 right-1 flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    </span>
+                </button>
+                <div id="notification-dropdown" class="z-50 hidden max-w-sm my-4 overflow-hidden text-base list-none bg-component-bg divide-y divide-border-light rounded-lg shadow-lg dark:bg-dark-component-bg dark:divide-border-dark">
+                    <div class="block px-4 py-2 text-base font-medium text-center text-text-primary bg-body-bg dark:bg-dark-component-bg/50 dark:text-dark-text-primary">
+                        Notifications
+                    </div>
+                    <div>
+                        <a href="#" class="flex px-4 py-3 border-b hover:bg-body-bg dark:hover:bg-dark-body-bg dark:border-border-dark">
+                            <div class="flex-shrink-0">
+                                <div class="inline-flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full dark:bg-blue-900">
+                                    <i class="fa-solid fa-file-signature text-blue-500"></i>
+                                </div>
+                            </div>
+                            <div class="w-full ps-3">
+                                <div class="text-text-secondary text-sm mb-1.5 dark:text-dark-text-secondary">
+                                    MoM baru <span class="font-semibold text-text-primary dark:text-white">"Evaluasi Kinerja Tim Q3"</span> menunggu persetujuan Anda.
+                                </div>
+                                <div class="text-xs text-blue-600 dark:text-blue-500">15 menit yang lalu</div>
+                            </div>
+                        </a>
+                        <a href="#" class="flex px-4 py-3 border-b hover:bg-body-bg dark:hover:bg-dark-body-bg dark:border-border-dark">
+                             <div class="flex-shrink-0">
+                                <div class="inline-flex items-center justify-center w-8 h-8 bg-green-100 rounded-full dark:bg-green-900">
+                                    <i class="fa-solid fa-user-plus text-green-500"></i>
+                                </div>
+                            </div>
+                            <div class="w-full ps-3">
+                                <div class="text-text-secondary text-sm mb-1.5 dark:text-dark-text-secondary">
+                                    Pengguna baru <span class="font-semibold text-text-primary dark:text-white">Jese Leos</span> telah mendaftar.
+                                </div>
+                                <div class="text-xs text-blue-600 dark:text-blue-500">1 jam yang lalu</div>
+                            </div>
+                        </a>
+                    </div>
+                    <a href="#" class="block py-2 text-sm font-medium text-center text-text-primary rounded-b-lg bg-body-bg hover:bg-border-light dark:bg-dark-component-bg/50 dark:hover:bg-dark-body-bg dark:text-white">
+                        <div class="inline-flex items-center">
+                            <i class="fa-solid fa-eye mr-2"></i>Lihat semua notifikasi
+                        </div>
+                    </a>
+                </div>
+
                 {{-- User Profile Dropdown --}}
                 <div class="flex items-center ms-3">
                     <button type="button" class="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-primary/50" data-dropdown-toggle="dropdown-user">
@@ -26,6 +74,7 @@
                         </ul>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>

@@ -80,7 +80,7 @@
                                     <h4 class="text-sm font-semibold text-text-primary dark:text-dark-text-primary mb-3">Peserta</h4>
                                     <div class="flex items-center justify-between">
                                         <div class="text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed">• Lana Byrd<br>• Thomas Lean</div>
-                                        <a href="{{ url('/detail') }}" class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
+                                        <a href="{{ url('/show') }}" class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
                                     </div>
                                 </div>
                             </div>
@@ -128,7 +128,7 @@
                                     <h4 class="text-sm font-semibold text-text-primary dark:text-dark-text-primary mb-3">Peserta</h4>
                                     <div class="flex items-center justify-between">
                                         <div class="text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed">• Lana Byrd<br>• Thomas Lean</div>
-                                        <a href="{{ url('/detail') }}" class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
+                                        <a href="{{ url('/show') }}" class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
                                     </div>
                                 </div>
                             </div>

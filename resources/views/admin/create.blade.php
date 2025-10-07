@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('admin.layouts.app')
 
 @section('title', 'Create MoM | MoM Telkom')
 
@@ -7,7 +7,7 @@
 @endpush
 
 @section('content')
-<div class="pt-16">
+<div class="pt-4">
             <div id="toast" class="hidden fixed top-24 right-5 z-50 items-center gap-3 px-4 py-3 rounded-xl shadow-lg bg-white dark:bg-dark-component-bg border border-border-light dark:border-border-dark text-text-primary dark:text-dark-text-primary transition-all duration-500 opacity-0"><div class="flex-shrink-0"><i class="fa-solid fa-circle-check text-green-500 text-lg"></i></div><div class="text-sm font-medium">MoM berhasil disubmit!</div></div>
 
             <div

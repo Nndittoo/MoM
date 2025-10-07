@@ -22,12 +22,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/reminder', fn () => view('user.reminder'))->name('user.reminder');
     Route::get('/calendar', fn () => view('user.calendar'))->name('user.calendar');
     Route::get('/notifications', fn () => view('user.notifikasi'))->name('user.notifications');
-    Route::get('/detail', fn () => view('user.detail'))->name('user.detail');
+    Route::get('/show', fn () => view('user.show'))->name('user.show');
+    Route::get('/export', fn () => view('user.export'))->name('user.export');
 
     Route::get('/admin', fn () => view('admin.dashboard'))->name('admin.dashboard');
     Route::get('/approvals', fn () => view('admin.approvals'))->name('admin.approvals');
-    Route::get('/calendar', fn () => view('admin.calendar'))->name('admin.calendar');
+    Route::get('/calendars', fn () => view('admin.calendars'))->name('admin.calendar');
     Route::get('/mom', fn () => view('admin.mom'))->name('admin.mom');
     Route::get('/users', fn () => view('admin.users'))->name('admin.users');
-
+    Route::get('/details', fn () => view('admin.details'))->name('admin.details');
+    Route::get('/task', fn () => view('admin.task'))->name('admin.task');
+    Route::get('/creates', fn () => view('admin.create'))->name('admin.create');
+    Route::get('/shows', fn () => view('admin.shows'))->name('admin.shows');
+    Route::get('/notification', fn () => view('admin.notification'))->name('admin.notification');
 });
