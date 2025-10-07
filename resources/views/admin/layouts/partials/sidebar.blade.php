@@ -14,7 +14,7 @@
             </li>
 
             <li>
-                <a href="{{ route('admin.approvals') }}"
+                <a href="{{ route('admin.approvals.index') }}"
                    class="flex items-center p-3 rounded-lg group transition relative
                    {{ request()->routeIs('admin.approvals') ? 'bg-primary/20 text-primary font-semibold'
                                                             : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
