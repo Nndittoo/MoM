@@ -16,7 +16,7 @@ class DashboardController extends Controller
         $stats = [
             'approved' => Mom::where('status_id', 2)->count(), // Asumsi status_id 2 = Approved
             'pending' => Mom::where('status_id', 1)->count(),  // Asumsi status_id 1 = Pending
-            'tasks_due' => ActionItem::where('due_date', '<=', Carbon::now()->addDays(7))
+            'tasks_due' => ActionItem::where('due', '<=', Carbon::now()->addDays(7))
                                      ->where('status', '!=', 'completed')
                                      ->count(),
             'tasks_completed' => ActionItem::where('status', 'completed')->count(),
@@ -57,10 +57,10 @@ class DashboardController extends Controller
                           });
 
         // Ambil task yang hampir deadline
-        $dueTasks = ActionItem::where('due_date', '>=', Carbon::now())
-                              ->where('due_date', '<=', Carbon::now()->addDays(7))
+        $dueTasks = ActionItem::where('due', '>=', Carbon::now())
+                              ->where('due', '<=', Carbon::now()->addDays(7))
                               ->where('status', '!=', 'completed')
-                              ->orderBy('due_date', 'asc')
+                              ->orderBy('due', 'asc')
                               ->take(2)
                               ->get()
                               ->map(function($task) {

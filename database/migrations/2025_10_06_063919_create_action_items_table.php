@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('mom_id')->constrained('moms', 'version_id')->onDelete('cascade');
             $table->string('item'); 
             $table->date('due');
+            $table->enum('status', ['mendatang', 'selesai'])->default('mendatang');
             $table->timestamps();
         });
     }
