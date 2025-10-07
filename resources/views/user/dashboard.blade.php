@@ -84,20 +84,32 @@
             <div class="lg:col-span-1 bg-component-bg rounded-lg shadow-md dark:bg-dark-component-bg p-4 md:p-6 h-full">
                 <h5 class="text-xl font-bold text-text-primary dark:text-white mb-4">Recent Activity</h5>
                 <ol class="relative border-s border-border-light dark:border-border-dark">
-                    @foreach($recentActivity as $activity)
-                    <li class="mb-6 ms-6 {{ $loop->last ? '' : '' }}">
+                    @forelse($recentActivity as $activity)
+                    <li class="mb-6 ms-6">
                         <span class="absolute flex items-center justify-center w-6 h-6 bg-{{ $activity['color'] }}-100 rounded-full -start-3 ring-8 ring-component-bg dark:ring-dark-component-bg dark:bg-{{ $activity['color'] }}-900">
                             <i class="fa-solid {{ $activity['icon'] }} text-{{ $activity['color'] }}-500"></i>
                         </span>
                         <h3 class="flex items-center mb-1 text-lg font-semibold text-text-primary dark:text-white">
                             {{ $activity['title'] }}
                         </h3>
+                        @if(isset($activity['subtitle']))
+                        <p class="text-sm text-text-secondary dark:text-dark-text-secondary mb-1">
+                            {{ $activity['subtitle'] }}
+                        </p>
+                        @endif
                         <time class="block mb-2 text-sm text-text-secondary dark:text-dark-text-secondary">
-                            {{ $activity['type'] === 'task_due' ? 'Due on ' : '' }}
-                            {{ \Carbon\Carbon::parse($activity['date'])->format('M jS, Y') }}
+                            @if($activity['type'] === 'task_due')
+                                Due on {{ \Carbon\Carbon::parse($activity['date'])->format('M jS, Y') }}
+                            @else
+                                {{ \Carbon\Carbon::parse($activity['date'])->diffForHumans() }}
+                            @endif
                         </time>
                     </li>
-                    @endforeach
+                    @empty
+                    <li class="ms-6">
+                        <p class="text-text-secondary dark:text-dark-text-secondary">No recent activity</p>
+                    </li>
+                    @endforelse
                 </ol>
             </div>
         </div>

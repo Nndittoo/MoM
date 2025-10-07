@@ -7,6 +7,7 @@ use App\Models\ActionItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class DashboardController extends Controller
 {
@@ -14,12 +15,10 @@ class DashboardController extends Controller
     {
         // Statistik Cards
         $stats = [
-            'approved' => Mom::where('status_id', 2)->count(), // Asumsi status_id 2 = Approved
-            'pending' => Mom::where('status_id', 1)->count(),  // Asumsi status_id 1 = Pending
-            'tasks_due' => ActionItem::where('due', '<=', Carbon::now()->addDays(7))
-                                     ->where('status', '!=', 'completed')
-                                     ->count(),
-            'tasks_completed' => ActionItem::where('status', 'completed')->count(),
+            'approved' => Mom::where('status_id', 2)->count(),
+            'pending' => Mom::where('status_id', 1)->count(),
+            'tasks_due' => ActionItem::where('status', 'mendatang')->count(), // Semua task mendatang
+            'tasks_completed' => ActionItem::where('status', 'selesai')->count(), // Semua task selesai
         ];
 
         // Recent MoMs untuk tabel
@@ -41,7 +40,7 @@ class DashboardController extends Controller
     {
         $activities = collect();
 
-        // Ambil MoM yang baru diapprove (3 terakhir)
+        // Ambil MoM yang baru diapprove (2 terakhir)
         $approvedMoms = Mom::where('status_id', 2)
                           ->orderBy('updated_at', 'desc')
                           ->take(2)
@@ -50,30 +49,33 @@ class DashboardController extends Controller
                               return [
                                   'type' => 'approved',
                                   'title' => "MoM #{$mom->version_id} Approved",
+                                  'subtitle' => $mom->title,
                                   'date' => $mom->updated_at,
                                   'icon' => 'fa-check',
                                   'color' => 'green'
                               ];
                           });
 
-        // Ambil task yang hampir deadline
-        $dueTasks = ActionItem::where('due', '>=', Carbon::now())
+        // Ambil task yang hampir deadline (2 terdekat)
+        $dueTasks = ActionItem::with('mom')
+                              ->where('due', '>=', Carbon::now())
                               ->where('due', '<=', Carbon::now()->addDays(7))
-                              ->where('status', '!=', 'completed')
+                              ->where('status', 'mendatang')
                               ->orderBy('due', 'asc')
                               ->take(2)
                               ->get()
                               ->map(function($task) {
                                   return [
                                       'type' => 'task_due',
-                                      'title' => 'Task "' . $task->description . '"',
-                                      'date' => $task->due_date,
+                                      'title' => 'Task "' . Str::limit($task->item, 30) . '"',
+                                      'subtitle' => 'From MoM #' . $task->mom_id,
+                                      'date' => $task->due,
                                       'icon' => 'fa-hourglass-half',
                                       'color' => 'yellow'
                                   ];
                               });
 
-        // Ambil MoM yang baru dibuat
+        // Ambil MoM yang baru dibuat (1 terakhir)
         $newMoms = Mom::orderBy('created_at', 'desc')
                      ->take(1)
                      ->get()
@@ -81,6 +83,7 @@ class DashboardController extends Controller
                          return [
                              'type' => 'created',
                              'title' => "New MoM #{$mom->version_id} Created",
+                             'subtitle' => $mom->title,
                              'date' => $mom->created_at,
                              'icon' => 'fa-plus',
                              'color' => 'red'
@@ -91,7 +94,8 @@ class DashboardController extends Controller
                          ->merge($dueTasks)
                          ->merge($newMoms)
                          ->sortByDesc('date')
-                         ->take(5);
+                         ->take(5)
+                         ->values();
     }
 
     private function getChartData()
@@ -193,14 +197,14 @@ class DashboardController extends Controller
     {
         $query = Mom::with(['status', 'creator']);
 
-        if ($request->has('search')) {
+        if ($request->has('search') && $request->search != '') {
             $query->where('title', 'like', '%' . $request->search . '%');
         }
 
-        if ($request->has('status')) {
+        if ($request->has('status') && $request->status != '') {
             $query->where('status_id', $request->status);
         }
 
-        return response()->json($query->orderBy('created_at', 'desc')->get());
+        return response()->json($query->orderBy('created_at', 'desc')->take(10)->get());
     }
 }

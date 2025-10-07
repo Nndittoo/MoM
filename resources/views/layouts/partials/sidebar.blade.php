@@ -2,7 +2,7 @@
     <div class="h-full px-4 pb-6 overflow-y-auto flex flex-col justify-between">
         <ul class="space-y-2 font-medium">
             <li>
-                <a href="{{ url('/user') }}" class="flex items-center p-3 rounded-lg group transition {{ request()->is('user') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary' }}">
+                <a href="{{ url('/user') }}" class="flex items-center p-3 rounded-lg group transition {{ request()->is('dashboard') || request()->is('user') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary' }}">
                     <i class="fa-solid fa-chart-pie w-5 h-5"></i>
                     <span class="ms-3">Dashboard</span>
                 </a>
