@@ -40,7 +40,7 @@ class StoreMomRequest extends FormRequest
             'attendees_manual.*' => ['required', 'string', 'max:255'],
             
             // Peserta Mitra (JSON string dari frontend)
-            'partner_attendees_json' => ['nullable', 'string'], // Diubah ke nullable (opsional)
+            'partner_attendees_json' => ['nullable', 'string'], 
             
             // Agenda (Array of strings)
             'agendas' => ['required', 'array', 'min:1'], 
@@ -55,7 +55,7 @@ class StoreMomRequest extends FormRequest
             'attachments' => ['nullable', 'array'], // Diubah ke nullable (opsional)
             'attachments.*' => ['file', 'mimes:pdf,doc,docx,jpg,jpeg,png', 'max:10240'], // Max 10MB
 
-            // VITAL: TAMBAHAN UNTUK AUTO-APPROVAL ADMIN
+            // TAMBAHAN UNTUK AUTO-APPROVAL ADMIN
             'is_admin_submission' => ['nullable', 'in:1'], 
         ];
     }

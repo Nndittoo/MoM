@@ -32,51 +32,35 @@
                 <button type="button" data-dropdown-toggle="notification-dropdown"
                     class="p-2 mr-3 text-text-secondary rounded-full hover:bg-primary/10 relative dark:text-dark-text-secondary dark:hover:bg-primary/20">
                     <i class="fa-solid fa-bell fa-lg"></i>
-                    <span class="absolute top-1 right-1 flex h-3 w-3">
+                    @php
+                        $unreadCount = \App\Http\Controllers\NotificationController::getUnreadCount();
+                    @endphp
+                    {{-- Ping Indicator --}}
+                    <span class="notification-ping absolute top-1 right-1 flex h-3 w-3 {{ $unreadCount > 0 ? '' : 'hidden' }}">
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                         <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    </span>
+                    {{-- Badge Count --}}
+                    <span class="notification-badge absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full min-w-[1.25rem] {{ $unreadCount > 0 ? '' : 'hidden' }}">
+                        {{ $unreadCount > 99 ? '99+' : $unreadCount }}
                     </span>
                 </button>
 
                 <div id="notification-dropdown"
-                     class="z-50 hidden max-w-sm my-4 overflow-hidden text-base list-none bg-component-bg divide-y divide-border-light rounded-lg shadow-lg dark:bg-dark-component-bg dark:divide-border-dark">
-                    <div class="block px-4 py-2 text-base font-medium text-center text-text-primary bg-body-bg dark:bg-dark-component-bg/50 dark:text-dark-text-primary">
-                        Notifications
-                    </div>
-                    <div>
-                        <a href="#" class="flex px-4 py-3 border-b hover:bg-body-bg dark:hover:bg-dark-body-bg dark:border-border-dark">
-                            <div class="flex-shrink-0">
-                                <div class="inline-flex items-center justify-center w-8 h-8 bg-green-100 rounded-full dark:bg-green-900">
-                                    <i class="fa-solid fa-calendar-check text-green-500"></i>
-                                </div>
-                            </div>
-                            <div class="w-full ps-3">
-                                <div class="text-text-secondary text-sm mb-1.5 dark:text-dark-text-secondary">
-                                    <span class="font-semibold text-text-primary dark:text-white">KOM Project NIQE 2025:</span>
-                                    Dijadwalkan pada 1 Okt 2025, 08:30.
-                                </div>
-                                <div class="text-xs text-blue-600 dark:text-blue-500">1 hari yang lalu</div>
-                            </div>
-                        </a>
+                    class="z-50 hidden max-w-sm my-4 overflow-hidden text-base list-none bg-component-bg divide-y divide-border-light rounded-lg shadow-lg dark:bg-dark-component-bg dark:divide-border-dark">
+                    {{-- ... header dropdown ... --}}
 
-                        <a href="#" class="flex px-4 py-3 hover:bg-body-bg dark:hover:bg-dark-body-bg">
-                            <div class="flex-shrink-0">
-                                <div class="inline-flex items-center justify-center w-8 h-8 bg-yellow-100 rounded-full dark:bg-yellow-900">
-                                    <i class="fa-solid fa-file-lines text-yellow-500"></i>
-                                </div>
-                            </div>
-                            <div class="w-full ps-3">
-                                <div class="text-text-secondary text-sm mb-1.5 dark:text-dark-text-secondary">
-                                    <span class="font-semibold text-text-primary dark:text-white">Notulen Siap:</span>
-                                    "VALIDASI NEW ORDER MINI OLT" sudah tersedia.
-                                </div>
-                                <div class="text-xs text-blue-600 dark:text-blue-500">15 September 2025</div>
-                            </div>
-                        </a>
+                    {{-- KOSONGKAN BAGIAN INI --}}
+                    <div id="notification-list" class="max-h-96 overflow-y-auto">
+                        {{-- Loop PHP di sini dihapus. JavaScript akan mengisi area ini. --}}
+                        {{-- Anda bisa menambahkan skeleton loading di sini jika mau --}}
+                        <div class="px-4 py-6 text-center text-text-secondary dark:text-dark-text-secondary">
+                            <p>Loading notifications...</p>
+                        </div>
                     </div>
 
-                    <a href="{{ url('/notifications') }}"
-                       class="block py-2 text-sm font-medium text-center text-text-primary rounded-b-lg bg-body-bg hover:bg-border-light dark:bg-dark-component-bg/50 dark:hover:bg-dark-body-bg dark:text-white">
+                    <a href="{{ url('notifications') }}"
+                    class="block py-2 text-sm font-medium text-center text-text-primary rounded-b-lg bg-body-bg hover:bg-border-light dark:bg-dark-component-bg/50 dark:hover:bg-dark-body-bg dark:text-white">
                         <div class="inline-flex items-center">
                             <i class="fa-solid fa-eye mr-2"></i>View all
                         </div>
@@ -102,7 +86,6 @@
 
                         <ul class="py-1">
                             <li>
-                                {{-- SIGN OUT (POST to route("logout")) --}}
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <button type="submit"
@@ -114,7 +97,6 @@
                         </ul>
                     </div>
                 </div>
-                {{-- /User dropdown --}}
             </div>
         </div>
     </div>

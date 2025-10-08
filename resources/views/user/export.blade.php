@@ -24,7 +24,7 @@
                 max-width: 100% !important; 
                 height: auto !important;
             }
-            /* Pastikan daftar tidak hilang saat print */
+        
             .ql-content ul, .ql-content ol {
                 margin-left: 1.5em !important;
             }
@@ -38,21 +38,20 @@
         .text-white { color: #fff; }
         .bg-red-600 { background-color: #dc2626; }
 
-        /* VITAL: Tambahkan style untuk List (Bullet/Numbering) dari Quill Editor */
         .content-quill ul {
             list-style-type: disc;
-            margin-left: 20px; /* Indentasi Bullet */
+            margin-left: 20px; 
             padding-left: 0;
         }
         .content-quill ol {
             list-style-type: decimal;
-            margin-left: 20px; /* Indentasi Penomoran */
+            margin-left: 20px; 
             padding-left: 0;
         }
         .content-quill li {
-            padding-left: 5px; /* Sedikit ruang agar bullet tidak menempel */
+            padding-left: 5px; 
         }
-        /* Akhir style List */
+        
     </style>
 </head>
 <body class="bg-white">
@@ -73,19 +72,18 @@
             }
         }
         
-        // *** PERBAIKAN: HAPUS DUPLIKAT DARI DAFTAR PESERTA TOTAL ***
         $allAttendees = array_unique($allAttendeesRaw); 
         $totalAttendeesCount = count($allAttendees);
         
         // Mengubah daftar peserta menjadi string yang dipisahkan koma
         $attendeeListString = implode(', ', $allAttendees);
         
-        // *** START MODIFIKASI: STRUKTUR DATA TANDA TANGAN DINAMIS ***
+        // STRUKTUR DATA TANDA TANGAN DINAMIS
         $signatoryGroups = [];
 
         
         
-        // 2. Gabungkan dengan grup Mitra
+        // Gabungkan dengan grup Mitra
         foreach ($partnerData as $mitra) {
             $signatoryGroups[] = [
                 'name' => $mitra['name'],
@@ -94,7 +92,7 @@
         }
         
         $totalSignatoryGroups = count($signatoryGroups);
-        // *** END MODIFIKASI ***
+    
     @endphp
 
     <div id="pdf-preview" class="p-6 md:p-8 min-w-[800px] bg-white text-gray-900 font-sans">
@@ -103,7 +101,7 @@
                 <tr>
                     {{-- Judul dan Logo --}}
                     <td class="align-middle text-center border border-black p-2 w-1/4">
-                        {{-- HATI-HATI: Pastikan asset('img/logo.png') benar di environment Anda --}}
+                        
                         <img src="{{ asset('img/logo.png') }}" alt="Company Logo" class="h-32 mx-auto">
                     </td>
                     <td colspan="3" class="text-center align-middle border border-black">
@@ -124,7 +122,7 @@
                 <tr>
                     <td class="border border-black p-2 font-semibold">Peserta</td>
                     <td colspan="3" class="border border-black p-2">
-                        {{-- Menggunakan string yang dipisahkan koma (Sudah unik) --}}
+                       
                         @if ($totalAttendeesCount > 0)
                             {{ $attendeeListString }}
                         @else
@@ -172,7 +170,7 @@
                 {{-- Hasil Pembahasan --}}
                 <tr>
                     <td colspan="4" class="border border-black p-4">
-                        {{-- Tambahkan kelas 'content-quill' untuk menargetkan CSS list --}}
+                        
                         <div class="font-sans whitespace-pre-wrap text-sm leading-relaxed content-quill">
                             {!! $mom->pembahasan !!}
                         </div>
@@ -199,14 +197,14 @@
                     <td colspan="4" class="pt-6">Demikian MoM ini dibuat untuk diketahui dan ditindaklanjuti bersama.</td>
                 </tr>
 
-                {{-- TANDA TANGAN PESERTA DENGAN MULTI-NAMA DINAMIS (REVISI) --}}
+                {{-- TANDA TANGAN PESERTA DENGAN MULTI-NAMA DINAMIS --}}
                 @if($totalSignatoryGroups > 0)
                 <tr>
                     <td colspan="4" class="pt-10">
                         <table class="w-full text-center border-collapse">
                             <thead>
                                 <tr class="border-b border-black">
-                                    {{-- ITERASI SEMUA GRUP TANDA TANGAN (TERMASUK TELKOM) --}}
+                                   
                                     @foreach($signatoryGroups as $group)
                                         {{-- Gunakan total kelompok untuk membagi lebar --}}
                                         <th class="p-2 font-semibold w-1/{{ $totalSignatoryGroups }}">{{ $group['name'] }}</th>
@@ -244,7 +242,7 @@
                             @forelse($mom->attachments as $attachment)
                                 @if(str_starts_with($attachment->mime_type, 'image/'))
                                     <div class="text-center mb-6">
-                                        {{-- Perhatikan path storage jika Anda menggunakan 'storage/app/public' --}}
+                                       
                                         <img src="{{ asset('storage/' . $attachment->file_path) }}" alt="Lampiran Rapat" class="w-full max-w-xl mx-auto border">
                                         <p class="mt-2 text-sm">File: {{ $attachment->file_name }}</p>
                                     </div>

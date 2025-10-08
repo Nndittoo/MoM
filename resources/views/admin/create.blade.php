@@ -33,7 +33,7 @@
         <form id="mom-form" class="space-y-10">
             @csrf {{-- Pastikan CSRF token disertakan --}}
             
-            {{-- VITAL: HIDDEN INPUT UNTUK AUTO-APPROVAL ADMIN --}}
+            {{-- HIDDEN INPUT UNTUK AUTO-APPROVAL ADMIN --}}
             <input type="hidden" name="is_admin_submission" value="1">
             
             {{-- Informasi Rapat --}}

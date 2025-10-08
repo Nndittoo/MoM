@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ReminderController;
+use App\Http\Controllers\NotificationController;
 
 Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -35,7 +36,11 @@ Route::middleware(['auth', 'role:user,admin'])->group(function () {
     Route::post('/reminder/{id}/complete', [ReminderController::class, 'complete'])->name('reminder.complete');
     Route::get('/calendar', [CalendarController::class, 'index'])->name('user.calendar');
     Route::get('/calendar/events', [CalendarController::class, 'getEvents'])->name('calendar.events');
-    Route::get('/notifications', fn () => view('user.notifikasi'))->name('user.notifications');
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index   ');
+    Route::get('/notifications/recent', [NotificationController::class, 'getRecent'])->name('notifications.recent');
+    Route::get('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllRead');
     Route::get('/show', fn () => view('user.show'))->name('user.show');
     Route::get('/export', fn () => view('user.export'))->name('user.export');
     Route::get('/mom/export', fn () => view('admin.export'))->name('admin.export');
