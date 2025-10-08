@@ -4,7 +4,7 @@
 
 @push('styles')
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    
+
 @endpush
 
 @section('content')
@@ -30,7 +30,7 @@
     {{-- Form Container --}}
     <div class="bg-component-bg dark:bg-dark-component-bg p-6 md:p-8 rounded-2xl shadow-lg">
         <form id="mom-form" class="space-y-10">
-            @csrf {{-- Pastikan CSRF token disertakan --}}
+            @csrf 
 
             {{-- Informasi Rapat --}}
             <div class="space-y-6">
@@ -147,20 +147,20 @@
         const toast = document.getElementById("toast");
         const icon = toast.querySelector('i');
         const messageContainer = toast.querySelector('div.text-sm.font-medium');
-        
-        icon.className = isError 
-            ? 'fa-solid fa-circle-xmark text-red-500 text-lg' 
+
+        icon.className = isError
+            ? 'fa-solid fa-circle-xmark text-red-500 text-lg'
             : 'fa-solid fa-circle-check text-green-500 text-lg';
         messageContainer.textContent = message;
-        
+
         toast.classList.remove("hidden", "opacity-0");
         toast.classList.add("opacity-100");
-        
+
         setTimeout(() => {
             toast.classList.remove("opacity-100");
             toast.classList.add("opacity-0");
             setTimeout(() => { toast.classList.add("hidden"); }, 500);
-        }, 5000); 
+        }, 5000);
     };
 
 
@@ -302,42 +302,27 @@
         setupManualParticipantPills();
 
 
-        // --- Setup Agenda (List) ---
-        function setupAgendaList() {
-            const input = document.getElementById('input-agenda');
-            const addButton = document.getElementById('btn-add-agenda');
-            const listContainer = document.getElementById('list-agenda');
-            
-            const renderList = () => {
-                listContainer.innerHTML = '';
-                dataStorage.agendas.forEach((item, index) => {
+            // --- Setup Agenda (List) ---
+            function setupAgendaList() {
+                const input = document.getElementById('input-agenda');
+                const addButton = document.getElementById('btn-add-agenda');
+                const listContainer = document.getElementById('list-agenda');
+                const addItem = () => {
+                    const value = input.value.trim();
+                    if (value === '') return;
                     const listItem = document.createElement('li');
                     listItem.className = 'flex items-center justify-between text-text-secondary dark:text-dark-text-secondary';
-                    listItem.textContent = item;
-                    
+                    listItem.textContent = value;
                     const removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
                     removeBtn.innerHTML = '<i class="fa-solid fa-times text-red-500 hover:text-red-700 fa-sm"></i>';
                     removeBtn.className = 'ml-4';
-                    removeBtn.onclick = () => {
-                        dataStorage.agendas.splice(index, 1);
-                        renderList();
-                    };
+                    removeBtn.onclick = () => listItem.remove();
                     listItem.appendChild(removeBtn);
                     listContainer.appendChild(listItem);
-                });
-            };
-
-            const addItem = () => {
-                const value = input.value.trim();
-                if (value === '') return;
-                dataStorage.agendas.push(value);
-                renderList();
-                input.value = '';
-                input.focus();
-            };
-            
-            if (addButton) {
+                    input.value = '';
+                    input.focus();
+                };
                 addButton.addEventListener('click', addItem);
                 input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addItem(); } });
             }
