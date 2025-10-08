@@ -20,13 +20,18 @@ return new class extends Migration
             $table->time('start_time'); 
             $table->time('end_time'); 
             
-    
-            $table->foreignId('leader_id')->constrained('users'); 
-            $table->foreignId('notulen_id')->constrained('users');
+        
+            $table->string('pimpinan_rapat'); 
+            $table->string('notulen');
+            
             $table->foreignId('creator_id')->constrained('users'); 
             
             $table->longText('pembahasan');
             $table->foreignId('status_id')->constrained('mom_status', 'status_id');
+            
+            $table->json('nama_peserta'); // Peserta Internal (array nama)
+            $table->json('nama_mitra'); // Peserta Mitra (array of objects)
+            
             $table->timestamps(); 
         });
     }

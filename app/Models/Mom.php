@@ -19,11 +19,19 @@ class Mom extends Model
         'location',
         'start_time',
         'end_time',
-        'leader_id',      
-        'notulen_id',     
+        'pimpinan_rapat',      
+        'notulen',    
         'creator_id',
         'pembahasan',
         'status_id',
+        'nama_peserta', 
+        'nama_mitra',
+    ];
+
+    // Casting untuk kolom JSON
+    protected $casts = [
+        'nama_peserta' => 'array',
+        'nama_mitra' => 'array',
     ];
     
     // Relasi ke User
@@ -31,33 +39,17 @@ class Mom extends Model
     {
         return $this->belongsTo(User::class, 'creator_id', 'id');
     }
-    public function leader()
-    {
-        return $this->belongsTo(User::class, 'leader_id', 'id');
-    }
-    public function notulen()
-    {
-        return $this->belongsTo(User::class, 'notulen_id', 'id');
-    }
-
+    
     // Relasi ke Status
     public function status()
     {
         return $this->belongsTo(MomStatus::class, 'status_id', 'status_id');
     }
     
-    // Relasi ke Tindak Lanjut
+    // Relasi ke Tindak Lanjut (Action Items)
     public function actionItems()
     {
         return $this->hasMany(ActionItem::class, 'mom_id', 'version_id');
-    }
-
-    // Relasi ke Peserta Rapat
-    public function attendees()
-    {
-        return $this->belongsToMany(User::class, 'mom_attendees', 'mom_id', 'user_id')
-                    ->withPivot('status')
-                    ->withTimestamps();
     }
 
     // Relasi ke Lampiran

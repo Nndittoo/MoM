@@ -2,7 +2,6 @@
 
 @section('title', 'Draft MoM | MoM Telkom')
 
-{{-- Import Str untuk memotong teks pembahasan --}}
 @php use Illuminate\Support\Str; @endphp
 
 @section('content')
@@ -18,6 +17,8 @@
             </div>
         </div>
 
+        ---
+        
         {{-- Tab and Filter Section --}}
         <div class="bg-component-bg dark:bg-dark-component-bg rounded-lg shadow p-4">
             <div class="flex flex-col md:flex-row justify-between items-center border-b border-border-light dark:border-border-dark pb-4">
@@ -85,12 +86,27 @@
                                 $actionRouteName = ($statusText === 'Ditolak') ? 'moms.edit' : 'moms.detail';
                                 $actionUrl = route($actionRouteName, $mom->version_id);
 
-                                
+                                // Ambil Lampiran pertama untuk preview
                                 $attachment = $mom->attachments->first();
-                                // 'file_path' adalah kolom di mom_attachments, dan file disimpan di storage/app/public/attachments
                                 $imageUrl = $attachment 
                                     ? asset('storage/' . $attachment->file_path) 
                                     : asset('img/lampiran-kosong.png'); // Gambar default jika tidak ada attachment
+
+                                // --- LOGIC UNTUK PESERTA DARI KOLOM JSON ---
+                                $internalNames = $mom->nama_peserta ?? []; 
+                                $partnerNames = [];
+                                
+                                if (is_array($mom->nama_mitra)) {
+                                    foreach ($mom->nama_mitra as $mitra) {
+                                        if (is_array($mitra['attendees'] ?? null)) {
+                                            $partnerNames = array_merge($partnerNames, $mitra['attendees']);
+                                        }
+                                    }
+                                }
+                                
+                                $allAttendees = array_merge($internalNames, $partnerNames);
+                                $totalAttendees = count($allAttendees);
+                        
                             @endphp
                             
                             <div class="bg-component-bg dark:bg-dark-component-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2">
@@ -122,12 +138,19 @@
                                         <h4 class="text-sm font-semibold text-text-primary dark:text-dark-text-primary mb-3">Peserta</h4>
                                         <div class="flex items-center justify-between">
                                             <div class="text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed">
-                                                {{-- Tampilkan 2 peserta pertama --}}
-                                                @foreach($mom->attendees->take(2) as $attendee)
-                                                    • {{ $attendee->name }}<br>
-                                                @endforeach
-                                                @if($mom->attendees->count() > 2)
-                                                    ... (+{{ $mom->attendees->count() - 2 }} lainnya)
+                                                {{-- Tampilkan data Peserta dari kolom JSON yang sudah digabung --}}
+                                                @if($totalAttendees > 0)
+                                                    {{-- Tampilkan 2 peserta pertama --}}
+                                                    @foreach(array_slice($allAttendees, 0, 2) as $attendeeName)
+                                                        • {{ $attendeeName }}<br>
+                                                    @endforeach
+                                                    
+                                                    {{-- Hitung dan tampilkan peserta sisanya --}}
+                                                    @if($totalAttendees > 2)
+                                                        ... (+{{ $totalAttendees - 2 }} lainnya)
+                                                    @endif
+                                                @else
+                                                    <span class="italic">Tidak ada peserta tercatat.</span>
                                                 @endif
                                             </div>
                                             <a href="{{ $actionUrl }}" class="text-sm font-medium text-primary hover:underline ml-4">
@@ -148,6 +171,7 @@
                 </div>
                 {{--END: My MoM Content--}}
                 
+                ---
                 
                 {{-- All MoM Content (Biarkan statis/kosong jika tidak ada data $allMoms) --}}
                 <div id="all-mom-content" class="hidden">
@@ -158,6 +182,8 @@
             </div>
         </div>
 
+        ---
+        
         {{-- Pagination --}}
         <div class="flex justify-center mt-8 mb-6">
             {{-- Mengganti div statis dengan link pagination Laravel --}}

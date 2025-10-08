@@ -6,9 +6,33 @@
     <title>Export MoM - {{ $mom->title }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+    
         @media print {
-            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            body { 
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact; 
+                font-size: 10pt; 
+            }
+            table {
+                page-break-inside: auto;
+            }
+            tr {
+                page-break-inside: avoid; 
+                page-break-after: auto;
+            }
+            img {
+                max-width: 100% !important; 
+                height: auto !important;
+            }
         }
+    
+        .border-black { border-color: #000; }
+        .border { border-style: solid; border-width: 1px; }
+        .text-gray-900 { color: #1f2937; }
+        .bg-gray-200 { background-color: #e5e7eb; }
+        .bg-white { background-color: #fff; }
+        .text-white { color: #fff; }
+        .bg-red-600 { background-color: #dc2626; }
     </style>
 </head>
 <body class="bg-white">
@@ -16,6 +40,22 @@
     @php
         use Carbon\Carbon;
         $meetingDate = Carbon::parse($mom->meeting_date);
+        
+        // --- LOGIC MENGAMBIL DATA PESERTA DARI JSON ---
+        $internalAttendees = $mom->nama_peserta ?? []; // Array of names (Internal)
+        $partnerData = $mom->nama_mitra ?? []; // Array of objects (Mitra)
+
+        // Menggabungkan semua peserta menjadi satu daftar
+        $allAttendees = $internalAttendees;
+        foreach ($partnerData as $mitra) {
+            if (is_array($mitra['attendees'] ?? null)) {
+                $allAttendees = array_merge($allAttendees, $mitra['attendees']);
+            }
+        }
+        $totalAttendeesCount = count($allAttendees);
+        
+        // Mengubah daftar peserta menjadi string yang dipisahkan koma
+        $attendeeListString = implode(', ', $allAttendees);
     @endphp
 
     <div id="pdf-preview" class="p-6 md:p-8 min-w-[800px] bg-white text-gray-900 font-sans">
@@ -35,23 +75,21 @@
                 {{-- Pimpinan & Notulen --}}
                 <tr>
                     <td class="border border-black p-2 font-semibold">Pimpinan Rapat</td>
-                    <td class="border border-black p-2">{{ $mom->leader->name }}</td>
+                    <td class="border border-black p-2">{{ $mom->pimpinan_rapat }}</td> 
                     <td class="border border-black p-2 font-semibold">Notulen</td>
-                    <td class="border border-black p-2">{{ $mom->notulen->name }}</td>
+                    <td class="border border-black p-2">{{ $mom->notulen }}</td> 
                 </tr>
 
-                {{-- ======================================================== --}}
-                {{-- BAGIAN YANG DIMODIFIKASI: PESERTA --}}
-                {{-- ======================================================== --}}
+                {{-- Daftar Peserta --}}
                 <tr>
                     <td class="border border-black p-2 font-semibold">Peserta</td>
                     <td colspan="3" class="border border-black p-2">
-                        {{-- Jika jumlah peserta lebih dari 5, daftar akan diubah menjadi 2 kolom --}}
-                        <ul class="list-disc ml-5 @if($mom->attendees->count() > 7) grid grid-cols-2 gap-x-8 @endif">
-                            @foreach($mom->attendees as $attendee)
-                                <li>{{ $attendee->name }}</li>
-                            @endforeach
-                        </ul>
+                        {{-- Menggunakan string yang dipisahkan koma --}}
+                        @if ($totalAttendeesCount > 0)
+                            {{ $attendeeListString }}
+                        @else
+                            Tidak ada peserta tercatat.
+                        @endif
                     </td>
                 </tr>
 
@@ -95,6 +133,7 @@
                 <tr>
                     <td colspan="4" class="border border-black p-4">
                         <div class="font-sans whitespace-pre-wrap text-sm leading-relaxed">
+                            {{-- Gunakan prose styles di sini untuk Quill content --}}
                             {!! $mom->pembahasan !!}
                         </div>
                     </td>
@@ -120,43 +159,45 @@
                     <td colspan="4" class="pt-6">Demikian MoM ini dibuat untuk diketahui dan ditindaklanjuti bersama.</td>
                 </tr>
 
-                {{-- TANDA TANGAN PESERTA DENGAN MULTI-NAMA --}}
+                {{-- TANDA TANGAN PESERTA DENGAN MULTI-NAMA DINAMIS --}}
                 <tr>
                     <td colspan="4" class="pt-10">
                         <table class="w-full text-center border-collapse">
                             <thead>
                                 <tr class="border-b border-black">
-                                    <th class="p-2 font-semibold w-1/3">PT TELKOM INDONESIA</th>
-                                    <th class="p-2 font-semibold w-1/3">PT. TIF</th>
-                                    <th class="p-2 font-semibold w-1/3">PT ZTE INDONESIA</th>
+                                    {{-- Kolom Telkom Indonesia --}}
+                                    <th class="p-2 font-semibold w-1/{{ count($partnerData) + 1 }}">PT TELKOM INDONESIA</th>
+                                    {{-- Kolom Mitra Lain (Dinamis) --}}
+                                    @foreach($partnerData as $mitra)
+                                        <th class="p-2 font-semibold w-1/{{ count($partnerData) + 1 }}">{{ $mitra['name'] }}</th>
+                                    @endforeach
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr class="align-top">
-                                    {{-- Kolom untuk Telkom --}}
+                                    {{-- Kolom untuk Telkom (Internal Attendees) --}}
                                     <td class="p-2">
                                         <div class="flex flex-col">
-                                            <p class="pt-16 underline">Denny</p>
-                                            <p class="pt-16 underline">Hannif</p>
-                                            <p class="pt-16 underline">Herdana</p>
+                                            @forelse($internalAttendees as $name)
+                                                <p class="pt-16 underline">{{ $name }}</p>
+                                            @empty
+                                                <p class="pt-16 italic text-gray-500">N/A</p>
+                                            @endforelse
                                         </div>
                                     </td>
-                                    {{-- Kolom untuk TIF --}}
-                                    <td class="p-2">
-                                        <div class="flex flex-col">
-                                            <p class="pt-16 underline">Asido</p>
-                                            <p class="pt-16 underline">Bambang</p>
-                                            <p class="pt-16 underline">Aduhai</p>
-                                            <p class="pt-16 underline">Woww</p>
-                                        </div>
-                                    </td>
-                                    {{-- Kolom untuk ZTE --}}
-                                    <td class="p-2">
-                                        <div class="flex flex-col">
-                                            <p class="pt-16 underline">Lukman</p>
-                                            <p class="pt-16 underline">Zulkairu</p>
-                                        </div>
-                                    </td>
+                                    
+                                    {{-- Kolom untuk Mitra Lain (Dinamis) --}}
+                                    @foreach($partnerData as $mitra)
+                                        <td class="p-2">
+                                            <div class="flex flex-col">
+                                                @forelse($mitra['attendees'] ?? [] as $name)
+                                                    <p class="pt-16 underline">{{ $name }}</p>
+                                                @empty
+                                                    <p class="pt-16 italic text-gray-500">N/A</p>
+                                                @endforelse
+                                            </div>
+                                        </td>
+                                    @endforeach
                                 </tr>
                             </tbody>
                         </table>
@@ -170,14 +211,16 @@
                 <tr>
                     <td colspan="4" class="p-4 border border-black">
                         @if($mom->attachments->isNotEmpty())
-                            @foreach($mom->attachments as $attachment)
+                            @forelse($mom->attachments as $attachment)
                                 @if(str_starts_with($attachment->mime_type, 'image/'))
                                     <div class="text-center mb-6">
                                         <img src="{{ asset('storage/' . $attachment->file_path) }}" alt="Lampiran Rapat" class="w-full max-w-xl mx-auto border">
                                         <p class="mt-2 text-sm">File: {{ $attachment->file_name }}</p>
                                     </div>
                                 @endif
-                            @endforeach
+                            @empty
+                                <p class="text-sm text-center text-gray-500">Tidak ada lampiran gambar yang dapat ditampilkan.</p>
+                            @endforelse
                         @else
                             <p class="text-sm text-center text-gray-500">Tidak ada lampiran gambar yang dapat ditampilkan.</p>
                         @endif

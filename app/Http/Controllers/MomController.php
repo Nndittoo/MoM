@@ -22,10 +22,8 @@ class MomController extends Controller
      */
     public function create()
     {
-        // Mengambil semua user dari database
+        // Variabel $users tetap dikirimkan (untuk creator_id)
         $users = User::all(); 
-
-        // Mengirimkan variabel $users ke view.
         return view('user/create', compact('users')); 
     }
     
@@ -40,8 +38,10 @@ class MomController extends Controller
         DB::beginTransaction();
         
         try {
-            // Status default MoM adalah 'Menunggu'
             $defaultStatus = MomStatus::where('status', 'Menunggu')->firstOrFail();
+
+            $partnerAttendees = $request->partner_attendees_json ? json_decode($request->partner_attendees_json, true) : [];
+            $manualAttendees = $request->attendees_manual ?? []; 
             
             // Membuat MoM utama
             $mom = Mom::create([
@@ -50,11 +50,16 @@ class MomController extends Controller
                 'location' => $request->location,
                 'start_time' => $request->start_time,
                 'end_time' => $request->end_time,
-                'leader_id' => $request->leader_id, 
-                'notulen_id' => $request->notulen_id,
+                
+                'pimpinan_rapat' => $request->pimpinan_rapat, 
+                'notulen' => $request->notulen,
+                
                 'creator_id' => $creatorId, 
                 'pembahasan' => $request->pembahasan,
                 'status_id' => $defaultStatus->status_id,
+                
+                'nama_peserta' => $manualAttendees,
+                'nama_mitra' => $partnerAttendees,
             ]);
 
             // Menyimpan Action Items (Tindak Lanjut)
@@ -81,10 +86,6 @@ class MomController extends Controller
                 MomAgenda::insert($agendasData);
             }
 
-            // Sinkron Peserta Rapat (Attendees)
-            $mom->attendees()->sync($request->attendees);
-
-
             // Handle Lampiran (File Upload)
             if ($request->hasFile('attachments')) {
                 $attachmentsData = [];
@@ -100,7 +101,6 @@ class MomController extends Controller
                     $filePath = null;
 
                     try {
-                        // Menggunakan disk 'public' secara eksplisit
                         $filePath = $file->storeAs('attachments', $fileName, $disk); 
 
                     } catch (\Throwable $e) {
@@ -132,7 +132,7 @@ class MomController extends Controller
             return response()->json([
                 'message' => 'Minutes of Meeting berhasil dibuat!',
                 'mom_id' => $mom->version_id,
-                'mom' => $mom->load(['actionItems', 'attendees', 'attachments', 'agendas'])
+                'mom' => $mom->load(['attachments', 'agendas']) 
             ], 201);
 
         } catch (\Exception $e) {
@@ -151,11 +151,8 @@ class MomController extends Controller
 
     public function show(Mom $mom)
     {
-    // Memuat semua relasi yang diperlukan untuk halaman detail
-    $mom->load(['leader', 'notulen', 'attendees', 'agendas', 'attachments']);
-    
-    // Memanggil view: resources/views/user/show.blade.php
-    return view('user/show', compact('mom')); 
+        $mom->load(['creator', 'agendas', 'attachments']); 
+        return view('user/show', compact('mom')); 
     }
 
     public function edit(Mom $mom)
@@ -166,10 +163,7 @@ class MomController extends Controller
 
     public function export(Mom $mom)
     {
-        // Memuat semua relasi yang diperlukan untuk dokumen export
-        $mom->load(['leader', 'notulen', 'attendees', 'agendas', 'actionItems', 'attachments']);
-
-        // Mengirim data ke view export.blade.php
+        $mom->load(['creator', 'agendas', 'actionItems', 'attachments']);
         return view('user/export', compact('mom'));
     }
 }

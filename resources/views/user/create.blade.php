@@ -12,7 +12,7 @@
     {{-- Toast Notification --}}
     <div id="toast" class="hidden fixed top-24 right-5 z-50 items-center gap-3 px-4 py-3 rounded-xl shadow-lg bg-white dark:bg-dark-component-bg border border-border-light dark:border-border-dark text-text-primary dark:text-dark-text-primary transition-all duration-500 opacity-0">
         <div class="flex-shrink-0"><i class="fa-solid fa-circle-check text-green-500 text-lg"></i></div>
-        <div class="text-sm font-medium">MoM berhasil disubmit!</div>
+        <div class="text-sm font-medium">MoM berhasil di submit!</div>
     </div>
 
     {{-- Header --}}
@@ -41,14 +41,14 @@
                     
                     {{-- INPUT MANUAL PIMPINAN --}}
                     <div>
-                        <label for="leader_name" class="block mb-2 text-sm font-medium">Pimpinan Rapat (Nama Manual)</label>
-                        <input type="text" name="leader_name" id="leader_name" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Nama Pimpinan" required>
+                        <label for="pimpinan_rapat" class="block mb-2 text-sm font-medium">Pimpinan Rapat</label>
+                        <input type="text" name="pimpinan_rapat" id="pimpinan_rapat" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Nama Pimpinan" required>
                     </div>
                     
                     {{-- INPUT MANUAL NOTULEN --}}
                     <div>
-                        <label for="notulen_name" class="block mb-2 text-sm font-medium">Notulen (Nama Manual)</label>
-                        <input type="text" name="notulen_name" id="notulen_name" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Nama Notulen" required>
+                        <label for="notulen" class="block mb-2 text-sm font-medium">Notulen</label>
+                        <input type="text" name="notulen" id="notulen" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Nama Notulen" required>
                     </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -65,7 +65,7 @@
                     
                     {{-- PESERTA INTERNAL (Manual Text Input) --}}
                     <div>
-                        <label class="block mb-2 text-sm font-medium">Peserta Rapat (Internal)</label>
+                        <label class="block mb-2 text-sm font-medium">Peserta Rapat</label>
                         <div class="flex gap-2">
                             <input type="text" id="input-peserta-manual" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Nama Peserta">
                             <button type="button" id="btn-add-peserta-manual" class="px-4 py-2 text-sm font-medium text-white bg-gradient-primary rounded-lg hover:opacity-90">Add</button>
@@ -468,7 +468,7 @@
             const formData = new FormData(); // Buat FormData baru
             
             // Salin data form standar + Nama Pimpinan & Notulen Manual
-            const simpleFields = ['title', 'location', 'meeting_date', 'start_time', 'end_time', 'leader_name', 'notulen_name']; // **Diperbarui**
+            const simpleFields = ['title', 'location', 'meeting_date', 'start_time', 'end_time', 'pimpinan_rapat', 'notulen']; 
             simpleFields.forEach(name => {
                 const element = document.querySelector(`[name="${name}"]`);
                 if (element) {
@@ -478,7 +478,7 @@
             formData.append('_token', '{{ csrf_token() }}');
 
             // Validasi Input Pimpinan dan Notulen Manual
-            if (!document.getElementById('leader_name').value.trim() || !document.getElementById('notulen_name').value.trim()) {
+            if (!document.getElementById('pimpinan_rapat').value.trim() || !document.getElementById('notulen').value.trim()) {
                 showToast('Nama Pimpinan Rapat dan Notulen wajib diisi!', true);
                 return;
             }

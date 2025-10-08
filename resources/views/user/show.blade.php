@@ -13,6 +13,21 @@
         : asset('img/lampiran-kosong.png'); 
     
     $statusText = $mom->status->status ?? 'Unknown';
+    
+    // --- LOGIC BARU UNTUK MENGGABUNGKAN PESERTA DARI KOLOM JSON ---
+    $internalNames = $mom->nama_peserta ?? []; // Peserta rapat (array of strings)
+    $partnerNames = [];
+    
+    if (is_array($mom->nama_mitra)) {
+        foreach ($mom->nama_mitra as $mitra) {
+            if (is_array($mitra['attendees'] ?? null)) {
+                $partnerNames = array_merge($partnerNames, $mitra['attendees']);
+            }
+        }
+    }
+    $allAttendees = array_merge($internalNames, $partnerNames);
+    $totalAttendees = count($allAttendees);
+    // -----------------------------------------------------------
 @endphp
 
 @section('content')
@@ -27,7 +42,7 @@
             <a href="{{ url()->previous() }}" class="flex-1 sm:flex-initial inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-text-secondary bg-component-bg border border-border-light rounded-lg hover:bg-body-bg dark:bg-dark-component-bg dark:text-dark-text-secondary dark:border-border-dark dark:hover:bg-dark-body-bg">
                 <i class="fa-solid fa-arrow-left mr-2"></i>Kembali
             </a>
-            {{-- Sesuaikan route export jika sudah dibuat --}}
+        
             <a href="{{ route('moms.export', $mom->version_id) }}" target="_blank" class="flex-1 sm:flex-initial inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-white bg-gradient-primary rounded-lg hover:opacity-90">
                 <i class="fa-solid fa-file-pdf mr-2"></i>Export
             </a>
@@ -44,8 +59,10 @@
             <div class="bg-component-bg dark:bg-dark-component-bg rounded-lg shadow-md p-6">
                 <h3 class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-4 border-b dark:border-border-dark pb-3">Informasi Rapat</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                    <div><p class="text-text-secondary"><strong>Pimpinan:</strong></p><p>{{ $mom->leader->name }}</p></div>
-                    <div><p class="text-text-secondary"><strong>Notulen:</strong></p><p>{{ $mom->notulen->name }}</p></div>
+                    {{-- Menggunakan kolom string pimpinan_rapat --}}
+                    <div><p class="text-text-secondary"><strong>Pimpinan:</strong></p><p>{{ $mom->pimpinan_rapat }}</p></div>
+                    {{-- Menggunakan kolom string notulen --}}
+                    <div><p class="text-text-secondary"><strong>Notulen:</strong></p><p>{{ $mom->notulen }}</p></div>
                     <div>
                         <p class="text-text-secondary"><strong>Waktu:</strong></p>
                         <p>{{ Carbon::parse($mom->meeting_date)->translatedFormat('l, d M Y') }} | {{ Carbon::parse($mom->start_time)->format('H:i') }} – {{ Carbon::parse($mom->end_time)->format('H:i') }}</p>
@@ -92,11 +109,15 @@
             
             {{-- Card Peserta --}}
             <div class="bg-component-bg dark:bg-dark-component-bg rounded-lg shadow-md p-6">
-                <h3 class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-4"><i class="fa-solid fa-users mr-2"></i>Peserta ({{ $mom->attendees->count() }})</h3>
+                {{-- Menggunakan $totalAttendees dari logic gabungan --}}
+                <h3 class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-4"><i class="fa-solid fa-users mr-2"></i>Peserta ({{ $totalAttendees }})</h3>
+                
                 <ul class="space-y-2 text-sm list-disc list-inside">
-                    @foreach($mom->attendees as $attendee)
-                        <li>{{ $attendee->name }}</li>
-                    @endforeach
+                    @forelse($allAttendees as $attendeeName)
+                        <li>{{ $attendeeName }}</li>
+                    @empty
+                        <span class="italic text-text-secondary">Tidak ada peserta tercatat.</span>
+                    @endforelse
                 </ul>
             </div>
 
@@ -184,7 +205,6 @@
         let modalInstance = null;
         
         // Inisialisasi modal menggunakan Flowbite.Modal jika Flowbite terdeteksi
-        // Ini mengatasi error Flowbite.getInstance is not a function
         if (typeof Flowbite !== 'undefined' && Flowbite.Modal) {
              modalInstance = new Flowbite.Modal(modalElement);
         }
@@ -215,12 +235,12 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    // 1. Format tanggal untuk tampilan lokal
+                    // Format tanggal untuk tampilan lokal
                     const formattedDate = new Date(deadline + 'T00:00:00').toLocaleDateString('id-ID', {
                         day: '2-digit', month: 'short', year: 'numeric'
                     });
 
-                    // 2. Buat elemen baru di daftar
+                    // Buat elemen baru di daftar
                     const newItem = document.createElement('div');
                     newItem.className = 'p-3 bg-body-bg dark:bg-dark-body-bg rounded-lg';
                     newItem.innerHTML = `
@@ -230,20 +250,25 @@
                     
                     // Hapus pesan "Tidak ada tindak lanjut" jika ada
                     const emptyMessage = listContainer.querySelector('.text-text-secondary');
-                    if (emptyMessage && listContainer.children.length === 1) {
+                    // Cek apakah pesan kosong itu satu-satunya elemen di dalam listContainer
+                    if (emptyMessage && listContainer.children.length === 1 && emptyMessage.textContent.includes('Tidak ada tindak lanjut')) {
                         listContainer.innerHTML = '';
                     }
 
                     listContainer.appendChild(newItem);
                     
-                    // 3. Reset form dan tutup modal
+                    // Reset form dan tutup modal
                     form.reset();
                     if (modalInstance) modalInstance.hide();
                     
                 } else {
                     let errorMessage = data.message || 'Error server saat menambahkan tugas.';
                     if (response.status === 422 && data.errors) {
-                        errorMessage = `Validasi Gagal: ${data.errors.item ? data.errors.item[0] : (data.errors.due ? data.errors.due[0] : data.errors.mom_id[0])}`;
+                        // Concatenate validation errors
+                        errorMessage = 'Validasi Gagal: ' + 
+                                     (data.errors.item ? data.errors.item[0] + ' ' : '') + 
+                                     (data.errors.due ? data.errors.due[0] + ' ' : '') +
+                                     (data.errors.mom_id ? data.errors.mom_id[0] : '');
                     }
                     alert('Gagal menyimpan tugas: ' + errorMessage);
                 }

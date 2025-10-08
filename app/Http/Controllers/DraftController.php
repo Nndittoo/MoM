@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Builder; 
+use Illuminate\Routing\Controller; 
 use App\Models\Mom;
+use App\Models\User; 
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class DraftController extends Controller
 {
@@ -19,12 +23,12 @@ class DraftController extends Controller
         
         // Ambil MoM yang dibuat oleh user ini dengan status "Menunggu" atau "Ditolak"
         $myMoms = Mom::where('creator_id', $userId)
-            ->whereHas('status', function ($query) {
+            ->whereHas('status', function (Builder $query) { 
                 // Status 'Menunggu' dan 'Ditolak' adalah status draft
                 $query->whereIn('status', ['Menunggu', 'Ditolak']); 
             })
-            // Menambahkan relasi yang diperlukan untuk ditampilkan di view
-            ->with(['creator', 'attendees', 'status']) 
+        
+            ->with(['creator', 'status']) 
             ->latest() // Mengurutkan dari yang terbaru
             ->paginate(9); // Menggunakan pagination
 
@@ -34,10 +38,11 @@ class DraftController extends Controller
 
 
         // Menyiapkan data untuk tab "All MoM"
-        $allMoms = Mom::whereHas('status', function ($query) {
+        $allMoms = Mom::whereHas('status', function (Builder $query) { 
                 $query->where('status', 'Disetujui');
             })
-            ->with(['creator', 'attendees', 'status'])
+            
+            ->with(['creator', 'status'])
             ->latest()
             ->get();
 
