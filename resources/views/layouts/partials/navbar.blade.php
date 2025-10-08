@@ -142,6 +142,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>`;
                     } else {
                         data.forEach(mom => {
+                            const createdDate = new Date(mom.created_at).toLocaleDateString('id-ID', {
+                                day: '2-digit',
+                                month: 'long',
+                                year: 'numeric'
+                            });
+
                             const createdTime = new Date(mom.created_at).toLocaleTimeString('id-ID', {
                                 hour: '2-digit',
                                 minute: '2-digit'
@@ -161,7 +167,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             ${mom.title}
                                         </p>
                                         <p class="text-xs text-text-secondary dark:text-dark-text-secondary">
-                                            ${createdTime}
+                                            ${createdDate}, ${createdTime}
                                         </p>
                                     </div>
                                 </a>

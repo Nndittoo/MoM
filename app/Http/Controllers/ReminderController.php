@@ -93,14 +93,6 @@ class ReminderController extends Controller
         return 'Besok';
     }
 
-    public function complete($id)
-    {
-        $task = ActionItem::findOrFail($id);
-        $task->update(['status' => 'selesai']);
-
-        return redirect()->back()->with('success', 'Task berhasil diselesaikan!');
-    }
-
     public static function getReminderCount($userId = null)
     {
         $now = Carbon::now();
