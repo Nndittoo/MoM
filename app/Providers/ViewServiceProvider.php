@@ -22,16 +22,31 @@ class ViewServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Share reminderCount dengan semua view
+        // Share reminderCount dan notificationCount dengan semua view
         View::composer('*', function ($view) {
-            $now = Carbon::now();
+            // Cek apakah user sudah login
+            if (\Illuminate\Support\Facades\Auth::check()) {
+                $now = Carbon::now();
 
-            $reminderCount = ActionItem::where('status', 'mendatang')
-                ->where('due', '>', $now)
-                ->where('due', '<=', $now->copy()->addDays(7))
-                ->count();
+                $reminderCount = ActionItem::where('status', 'mendatang')
+                    ->where('due', '>', $now)
+                    ->where('due', '<=', $now->copy()->addDays(7))
+                    ->count();
 
-            $view->with('reminderCount', $reminderCount);
+                // Import NotificationController untuk getUnreadCount
+                $notificationCount = \App\Http\Controllers\NotificationController::getUnreadCount();
+
+                $view->with([
+                    'reminderCount' => $reminderCount,
+                    'notificationCount' => $notificationCount
+                ]);
+            } else {
+                // Jika belum login, set ke 0
+                $view->with([
+                    'reminderCount' => 0,
+                    'notificationCount' => 0
+                ]);
+            }
         });
     }
 }

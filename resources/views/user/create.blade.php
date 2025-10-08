@@ -4,7 +4,7 @@
 
 @push('styles')
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    
+
 @endpush
 
 @section('content')
@@ -38,13 +38,13 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div><label for="judul" class="block mb-2 text-sm font-medium">Judul Rapat</label><input type="text" name="title" id="judul" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Contoh: Rapat Progres Proyek Q3" required></div>
                     <div><label for="tempat" class="block mb-2 text-sm font-medium">Tempat</label><input type="text" name="location" id="tempat" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Contoh: Ruang Rapat Lt. 5 / Online" required></div>
-                    
+
                     {{-- INPUT MANUAL PIMPINAN --}}
                     <div>
                         <label for="pimpinan_rapat" class="block mb-2 text-sm font-medium">Pimpinan Rapat</label>
                         <input type="text" name="pimpinan_rapat" id="pimpinan_rapat" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Nama Pimpinan" required>
                     </div>
-                    
+
                     {{-- INPUT MANUAL NOTULEN --}}
                     <div>
                         <label for="notulen" class="block mb-2 text-sm font-medium">Notulen</label>
@@ -62,7 +62,7 @@
             <div class="space-y-6">
                 <h2 class="text-base font-semibold text-text-primary dark:text-dark-text-primary border-b border-border-light dark:border-border-dark pb-3">Peserta & Agenda</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    
+
                     {{-- PESERTA INTERNAL (Manual Text Input) --}}
                     <div>
                         <label class="block mb-2 text-sm font-medium">Peserta Rapat</label>
@@ -90,7 +90,7 @@
             {{-- Peserta dari Mitra (Custom Manual Entry) --}}
             <div class="space-y-6">
                 <h2 class="text-base font-semibold text-text-primary dark:text-dark-text-primary border-b border-border-light dark:border-border-dark pb-3">Pihak yang Akan Menandatangani MoM</h2>
-                
+
                 {{-- Form untuk menambah Mitra Baru --}}
                 <div class="flex flex-col md:flex-row gap-4 items-end">
                     <div class="w-full">
@@ -120,7 +120,7 @@
                 {{-- Input file dengan ID 'lampiran-input' agar mudah diolah JS --}}
                 <input class="block w-full text-sm text-text-primary border border-border-light rounded-lg cursor-pointer bg-body-bg dark:text-dark-text-secondary focus:outline-none dark:bg-dark-component-bg dark:border-border-dark" id="lampiran-input" name="attachments[]" type="file" multiple>
                 <p class="mt-1 text-xs text-text-secondary">PNG, JPG, PDF, DOCX (MAX. 10MB). Dapat mengunggah lebih dari 1 file.</p>
-                
+
                 {{-- LIST FILE YANG DIPILIH --}}
                 <div id="file-list" class="mt-3 space-y-1 text-sm text-text-secondary dark:text-dark-text-secondary">
                     {{-- File names will be listed here by JS --}}
@@ -141,33 +141,33 @@
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
 <script>
-    
+
     // FUNGSI UTILITY: Tampilkan Toast
     const showToast = (message, isError = false) => {
         const toast = document.getElementById("toast");
         const icon = toast.querySelector('i');
         const messageContainer = toast.querySelector('div.text-sm.font-medium');
-        
-        icon.className = isError 
-            ? 'fa-solid fa-circle-xmark text-red-500 text-lg' 
+
+        icon.className = isError
+            ? 'fa-solid fa-circle-xmark text-red-500 text-lg'
             : 'fa-solid fa-circle-check text-green-500 text-lg';
         messageContainer.textContent = message;
-        
+
         toast.classList.remove("hidden", "opacity-0");
         toast.classList.add("opacity-100");
-        
+
         setTimeout(() => {
             toast.classList.remove("opacity-100");
             toast.classList.add("opacity-0");
             setTimeout(() => { toast.classList.add("hidden"); }, 500);
-        }, 5000); 
+        }, 5000);
     };
 
 
     document.addEventListener("DOMContentLoaded", () => {
         const form = document.getElementById('mom-form');
         const btnSubmit = document.getElementById('btn-submit');
-        const fileInput = document.getElementById('lampiran-input'); 
+        const fileInput = document.getElementById('lampiran-input');
 
         const csrfTokenElement = document.querySelector('meta[name="csrf-token"]');
         const csrfToken = csrfTokenElement ? csrfTokenElement.getAttribute('content') : '';
@@ -176,12 +176,12 @@
             console.error("Elemen form, submit button, atau file input tidak ditemukan.");
             return;
         }
-        
+
         // --- SETUP DATA GLOBAL ---
         const dataStorage = {
-            manualAttendees: [], 
-            agendas: [], 
-            partnerAttendees: [], 
+            manualAttendees: [],
+            agendas: [],
+            partnerAttendees: [],
             filesToUpload: []
         };
 
@@ -193,8 +193,8 @@
 
             if (files.length > 0) {
                 const ul = document.createElement('ul');
-                ul.className = 'list-none space-y-2'; 
-                
+                ul.className = 'list-none space-y-2';
+
                 files.forEach((file, index) => {
                     const li = document.createElement('li');
                     li.className = 'flex items-center justify-between p-2 rounded-lg bg-gray-100 dark:bg-gray-700';
@@ -208,14 +208,14 @@
                     removeBtn.type = 'button';
                     removeBtn.innerHTML = '<i class="fa-solid fa-xmark text-red-500 hover:text-red-700"></i>';
                     removeBtn.title = 'Hapus file ini dari daftar upload';
-                    
+
                     removeBtn.onclick = () => {
                         // Hapus file dari array dataStorage
                         dataStorage.filesToUpload.splice(index, 1);
                         renderFileList();
-                        
+
                         // Reset input file (perlu untuk mengizinkan input file yang sama lagi)
-                        fileInput.value = null; 
+                        fileInput.value = null;
                     };
 
                     li.appendChild(fileInfo);
@@ -231,7 +231,7 @@
         // --- EVENT LISTENER UNTUK FILE INPUT (Menggabungkan file) ---
         fileInput.addEventListener('change', (event) => {
             const newFiles = Array.from(event.target.files);
-            
+
             if (newFiles.length > 0) {
                 newFiles.forEach(file => {
                     // Cek duplikasi (berdasarkan nama dan ukuran)
@@ -242,8 +242,8 @@
             }
 
             // Reset input file
-            fileInput.value = null; 
-            
+            fileInput.value = null;
+
             renderFileList();
         });
 
@@ -252,15 +252,15 @@
             const input = document.getElementById('input-peserta-manual');
             const addButton = document.getElementById('btn-add-peserta-manual');
             const listContainer = document.getElementById('list-peserta-manual');
-            
+
             const renderList = () => {
                 listContainer.innerHTML = '';
                 dataStorage.manualAttendees.forEach((name, index) => {
                     const pill = document.createElement('span');
                     pill.className = 'inline-flex items-center gap-x-2 bg-primary/20 text-primary text-sm font-medium px-3 py-1.5 rounded-full dark:bg-primary/30 dark:text-primary';
-                    
+
                     pill.textContent = name;
-                    
+
                     const removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
                     removeBtn.innerHTML = '<i class="fa-solid fa-times w-3 h-3"></i>';
@@ -268,7 +268,7 @@
                         dataStorage.manualAttendees.splice(index, 1);
                         renderList();
                     };
-                    
+
                     pill.appendChild(removeBtn);
                     listContainer.appendChild(pill);
                 });
@@ -277,25 +277,25 @@
             const addItem = () => {
                 const name = input.value.trim();
                 if (!name) return;
-                
-                if (dataStorage.manualAttendees.some(n => n.toLowerCase() === name.toLowerCase())) { 
+
+                if (dataStorage.manualAttendees.some(n => n.toLowerCase() === name.toLowerCase())) {
                      showToast('Peserta ini sudah ditambahkan!', true);
                      return;
                 }
-                
+
                 dataStorage.manualAttendees.push(name);
-                input.value = ''; 
+                input.value = '';
                 input.focus();
                 renderList();
             };
 
             if (addButton) {
                 addButton.addEventListener('click', addItem);
-                input.addEventListener('keydown', (e) => { 
-                    if (e.key === 'Enter') { 
-                        e.preventDefault(); 
-                        addItem(); 
-                    } 
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addItem();
+                    }
                 });
             }
         }
@@ -307,14 +307,14 @@
             const input = document.getElementById('input-agenda');
             const addButton = document.getElementById('btn-add-agenda');
             const listContainer = document.getElementById('list-agenda');
-            
+
             const renderList = () => {
                 listContainer.innerHTML = '';
                 dataStorage.agendas.forEach((item, index) => {
                     const listItem = document.createElement('li');
                     listItem.className = 'flex items-center justify-between text-text-secondary dark:text-dark-text-secondary';
                     listItem.textContent = item;
-                    
+
                     const removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
                     removeBtn.innerHTML = '<i class="fa-solid fa-times text-red-500 hover:text-red-700 fa-sm"></i>';
@@ -336,15 +336,15 @@
                 input.value = '';
                 input.focus();
             };
-            
+
             if (addButton) {
                 addButton.addEventListener('click', addItem);
                 input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addItem(); } });
             }
         }
         setupAgendaList();
-        
-        
+
+
         // --- Setup Peserta dari Mitra (Dynamic Input) ---
         function setupPartnerAttendees() {
             const inputMitra = document.getElementById('input-mitra-nama');
@@ -353,16 +353,16 @@
 
             const renderMitraList = () => {
                 listMitraContainer.innerHTML = '';
-                
+
                 dataStorage.partnerAttendees.forEach((mitra, mitraIndex) => {
                     const mitraDiv = document.createElement('div');
                     mitraDiv.className = 'p-4 border border-border-light dark:border-border-dark rounded-lg bg-body-bg dark:bg-dark-component-bg shadow-sm space-y-3';
-                    
+
                     // Header Mitra
                     const header = document.createElement('div');
                     header.className = 'flex items-center justify-between border-b border-border-light dark:border-border-dark pb-2';
                     header.innerHTML = `<h3 class="text-base font-semibold text-primary">${mitra.name}</h3>`;
-                    
+
                     const removeMitraBtn = document.createElement('button');
                     removeMitraBtn.type = 'button';
                     removeMitraBtn.innerHTML = '<i class="fa-solid fa-trash text-red-500 hover:text-red-700 fa-sm"></i>';
@@ -381,7 +381,7 @@
                         <button type="button" id="btn-add-peserta-mitra-${mitraIndex}" class="px-4 py-2 text-xs font-medium text-white bg-primary rounded-lg hover:opacity-90 flex-shrink-0">Tambah</button>
                     `;
                     mitraDiv.appendChild(attendeeForm);
-                    
+
                     // List Peserta Mitra
                     const attendeeList = document.createElement('ul');
                     attendeeList.className = 'mt-2 space-y-1 list-disc list-inside text-sm text-text-secondary dark:text-dark-text-secondary';
@@ -389,7 +389,7 @@
                         const li = document.createElement('li');
                         li.className = 'flex items-center justify-between';
                         li.textContent = person;
-                        
+
                         const removePersonBtn = document.createElement('button');
                         removePersonBtn.type = 'button';
                         removePersonBtn.innerHTML = '<i class="fa-solid fa-times text-red-400 hover:text-red-600 fa-xs"></i>';
@@ -404,11 +404,11 @@
                     });
                     mitraDiv.appendChild(attendeeList);
                     listMitraContainer.appendChild(mitraDiv);
-                    
+
                     // Tambahkan Listener untuk tombol Tambah Peserta
                     const personInput = document.getElementById(`input-peserta-mitra-${mitraIndex}`);
                     const personAddBtn = document.getElementById(`btn-add-peserta-mitra-${mitraIndex}`);
-                    
+
                     const addPerson = () => {
                         const personName = personInput.value.trim();
                         if (personName === '') return;
@@ -418,11 +418,11 @@
                     };
 
                     personAddBtn.addEventListener('click', addPerson);
-                    personInput.addEventListener('keydown', (e) => { 
-                        if (e.key === 'Enter') { 
-                            e.preventDefault(); 
-                            addPerson(); 
-                        } 
+                    personInput.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            addPerson();
+                        }
                     });
                 });
             };
@@ -434,7 +434,7 @@
                     showToast('Nama Mitra wajib diisi!', true);
                     return;
                 }
-                
+
                 if (dataStorage.partnerAttendees.some(mitra => mitra.name.toLowerCase() === mitraName.toLowerCase())) {
                     showToast('Nama Mitra ini sudah ada!', true);
                     return;
@@ -448,11 +448,11 @@
 
             if (btnAddMitra) {
                 btnAddMitra.addEventListener('click', addMitra);
-                inputMitra.addEventListener('keydown', (e) => { 
-                    if (e.key === 'Enter') { 
-                        e.preventDefault(); 
-                        addMitra(); 
-                    } 
+                inputMitra.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addMitra();
+                    }
                 });
             }
         }
@@ -461,14 +461,14 @@
 
         // --- Inisialisasi Quill JS ---
         const pembahasanQuill = new Quill('#pembahasan-editor', { theme: 'snow', placeholder: "Tuliskan hasil pembahasan, keputusan, dan poin penting lainnya...", modules: { toolbar: [[{ 'header': [1, 2, false] }], ['bold', 'italic', 'underline'], [{ 'list': 'ordered' }, { 'list': 'bullet' }], ['link'], ['clean']] } });
-        
+
 
         // --- FUNGSI SUBMIT UTAMA (AJAX) ---
         const submitForm = async () => {
             const formData = new FormData(); // Buat FormData baru
-            
+
             // Salin data form standar + Nama Pimpinan & Notulen Manual
-            const simpleFields = ['title', 'location', 'meeting_date', 'start_time', 'end_time', 'pimpinan_rapat', 'notulen']; 
+            const simpleFields = ['title', 'location', 'meeting_date', 'start_time', 'end_time', 'pimpinan_rapat', 'notulen'];
             simpleFields.forEach(name => {
                 const element = document.querySelector(`[name="${name}"]`);
                 if (element) {
@@ -497,7 +497,7 @@
                  return;
             }
             dataStorage.manualAttendees.forEach(name => {
-                formData.append('attendees_manual[]', name); 
+                formData.append('attendees_manual[]', name);
             });
 
 
@@ -509,7 +509,7 @@
             dataStorage.agendas.forEach(item => {
                 formData.append('agendas[]', item);
             });
-            
+
             // Tambahkan Array Peserta Mitra (Partner Attendees) sebagai JSON string
             formData.append('partner_attendees_json', JSON.stringify(dataStorage.partnerAttendees));
 
@@ -520,17 +520,17 @@
                 });
             }
 
-            
+
             // Kirim data ke backend
-            
+
             try {
-                const response = await fetch('{{ route('moms.store') }}', { 
+                const response = await fetch('{{ route('moms.store') }}', {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': csrfToken, 
+                        'X-CSRF-TOKEN': csrfToken,
                         'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: formData, 
+                    body: formData,
                 });
 
                 const isJson = response.headers.get('content-type')?.includes('application/json');
@@ -538,22 +538,23 @@
 
                 if (response.ok) {
                     showToast('MoM berhasil di submit!', false);
-                    form.reset(); 
-                    
+                    window.fetchNotifications();
+                    form.reset();
+
                     // Reset custom data dan tampilan
-                    dataStorage.manualAttendees = []; 
+                    dataStorage.manualAttendees = [];
                     dataStorage.agendas = [];
                     dataStorage.partnerAttendees = [];
-                    dataStorage.filesToUpload = []; 
-                    
-                    document.getElementById('list-peserta-manual').innerHTML = ''; 
+                    dataStorage.filesToUpload = [];
+
+                    document.getElementById('list-peserta-manual').innerHTML = '';
                     document.getElementById('list-agenda').innerHTML = '';
-                    document.getElementById('list-mitra-container').innerHTML = ''; 
+                    document.getElementById('list-mitra-container').innerHTML = '';
                     renderFileList();
                     pembahasanQuill.root.innerHTML = '';
                 } else {
                     let errorMessage = 'Gagal menyimpan MoM.';
-                    
+
                     if (response.status === 422 && data.errors) {
                         const firstErrorKey = Object.keys(data.errors)[0];
                         errorMessage = `Validasi Gagal: ${data.errors[firstErrorKey][0]}`;
@@ -574,14 +575,14 @@
             e.preventDefault();
             submitForm();
         });
-        
+
         // Nonaktifkan submit form default agar tidak terjadi reload
-        form.addEventListener("submit", (e) => { 
-            e.preventDefault(); 
-        }); 
-        
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+        });
+
         // Panggil renderFileList saat DOM selesai dimuat (untuk inisialisasi teks)
-        renderFileList(); 
+        renderFileList();
     });
 </script>
 @endpush
