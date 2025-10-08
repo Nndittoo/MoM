@@ -8,40 +8,49 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
     public function index()
     {
+        $userId = Auth::id();
+
         // Statistik Cards
         $stats = [
-            'approved' => Mom::where('status_id', 2)->count(),
-            'pending' => Mom::where('status_id', 1)->count(),
-            'tasks_due' => ActionItem::where('status', 'mendatang')->count(), // Semua task mendatang
-            'tasks_completed' => ActionItem::where('status', 'selesai')->count(), // Semua task selesai
+            'approved' => Mom::where('status_id', 2)->where('creator_id', $userId)->count(),
+            'pending' => Mom::where('status_id', 1)->where('creator_id', $userId)->count(),
+            'tasks_due' => ActionItem::whereHas('mom', function ($q) use ($userId) {
+                                $q->where('creator_id', $userId);
+                            })->where('status', 'mendatang')->count(),
+            'tasks_completed' => ActionItem::whereHas('mom', function ($q) use ($userId) {
+                                        $q->where('creator_id', $userId);
+                                    })->where('status', 'selesai')->count(),
         ];
 
         // Recent MoMs untuk tabel
         $recentMoms = Mom::with(['status', 'creator'])
+                        ->where('creator_id', $userId)
                         ->orderBy('created_at', 'desc')
                         ->take(10)
                         ->get();
 
         // Recent Activity
-        $recentActivity = $this->getRecentActivity();
+        $recentActivity = $this->getRecentActivity($userId);
 
         // Chart Data
-        $chartData = $this->getChartData();
+        $chartData = $this->getChartData($userId);
 
         return view('user.dashboard', compact('stats', 'recentMoms', 'recentActivity', 'chartData'));
     }
 
-    private function getRecentActivity()
+    private function getRecentActivity($userId)
     {
         $activities = collect();
 
         // Ambil MoM yang baru dibuat (3 terakhir)
         $newMoms = Mom::with('creator')
+                     ->where('creator_id', $userId)
                      ->orderBy('created_at', 'desc')
                      ->take(3)
                      ->get()
@@ -59,6 +68,9 @@ class DashboardController extends Controller
 
         // Ambil Action Item yang baru dibuat (3 terakhir)
         $newTasks = ActionItem::with('mom')
+                              ->whereHas('mom', function ($q) use ($userId) {
+                                  $q->where('creator_id', $userId);
+                              })
                               ->orderBy('created_at', 'desc')
                               ->take(3)
                               ->get()
@@ -82,16 +94,16 @@ class DashboardController extends Controller
                          ->values();
     }
 
-    private function getChartData()
+    private function getChartData($userId)
     {
         return [
-            'week' => $this->getWeeklyData(),
-            'month' => $this->getMonthlyData(),
-            'year' => $this->getYearlyData(),
+            'week' => $this->getWeeklyData($userId),
+            'month' => $this->getMonthlyData($userId),
+            'year' => $this->getYearlyData($userId),
         ];
     }
 
-    private function getWeeklyData()
+    private function getWeeklyData($userId)
     {
         $startOfWeek = Carbon::now()->startOfWeek();
         $days = [];
@@ -103,10 +115,12 @@ class DashboardController extends Controller
             $days[] = $date->format('D');
 
             $approved[] = Mom::where('status_id', 2)
+                            ->where('creator_id', $userId)
                             ->whereDate('created_at', $date)
                             ->count();
 
             $pending[] = Mom::where('status_id', 1)
+                           ->where('creator_id', $userId)
                            ->whereDate('created_at', $date)
                            ->count();
         }
@@ -120,7 +134,7 @@ class DashboardController extends Controller
         ];
     }
 
-    private function getMonthlyData()
+    private function getMonthlyData($userId)
     {
         $startOfMonth = Carbon::now()->startOfMonth();
         $weeks = ['Minggu 1', 'Minggu 2', 'Minggu 3', 'Minggu 4'];
@@ -132,10 +146,12 @@ class DashboardController extends Controller
             $weekEnd = $weekStart->copy()->addWeek();
 
             $approved[] = Mom::where('status_id', 2)
+                            ->where('creator_id', $userId)
                             ->whereBetween('created_at', [$weekStart, $weekEnd])
                             ->count();
 
             $pending[] = Mom::where('status_id', 1)
+                           ->where('creator_id', $userId)
                            ->whereBetween('created_at', [$weekStart, $weekEnd])
                            ->count();
         }
@@ -149,7 +165,7 @@ class DashboardController extends Controller
         ];
     }
 
-    private function getYearlyData()
+    private function getYearlyData($userId)
     {
         $months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
         $approved = [];
@@ -157,11 +173,13 @@ class DashboardController extends Controller
 
         for ($i = 1; $i <= 12; $i++) {
             $approved[] = Mom::where('status_id', 2)
+                            ->where('creator_id', $userId)
                             ->whereYear('created_at', Carbon::now()->year)
                             ->whereMonth('created_at', $i)
                             ->count();
 
             $pending[] = Mom::where('status_id', 1)
+                           ->where('creator_id', $userId)
                            ->whereYear('created_at', Carbon::now()->year)
                            ->whereMonth('created_at', $i)
                            ->count();
@@ -184,11 +202,17 @@ class DashboardController extends Controller
         // Search by title, pimpinan_rapat, notulen, atau location
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
+            $userId = Auth::id();
+
             $query->where(function($q) use ($search) {
                 $q->where('title', 'like', '%' . $search . '%')
-                  ->orWhere('pimpinan_rapat', 'like', '%' . $search . '%')
-                  ->orWhere('notulen', 'like', '%' . $search . '%')
-                  ->orWhere('location', 'like', '%' . $search . '%');
+                ->orWhere('pimpinan_rapat', 'like', '%' . $search . '%')
+                ->orWhere('notulen', 'like', '%' . $search . '%')
+                ->orWhere('location', 'like', '%' . $search . '%');
+            })
+            ->where(function($q) use ($userId) {
+                $q->where('creator_id', $userId)
+                ->orWhere('status_id', 2);
             });
         }
 

@@ -62,14 +62,6 @@
                         <span class="px-3 py-1 text-xs font-semibold rounded-full {{ $task['bg_color'] }} {{ $task['text_color'] }} {{ $task['dark_bg'] }} {{ $task['dark_text'] }}">
                             {{ $task['badge'] }}
                         </span>
-                        <form action="{{ route('reminder.complete', $task['action_id']) }}" method="POST" onsubmit="return confirm('Tandai task ini sebagai selesai?')">
-                            @csrf
-                            <button type="submit" class="p-2 text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-lg transition" title="Tandai Selesai">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </button>
-                        </form>
                     </div>
                 </div>
             </div>
@@ -122,14 +114,6 @@
                         <span class="px-3 py-1 text-xs font-semibold rounded-full {{ $task['bg_color'] }} {{ $task['text_color'] }} {{ $task['dark_bg'] }} {{ $task['dark_text'] }}">
                             {{ $task['badge'] }}
                         </span>
-                        <form action="{{ route('reminder.complete', $task['action_id']) }}" method="POST" onsubmit="return confirm('Tandai task ini sebagai selesai?')">
-                            @csrf
-                            <button type="submit" class="p-2 text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-lg transition" title="Tandai Selesai">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </button>
-                        </form>
                     </div>
                 </div>
             </div>
