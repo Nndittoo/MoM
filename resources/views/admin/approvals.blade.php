@@ -33,7 +33,7 @@
         <div class="bg-component-bg dark:bg-dark-component-bg shadow rounded-lg p-5 border-l-4 border-yellow-500">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div class="flex-grow">
-                    <a href="{{ url('/moms/' . $momId) }}" class="font-bold text-lg text-text-primary dark:text-dark-text-primary hover:underline">{{ $mom->title }}</a>
+                    <a href="{{ $momId ? route('admin.moms.show', $momId) : '#' }}" class="font-bold text-lg text-text-primary dark:text-dark-text-primary hover:underline">{{ $mom->title }}</a>
                     <p class="text-sm text-text-secondary dark:text-dark-text-secondary mt-1">
                         Diajukan oleh: <span class="font-medium">{{ $creatorName }}</span> pada {{ $createdAt }}
                     </p>

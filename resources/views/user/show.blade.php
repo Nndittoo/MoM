@@ -16,16 +16,8 @@
     
     // --- LOGIC BARU UNTUK MENGGABUNGKAN PESERTA DARI KOLOM JSON ---
     $internalNames = $mom->nama_peserta ?? []; // Peserta rapat (array of strings)
-    $partnerNames = [];
     
-    if (is_array($mom->nama_mitra)) {
-        foreach ($mom->nama_mitra as $mitra) {
-            if (is_array($mitra['attendees'] ?? null)) {
-                $partnerNames = array_merge($partnerNames, $mitra['attendees']);
-            }
-        }
-    }
-    $allAttendees = array_merge($internalNames, $partnerNames);
+    $allAttendees = array_merge($internalNames);
     $totalAttendees = count($allAttendees);
     // -----------------------------------------------------------
 @endphp

@@ -78,6 +78,7 @@ Route::prefix('admin')->middleware(['auth','role:admin'])->group(function () {
     Route::post('/approvals/approve/{mom}', [ApprovalController::class, 'approve'])->name('admin.approvals.approve');
     Route::post('/approvals/reject/{mom}', [ApprovalController::class, 'reject'])->name('admin.approvals.reject');
     Route::get('/moms/create', [MomController::class, 'create'])->name('admin.moms.create');
+    Route::get('/moms/{mom}', [MomController::class, 'show_admin'])->name('admin.moms.show');
 });
 
 Route::get('/draft', [DraftController::class, 'index'])->name('draft.index')->middleware('auth');

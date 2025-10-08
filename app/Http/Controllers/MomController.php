@@ -192,6 +192,12 @@ class MomController extends Controller
         return view('user/show', compact('mom'));
     }
 
+    public function show_admin(Mom $mom)
+    {
+        $mom->load(['creator', 'agendas', 'attachments']);
+        return view('admin/details', compact('mom'));
+    }
+
     public function edit(Mom $mom)
     {
         $users = User::all();
