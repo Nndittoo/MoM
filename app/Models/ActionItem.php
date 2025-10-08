@@ -10,7 +10,7 @@ class ActionItem extends Model
     use HasFactory;
 
     protected $table = 'action_items';
-    protected $primaryKey = 'action_id';
+    protected $primaryKey = 'action_id'; 
 
     protected $fillable = [
         'mom_id',
@@ -22,6 +22,11 @@ class ActionItem extends Model
     protected $casts = [
         'due' => 'date',
     ];
+
+    public function getRouteKeyName()
+    {
+        return 'action_id'; 
+    }
 
     public function mom()
     {
@@ -44,7 +49,7 @@ class ActionItem extends Model
     public function scopeDueSoon($query, $days = 7)
     {
         return $query->where('due', '>=', now())
-                    ->where('due', '<=', now()->addDays($days))
-                    ->where('status', 'mendatang');
+                     ->where('due', '<=', now()->addDays($days))
+                     ->where('status', 'mendatang');
     }
 }

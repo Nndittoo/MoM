@@ -184,19 +184,45 @@
 </div>
 @endsection
 
+@push('styles')
+<style>
+    /* Tambahkan bullet di dalam pembahasan */
+    .prose ul {
+        list-style-type: disc;
+        margin-left: 1.5rem;
+        padding-left: 1rem;
+    }
+
+    .prose ol {
+        list-style-type: decimal;
+        margin-left: 1.5rem;
+        padding-left: 1rem;
+    }
+
+    .prose li {
+        margin-bottom: 0.25rem;
+    }
+
+    .prose ul li::marker {
+        color: var(--tw-prose-bullets, #6b7280);
+    }
+
+    .dark .prose ul li::marker {
+        color: #d1d5db;
+    }
+</style>
+@endpush
+
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('tindak-lanjut-form');
         const listContainer = document.getElementById('tindak-lanjut-list');
-        // Mendapatkan URL POST dari route yang sudah dibuat (Harus ada: action_items.store)
         const storeActionItemUrl = "{{ route('action_items.store') }}"; 
         
-        // Memastikan modal Flowbite dapat diakses
         const modalElement = document.getElementById('tindak-lanjut-modal');
         let modalInstance = null;
         
-        // Inisialisasi modal menggunakan Flowbite.Modal jika Flowbite terdeteksi
         if (typeof Flowbite !== 'undefined' && Flowbite.Modal) {
              modalInstance = new Flowbite.Modal(modalElement);
         }
@@ -217,7 +243,6 @@
                 const response = await fetch(storeActionItemUrl, {
                     method: 'POST',
                     headers: {
-                        // Mengambil CSRF token dari hidden input form
                         'X-CSRF-TOKEN': formData.get('_token'), 
                         'X-Requested-With': 'XMLHttpRequest',
                     },
@@ -227,12 +252,10 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    // Format tanggal untuk tampilan lokal
                     const formattedDate = new Date(deadline + 'T00:00:00').toLocaleDateString('id-ID', {
                         day: '2-digit', month: 'short', year: 'numeric'
                     });
 
-                    // Buat elemen baru di daftar
                     const newItem = document.createElement('div');
                     newItem.className = 'p-3 bg-body-bg dark:bg-dark-body-bg rounded-lg';
                     newItem.innerHTML = `
@@ -240,23 +263,19 @@
                         <p class="text-xs text-text-secondary">Deadline: ${formattedDate}</p>
                     `;
                     
-                    // Hapus pesan "Tidak ada tindak lanjut" jika ada
                     const emptyMessage = listContainer.querySelector('.text-text-secondary');
-                    // Cek apakah pesan kosong itu satu-satunya elemen di dalam listContainer
                     if (emptyMessage && listContainer.children.length === 1 && emptyMessage.textContent.includes('Tidak ada tindak lanjut')) {
                         listContainer.innerHTML = '';
                     }
 
                     listContainer.appendChild(newItem);
                     
-                    // Reset form dan tutup modal
                     form.reset();
                     if (modalInstance) modalInstance.hide();
                     
                 } else {
                     let errorMessage = data.message || 'Error server saat menambahkan tugas.';
                     if (response.status === 422 && data.errors) {
-                        // Concatenate validation errors
                         errorMessage = 'Validasi Gagal: ' + 
                                      (data.errors.item ? data.errors.item[0] + ' ' : '') + 
                                      (data.errors.due ? data.errors.due[0] + ' ' : '') +

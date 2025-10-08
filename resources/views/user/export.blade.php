@@ -106,7 +106,7 @@
                     </td>
                     <td colspan="3" class="text-center align-middle border border-black">
                         <p class="font-bold text-2xl italic">MINUTE OF MEETING</p>
-                        <p class="semibold text-xl">{{ $mom->title }}</p>
+                        <p class="font-bold text-xl">{{ $mom->title }}</p>
                     </td>
                 </tr>
 
