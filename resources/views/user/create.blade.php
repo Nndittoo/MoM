@@ -4,7 +4,7 @@
 
 @push('styles')
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-
+    
 @endpush
 
 @section('content')
@@ -12,7 +12,7 @@
     {{-- Toast Notification --}}
     <div id="toast" class="hidden fixed top-24 right-5 z-50 items-center gap-3 px-4 py-3 rounded-xl shadow-lg bg-white dark:bg-dark-component-bg border border-border-light dark:border-border-dark text-text-primary dark:text-dark-text-primary transition-all duration-500 opacity-0">
         <div class="flex-shrink-0"><i class="fa-solid fa-circle-check text-green-500 text-lg"></i></div>
-        <div class="text-sm font-medium">MoM berhasil di submit!</div>
+        <div class="text-sm font-medium">MoM berhasil disubmit!</div>
     </div>
 
     {{-- Header --}}
@@ -30,7 +30,7 @@
     {{-- Form Container --}}
     <div class="bg-component-bg dark:bg-dark-component-bg p-6 md:p-8 rounded-2xl shadow-lg">
         <form id="mom-form" class="space-y-10">
-            @csrf 
+            @csrf {{-- Pastikan CSRF token disertakan --}}
 
             {{-- Informasi Rapat --}}
             <div class="space-y-6">
@@ -41,13 +41,13 @@
                     
                     {{-- INPUT MANUAL PIMPINAN --}}
                     <div>
-                        <label for="leader_name" class="block mb-2 text-sm font-medium">Pimpinan Rapat</label>
-                        <input type="text" name="leader_name" id="leader_name" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Nama Pimpinan Rapat" required>
+                        <label for="leader_name" class="block mb-2 text-sm font-medium">Pimpinan Rapat (Nama Manual)</label>
+                        <input type="text" name="leader_name" id="leader_name" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Nama Pimpinan" required>
                     </div>
                     
                     {{-- INPUT MANUAL NOTULEN --}}
                     <div>
-                        <label for="notulen_name" class="block mb-2 text-sm font-medium">Notulen</label>
+                        <label for="notulen_name" class="block mb-2 text-sm font-medium">Notulen (Nama Manual)</label>
                         <input type="text" name="notulen_name" id="notulen_name" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Nama Notulen" required>
                     </div>
                 </div>
@@ -65,7 +65,7 @@
                     
                     {{-- PESERTA INTERNAL (Manual Text Input) --}}
                     <div>
-                        <label class="block mb-2 text-sm font-medium">Peserta Rapat</label>
+                        <label class="block mb-2 text-sm font-medium">Peserta Rapat (Internal)</label>
                         <div class="flex gap-2">
                             <input type="text" id="input-peserta-manual" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Nama Peserta">
                             <button type="button" id="btn-add-peserta-manual" class="px-4 py-2 text-sm font-medium text-white bg-gradient-primary rounded-lg hover:opacity-90">Add</button>
@@ -147,20 +147,20 @@
         const toast = document.getElementById("toast");
         const icon = toast.querySelector('i');
         const messageContainer = toast.querySelector('div.text-sm.font-medium');
-
-        icon.className = isError
-            ? 'fa-solid fa-circle-xmark text-red-500 text-lg'
+        
+        icon.className = isError 
+            ? 'fa-solid fa-circle-xmark text-red-500 text-lg' 
             : 'fa-solid fa-circle-check text-green-500 text-lg';
         messageContainer.textContent = message;
-
+        
         toast.classList.remove("hidden", "opacity-0");
         toast.classList.add("opacity-100");
-
+        
         setTimeout(() => {
             toast.classList.remove("opacity-100");
             toast.classList.add("opacity-0");
             setTimeout(() => { toast.classList.add("hidden"); }, 500);
-        }, 5000);
+        }, 5000); 
     };
 
 
@@ -302,27 +302,42 @@
         setupManualParticipantPills();
 
 
-            // --- Setup Agenda (List) ---
-            function setupAgendaList() {
-                const input = document.getElementById('input-agenda');
-                const addButton = document.getElementById('btn-add-agenda');
-                const listContainer = document.getElementById('list-agenda');
-                const addItem = () => {
-                    const value = input.value.trim();
-                    if (value === '') return;
+        // --- Setup Agenda (List) ---
+        function setupAgendaList() {
+            const input = document.getElementById('input-agenda');
+            const addButton = document.getElementById('btn-add-agenda');
+            const listContainer = document.getElementById('list-agenda');
+            
+            const renderList = () => {
+                listContainer.innerHTML = '';
+                dataStorage.agendas.forEach((item, index) => {
                     const listItem = document.createElement('li');
                     listItem.className = 'flex items-center justify-between text-text-secondary dark:text-dark-text-secondary';
-                    listItem.textContent = value;
+                    listItem.textContent = item;
+                    
                     const removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
                     removeBtn.innerHTML = '<i class="fa-solid fa-times text-red-500 hover:text-red-700 fa-sm"></i>';
                     removeBtn.className = 'ml-4';
-                    removeBtn.onclick = () => listItem.remove();
+                    removeBtn.onclick = () => {
+                        dataStorage.agendas.splice(index, 1);
+                        renderList();
+                    };
                     listItem.appendChild(removeBtn);
                     listContainer.appendChild(listItem);
-                    input.value = '';
-                    input.focus();
-                };
+                });
+            };
+
+            const addItem = () => {
+                const value = input.value.trim();
+                if (value === '') return;
+                dataStorage.agendas.push(value);
+                renderList();
+                input.value = '';
+                input.focus();
+            };
+            
+            if (addButton) {
                 addButton.addEventListener('click', addItem);
                 input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addItem(); } });
             }
