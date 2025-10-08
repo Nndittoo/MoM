@@ -88,7 +88,7 @@
 
                 {{-- Pembahasan Header --}}
                 <tr>
-                    <td colspan="4" class="border border-black p-2 font-semibold bg-gray-200 text-center uppercase">Hasil Pembahasan / Tindak Lanjut</td>
+                    <td colspan="4" class="border border-black p-2 font-semibold bg-gray-200 text-center uppercase">Hasil Pembahasan</td>
                 </tr>
 
                 {{-- Hasil Pembahasan --}}
@@ -103,7 +103,7 @@
                 {{-- Tindak Lanjut --}}
                 @if($mom->actionItems->isNotEmpty())
                 <tr>
-                    <td colspan="4" class="border border-black p-2 font-semibold bg-gray-200 text-center uppercase">Tindak Lanjut (Action Items)</td>
+                    <td colspan="4" class="border border-black p-2 font-semibold bg-gray-200 text-center uppercase">Tindak Lanjut</td>
                 </tr>
                 <tr>
                     <td colspan="4" class="border border-black p-4">
