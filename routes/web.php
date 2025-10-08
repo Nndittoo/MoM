@@ -9,6 +9,7 @@ use App\Http\Controllers\ActionItemController;
 use App\Http\Controllers\ApprovalController;
 use App\Models\User;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CalendarController;
 
 Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -30,7 +31,8 @@ Route::middleware(['auth', 'role:user,admin'])->group(function () {
     })->name('user.index');
     Route::get('/draft', fn () => view('user.draft'))->name('user.draft');
     Route::get('/reminder', fn () => view('user.reminder'))->name('user.reminder');
-    Route::get('/calendar', fn () => view('user.calendar'))->name('user.calendar');
+    Route::get('/calendar', [CalendarController::class, 'index'])->name('user.calendar');
+    Route::get('/calendar/events', [CalendarController::class, 'getEvents'])->name('calendar.events');
     Route::get('/notifications', fn () => view('user.notifikasi'))->name('user.notifications');
     Route::get('/show', fn () => view('user.show'))->name('user.show');
     Route::get('/export', fn () => view('user.export'))->name('user.export');
