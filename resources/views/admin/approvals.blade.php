@@ -25,11 +25,11 @@
 
         @forelse ($pendingMoms as $mom)
         @php
-            $momId = $mom->version_id ?? $mom->id ?? null; 
+            $momId = $mom->version_id ?? $mom->id ?? null;
             $creatorName = $mom->creator->name ?? 'N/A';
             $createdAt = $mom->created_at ? $mom->created_at->format('d M Y') : 'N/A';
         @endphp
-        
+
         <div class="bg-component-bg dark:bg-dark-component-bg shadow rounded-lg p-5 border-l-4 border-yellow-500">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div class="flex-grow">
@@ -41,7 +41,7 @@
 
                 <div class="flex items-center gap-2 w-full sm:w-auto">
                     {{-- APPROVE --}}
-                    <button 
+                    <button
                         data-mom-id="{{ $momId }}"
                         data-mom-title="{{ $mom->title }}"
                         data-approve-url="{{ $momId ? route('admin.approvals.approve', ['mom' => $momId]) : '#' }}"
@@ -50,7 +50,7 @@
                     </button>
 
                     {{-- REJECT --}}
-                    <button 
+                    <button
                         data-modal-target="rejection-modal" data-modal-toggle="rejection-modal"
                         data-mom-id="{{ $momId }}"
                         data-mom-title="{{ $mom->title }}"
@@ -72,13 +72,13 @@
 </div>
 
 {{-- MODAL PENOLAKAN --}}
-<div id="rejection-modal" tabindex="-1" aria-hidden="true" 
+<div id="rejection-modal" tabindex="-1" aria-hidden="true"
     class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
     <div class="relative p-4 w-full max-w-lg max-h-full">
         <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
             <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Alasan Penolakan</h3>
-                <button type="button" data-modal-hide="rejection-modal" 
+                <button type="button" data-modal-hide="rejection-modal"
                     class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
                     <i class="fa-solid fa-times"></i>
                 </button>
@@ -92,12 +92,12 @@
 
                 <div>
                     <label for="rejection-comment" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Komentar Revisi</label>
-                    <textarea id="rejection-comment" name="comment" rows="4" 
-                        class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-primary focus:border-primary dark:bg-gray-600 dark:border-gray-500" 
+                    <textarea id="rejection-comment" name="comment" rows="4"
+                        class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-primary focus:border-primary dark:bg-gray-600 dark:border-gray-500"
                         placeholder="Jelaskan bagian mana yang perlu diperbaiki oleh user..." required></textarea>
                 </div>
 
-                <button type="submit" 
+                <button type="submit"
                     class="mt-4 text-white inline-flex items-center bg-red-600 hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:focus:ring-red-800">
                     Kirim Penolakan
                 </button>
@@ -107,17 +107,18 @@
 </div>
 @endsection
 
+
+
 @push('scripts')
 <script>
-
 /* TOAST */
 const showToast = (message, isError = false) => {
     const toast = document.getElementById("toast");
     const icon = toast.querySelector('i');
     const msg = document.getElementById("toast-message");
 
-    icon.className = isError 
-        ? 'fa-solid fa-circle-xmark text-red-500 text-lg' 
+    icon.className = isError
+        ? 'fa-solid fa-circle-xmark text-red-500 text-lg'
         : 'fa-solid fa-circle-check text-green-500 text-lg';
     msg.textContent = message;
 
@@ -133,7 +134,7 @@ const showToast = (message, isError = false) => {
 
 /* AJAX HANDLER */
 const handleAjaxAction = async (url, method, data = null, successCallback = () => {}, actionName = 'aksi') => {
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content 
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
         || document.querySelector('input[name="_token"]')?.value || '';
 
     try {
@@ -163,21 +164,33 @@ const handleAjaxAction = async (url, method, data = null, successCallback = () =
     }
 };
 
-/* CLOSE MODAL  */
+/* CLOSE MODAL (VERSI FIX BACKDROP) */
 const closeRejectionModal = () => {
     const modal = document.getElementById('rejection-modal');
-    try {
-        const instance = window.Flowbite?.Modal?.getInstance?.(modal);
-        if (instance) instance.hide();
-    } catch (e) {
-        console.warn('Flowbite instance not found, fallback manual.');
-    }
+
+    // Tutup modal
     modal.classList.add('hidden');
     modal.setAttribute('aria-hidden', 'true');
-    document.querySelectorAll('.modal-backdrop, .fixed.inset-0.bg-gray-900, .bg-opacity-50')
-        .forEach(el => el.remove());
+
+    // ====== HAPUS SEMUA BACKDROP ======
+    const backdrops = [
+        '.modal-backdrop',
+        '.fixed.inset-0.bg-gray-900',
+        '.bg-gray-900.bg-opacity-50',
+        '.bg-opacity-50',
+        '.dark\\:bg-opacity-80',
+        '.overflow-y-auto > div.fixed.inset-0',
+        '[data-modal-backdrop]'
+    ];
+    backdrops.forEach(selector => {
+        document.querySelectorAll(selector).forEach(el => el.remove());
+    });
+
+    // ====== RESET BODY STYLE ======
     document.body.classList.remove('modal-open', 'overflow-hidden');
     document.body.style.overflow = 'auto';
+    document.body.style.pointerEvents = 'auto';
+    document.body.removeAttribute('data-modal-open');
 };
 
 /* EVENT LISTENER */
@@ -193,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Tutup modal
+    // Tutup modal dengan tombol X
     document.querySelector('[data-modal-hide="rejection-modal"]').addEventListener('click', closeRejectionModal);
 
     // Submit penolakan
@@ -204,14 +217,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const comment = form.querySelector('#rejection-comment').value;
         const url = form.dataset.url;
 
+        // ========================================================
+        // PERUBAHAN DI SINI
+        // ========================================================
         const success = () => {
-            closeRejectionModal();
-            const card = document.querySelector(`.reject-btn[data-mom-id="${momId}"]`)?.closest('.bg-component-bg');
-            if (card) {
-                card.style.transition = 'opacity 0.5s ease';
-                card.style.opacity = '0';
-                setTimeout(() => card.remove(), 500);
-            }
+            // Muat ulang halaman untuk menampilkan daftar MoM yang terbaru
+            window.location.reload();
         };
 
         handleAjaxAction(url, 'POST', { comment }, success, 'menolak MoM');
