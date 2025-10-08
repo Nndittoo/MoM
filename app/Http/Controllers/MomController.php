@@ -18,13 +18,23 @@ use Throwable;
 class MomController extends Controller
 {
     /**
-     * Menampilkan form untuk membuat MoM baru.
+     * Menampilkan form untuk membuat MoM baru (untuk Role User biasa).
      */
     public function create()
     {
         // Variabel $users tetap dikirimkan (untuk creator_id)
         $users = User::all(); 
         return view('user/create', compact('users')); 
+    }
+
+    /**
+     * Menampilkan form untuk membuat MoM baru (untuk Role Admin).
+     * Memuat view yang memiliki hidden input is_admin_submission.
+     */
+    public function createAdmin()
+    {
+        $users = User::all(); 
+        return view('admin/create', compact('users')); // <-- Memuat view Admin yang baru
     }
     
     public function store(StoreMomRequest $request)
@@ -38,8 +48,24 @@ class MomController extends Controller
         DB::beginTransaction();
         
         try {
+            // 1. Tentukan status default (Menunggu)
             $defaultStatus = MomStatus::where('status', 'Menunggu')->firstOrFail();
+            $statusToUse = $defaultStatus;
+            $statusMessage = 'Menunggu';
 
+            // 2. LOGIKA ADMIN: Cek apakah ini submission dari Admin (menggunakan hidden input)
+            if ($request->has('is_admin_submission') && $request->is_admin_submission == '1') {
+                try {
+                    // Cari status 'Disetujui'
+                    $approvedStatus = MomStatus::where('status', 'Disetujui')->firstOrFail();
+                    $statusToUse = $approvedStatus;
+                    $statusMessage = 'Disetujui';
+                } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+                    // Jika status 'Disetujui' tidak ditemukan, log warning dan gunakan status default
+                    Log::warning("Status 'Disetujui' tidak ditemukan di tabel MomStatus. Menggunakan status default 'Menunggu'.");
+                }
+            }
+            
             $partnerAttendees = $request->partner_attendees_json ? json_decode($request->partner_attendees_json, true) : [];
             $manualAttendees = $request->attendees_manual ?? []; 
             
@@ -56,7 +82,8 @@ class MomController extends Controller
                 
                 'creator_id' => $creatorId, 
                 'pembahasan' => $request->pembahasan,
-                'status_id' => $defaultStatus->status_id,
+                // MENGGUNAKAN STATUS YANG SUDAH DITENTUKAN OLEH LOGIKA ADMIN DI ATAS
+                'status_id' => $statusToUse->status_id, 
                 
                 'nama_peserta' => $manualAttendees,
                 'nama_mitra' => $partnerAttendees,
@@ -109,7 +136,7 @@ class MomController extends Controller
                     }
                     
                     if (!$filePath) {
-                         throw new \Exception("Penyimpanan file mengembalikan nilai kosong.");
+                          throw new \Exception("Penyimpanan file mengembalikan nilai kosong.");
                     }
 
                     $attachmentsData[] = [
@@ -130,7 +157,7 @@ class MomController extends Controller
             DB::commit();
 
             return response()->json([
-                'message' => 'Minutes of Meeting berhasil dibuat!',
+                'message' => 'Minutes of Meeting berhasil dibuat dan berstatus ' . $statusMessage . '!',
                 'mom_id' => $mom->version_id,
                 'mom' => $mom->load(['attachments', 'agendas']) 
             ], 201);
