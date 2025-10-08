@@ -6,13 +6,19 @@ use App\Models\ActionItem;
 use App\Models\Mom;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class CalendarController extends Controller
 {
     public function index()
     {
+        $userId = Auth::id();
+
         // Ambil semua action items dengan relasi mom
         $actionItems = ActionItem::with('mom')
+                                ->whereHas('mom', function ($query) use ($userId) {
+                                        $query->where('user_id', $userId); // hanya MoM milik user login
+                                    })
                                  ->where('status', 'mendatang')
                                  ->orderBy('due', 'asc')
                                  ->get();
@@ -43,6 +49,7 @@ class CalendarController extends Controller
     // API untuk mendapatkan events berdasarkan bulan
     public function getEvents(Request $request)
     {
+        $userId = Auth::id();
         $month = $request->input('month', now()->month);
         $year = $request->input('year', now()->year);
 
@@ -50,10 +57,13 @@ class CalendarController extends Controller
         $endDate = Carbon::create($year, $month, 1)->endOfMonth();
 
         $actionItems = ActionItem::with('mom')
-                                 ->where('status', 'mendatang')
-                                 ->whereBetween('due', [$startDate, $endDate])
-                                 ->orderBy('due', 'asc')
-                                 ->get();
+            ->whereHas('mom', function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
+            ->where('status', 'mendatang')
+            ->whereBetween('due', [$startDate, $endDate])
+            ->orderBy('due', 'asc')
+            ->get();
 
         $events = [];
         foreach ($actionItems as $item) {

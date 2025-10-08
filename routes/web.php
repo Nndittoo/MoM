@@ -25,6 +25,8 @@ Route::post('/logout', [AuthController::class, 'logout'])
  */
 Route::middleware(['auth', 'role:user,admin'])->group(function () {
     // Dashboard routes - pindahkan ke dalam middleware
+    Route::get('/api/search-moms', [DashboardController::class, 'searchMoms'])->name('api.search.moms');
+
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/search', [DashboardController::class, 'searchMoms'])->name('dashboard.search');
 

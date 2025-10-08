@@ -53,7 +53,7 @@ class NotificationController extends Controller
         $notifications = Notification::with('mom')
             ->where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
-            ->take(5)
+            ->take(2)
             ->get()
             ->map(function($notification) {
                 return [

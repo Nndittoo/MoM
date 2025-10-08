@@ -21,11 +21,22 @@
                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                         <i class="fa-solid fa-search text-text-secondary"></i>
                     </div>
+
                     <input
                         type="text"
                         id="search-navbar"
                         class="block w-full p-2 pl-10 text-sm text-text-primary border border-border-light rounded-lg bg-body-bg focus:ring-primary focus:border-primary dark:bg-dark-component-bg dark:border-border-dark"
-                        placeholder="Search...">
+                        placeholder="Search MoM...">
+
+                    {{-- Dropdown hasil pencarian --}}
+                    <div id="search-dropdown"
+                        class="absolute mt-2 w-full bg-component-bg dark:bg-dark-component-bg border border-border-light dark:border-border-dark rounded-lg shadow-lg z-50 hidden">
+                        <div class="max-h-96 overflow-y-auto divide-y divide-border-light dark:divide-border-dark" id="search-results">
+                            <div class="px-4 py-6 text-center text-text-secondary dark:text-dark-text-secondary">
+                                <p>Mulai mengetik untuk mencari...</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {{-- Notifications --}}
@@ -101,3 +112,78 @@
         </div>
     </div>
 </nav>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search-navbar');
+    const dropdown = document.getElementById('search-dropdown');
+    const resultsContainer = document.getElementById('search-results');
+    let debounceTimer;
+
+    searchInput.addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        const query = this.value.trim();
+
+        if (query.length < 2) {
+            dropdown.classList.add('hidden');
+            return;
+        }
+
+        debounceTimer = setTimeout(() => {
+            fetch(`/api/search-moms?search=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    resultsContainer.innerHTML = '';
+
+                    if (data.length === 0) {
+                        resultsContainer.innerHTML = `
+                            <div class="px-4 py-6 text-center text-text-secondary dark:text-dark-text-secondary">
+                                <p>Tidak ada hasil ditemukan</p>
+                            </div>`;
+                    } else {
+                        data.forEach(mom => {
+                            const createdTime = new Date(mom.created_at).toLocaleTimeString('id-ID', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+
+                            const item = document.createElement('div');
+                            item.className = 'block px-4 py-3 hover:bg-primary/10 dark:hover:bg-primary/20 transition cursor-pointer';
+                            item.innerHTML = `
+                                <a href="/moms/${mom.version_id}" class="flex items-center space-x-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                            <i class="fa-solid fa-file-alt text-blue-500 text-lg"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-text-primary dark:text-dark-text-primary truncate">
+                                            ${mom.title}
+                                        </p>
+                                        <p class="text-xs text-text-secondary dark:text-dark-text-secondary">
+                                            ${createdTime}
+                                        </p>
+                                    </div>
+                                </a>
+                            `;
+                            resultsContainer.appendChild(item);
+                        });
+                    }
+
+                    dropdown.classList.remove('hidden');
+                })
+                .catch(err => {
+                    console.error(err);
+                    dropdown.classList.add('hidden');
+                });
+        }, 300);
+    });
+
+    // Klik di luar dropdown -> sembunyikan
+    document.addEventListener('click', function(e) {
+        if (!dropdown.contains(e.target) && !searchInput.contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+});
+</script>
