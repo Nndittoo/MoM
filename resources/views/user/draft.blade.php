@@ -16,8 +16,6 @@
                 </div>
             </div>
         </div>
-
-        ---
         
         {{-- Tab and Filter Section --}}
         <div class="bg-component-bg dark:bg-dark-component-bg rounded-lg shadow p-4">
@@ -63,17 +61,18 @@
                 </div>
             </div>
 
+            
             {{-- Tab Content --}}
             <div class="pt-6">
                 
-                {{--START: My MoM Content--}}
+                {{--START: My MoM Content (Drafts/Rejected)--}}
                 <div id="my-mom-content">
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                         
                         {{-- Cek apakah ada data $myMoms yang dikirim dari controller --}}
                         @forelse($myMoms as $mom)
                             @php
-                                // Tentukan warna status berdasarkan nilai status dari database
+                                // Menggunakan Safe Operator (?->) untuk mencegah error 'Attempt to read property on null'
                                 $statusText = $mom->status->status ?? 'Unknown';
                                 $statusColor = match ($statusText) {
                                     'Menunggu' => 'bg-yellow-500',
@@ -82,7 +81,6 @@
                                     default    => 'bg-gray-500', 
                                 };
                                 
-                                // Tentukan URL aksi (Revisi jika ditolak, Detail jika menunggu/disetujui)
                                 $actionRouteName = ($statusText === 'Ditolak') ? 'moms.edit' : 'moms.detail';
                                 $actionUrl = route($actionRouteName, $mom->version_id);
 
@@ -90,7 +88,7 @@
                                 $attachment = $mom->attachments->first();
                                 $imageUrl = $attachment 
                                     ? asset('storage/' . $attachment->file_path) 
-                                    : asset('img/lampiran-kosong.png'); // Gambar default jika tidak ada attachment
+                                    : asset('img/lampiran-kosong.png');
 
                                 // --- LOGIC UNTUK PESERTA DARI KOLOM JSON ---
                                 $internalNames = $mom->nama_peserta ?? []; 
@@ -106,7 +104,10 @@
                                 
                                 $allAttendees = array_merge($internalNames, $partnerNames);
                                 $totalAttendees = count($allAttendees);
-                        
+
+                                // Ambil nama creator dengan aman menggunakan Safe Operator
+                                $creatorName = $mom->creator?->name ?? 'N/A';
+                                
                             @endphp
                             
                             <div class="bg-component-bg dark:bg-dark-component-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2">
@@ -126,11 +127,13 @@
                                     
                                     <div class="flex items-center text-sm text-text-secondary dark:text-dark-text-secondary mb-3">
                                         <i class="fa-solid fa-user-pen mr-2 text-primary"></i>Dibuat oleh
-                                        <span class="ml-1 font-medium">{{ $mom->creator->name === Auth::user()->name ? 'Anda' : $mom->creator->name }}</span>
+                                        <span class="ml-1 font-medium">
+                                            {{-- Safe check using $creatorName --}}
+                                            {{ ($creatorName !== 'N/A' && $creatorName === Auth::user()->name) ? 'Anda' : $creatorName }}
+                                        </span>
                                     </div>
                                     
                                     <p class="text-sm text-text-secondary dark:text-dark-text-secondary mb-4 line-clamp-2">
-                                        {{-- Menampilkan isi pembahasan tanpa tag HTML dan dibatasi --}}
                                         {!! Str::limit(strip_tags($mom->pembahasan), 100) !!}
                                     </p>
                                     
@@ -138,7 +141,6 @@
                                         <h4 class="text-sm font-semibold text-text-primary dark:text-dark-text-primary mb-3">Peserta</h4>
                                         <div class="flex items-center justify-between">
                                             <div class="text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed">
-                                                {{-- Tampilkan data Peserta dari kolom JSON yang sudah digabung --}}
                                                 @if($totalAttendees > 0)
                                                     {{-- Tampilkan 2 peserta pertama --}}
                                                     @foreach(array_slice($allAttendees, 0, 2) as $attendeeName)
@@ -171,18 +173,108 @@
                 </div>
                 {{--END: My MoM Content--}}
                 
-                ---
                 
-                {{-- All MoM Content (Biarkan statis/kosong jika tidak ada data $allMoms) --}}
+                {{--START: All MoM Content (Approved)--}}
                 <div id="all-mom-content" class="hidden">
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        {{-- Card statis/looping data $allMoms di sini --}}
+                        @php
+                            // Pastikan $allMoms sudah didefinisikan dan berisi MoM yang Approved dari controller
+                            $allMoms = $allMoms ?? [];
+                        @endphp
+                        
+                        @forelse($allMoms as $mom)
+                            @php
+                                // Status di sini harus selalu 'Disetujui' (Approved)
+                                $statusText = $mom->status->status ?? 'Unknown';
+                                $statusColor = match ($statusText) {
+                                    'Disetujui'=> 'bg-green-500', 
+                                    default    => 'bg-gray-500', 
+                                };
+                                
+                                $actionUrl = route('moms.detail', $mom->version_id);
+
+                                // Ambil Lampiran pertama untuk preview
+                                $attachment = $mom->attachments->first();
+                                $imageUrl = $attachment 
+                                    ? asset('storage/' . $attachment->file_path) 
+                                    : asset('img/lampiran-kosong.png');
+                                    
+                                // --- LOGIC UNTUK PESERTA DARI KOLOM JSON ---
+                                $internalNames = $mom->nama_peserta ?? []; 
+                                $partnerNames = [];
+                                
+                                if (is_array($mom->nama_mitra)) {
+                                    foreach ($mom->nama_mitra as $mitra) {
+                                        if (is_array($mitra['attendees'] ?? null)) {
+                                            $partnerNames = array_merge($partnerNames, $mitra['attendees']);
+                                        }
+                                    }
+                                }
+                                
+                                $allAttendees = array_merge($internalNames, $partnerNames);
+                                $totalAttendees = count($allAttendees);
+                                // Ambil nama creator dengan aman menggunakan Safe Operator
+                                $creatorName = $mom->creator?->name ?? 'N/A';
+                            @endphp
+                            
+                            <div class="bg-component-bg dark:bg-dark-component-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2">
+                                <div class="relative">
+                                    {{-- Image --}}
+                                    <img class="w-full h-48 object-cover" src="{{ $imageUrl }}" alt="Dokumentasi Rapat">
+                                    
+                                    {{-- Status Badge --}}
+                                    <span class="absolute top-3 right-3 {{ $statusColor }} text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
+                                        {{ $statusText }}
+                                    </span>
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                                </div>
+                                
+                                <div class="p-5 flex flex-col">
+                                    <h3 class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-2">{{ $mom->title }}</h3>
+                                    
+                                    <div class="flex items-center text-sm text-text-secondary dark:text-dark-text-secondary mb-3">
+                                        <i class="fa-solid fa-user-pen mr-2 text-primary"></i>Dibuat oleh
+                                        <span class="ml-1 font-medium">{{ $creatorName }}</span>
+                                    </div>
+                                    
+                                    <p class="text-sm text-text-secondary dark:text-dark-text-secondary mb-4 line-clamp-2">
+                                        {!! Str::limit(strip_tags($mom->pembahasan), 100) !!}
+                                    </p>
+                                    
+                                    <div class="pt-4 border-t border-border-light dark:border-border-dark">
+                                        <h4 class="text-sm font-semibold text-text-primary dark:text-dark-text-primary mb-3">Peserta</h4>
+                                        <div class="flex items-center justify-between">
+                                            <div class="text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed">
+                                                @if($totalAttendees > 0)
+                                                    @foreach(array_slice($allAttendees, 0, 2) as $attendeeName)
+                                                        • {{ $attendeeName }}<br>
+                                                    @endforeach
+                                                    
+                                                    @if($totalAttendees > 2)
+                                                        ... (+{{ $totalAttendees - 2 }} lainnya)
+                                                    @endif
+                                                @else
+                                                    <span class="italic">Tidak ada peserta tercatat.</span>
+                                                @endif
+                                            </div>
+                                            <a href="{{ $actionUrl }}" class="text-sm font-medium text-primary hover:underline ml-4">
+                                                Lihat Detail
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="col-span-3 text-center py-10 bg-body-bg dark:bg-dark-body-bg rounded-xl">
+                                <p class="text-lg text-text-secondary dark:text-dark-text-secondary">Belum ada MoM yang disetujui (Approved).</p>
+                            </div>
+                        @endforelse
                     </div>
                 </div>
+                {{--END: All MoM Content--}}
+                
             </div>
         </div>
-
-        ---
         
         {{-- Pagination --}}
         <div class="flex justify-center mt-8 mb-6">
