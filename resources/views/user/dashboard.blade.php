@@ -265,70 +265,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Search and Filter functionality
+    // Search and Filter functionality - FIXED
     const searchInput = document.getElementById('simple-search');
     let currentStatus = '';
 
-    searchInput.addEventListener('input', debounce(function() {
-        filterMoms(this.value, currentStatus);
-    }, 500));
-
-    document.querySelectorAll('.filter-status').forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            currentStatus = this.dataset.status;
-            filterMoms(searchInput.value, currentStatus);
-        });
-    });
-
-    function filterMoms(search, status) {
-        fetch(`{{ route('dashboard.search') }}?search=${search}&status=${status}`, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            updateTable(data);
-        })
-        .catch(error => console.error('Error:', error));
-    }
-
-    function updateTable(moms) {
-        const tbody = document.getElementById('mom-table-body');
-        const statusColors = {
-            1: { bg: 'yellow', text: 'Pending' },
-            2: { bg: 'green', text: 'Approved' },
-            3: { bg: 'red', text: 'Rejected' }
-        };
-
-        if (moms.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-4 text-center text-text-secondary">No MoM data available</td></tr>';
-            return;
-        }
-
-        tbody.innerHTML = moms.map((mom, index) => {
-            const status = statusColors[mom.status_id] || { bg: 'gray', text: 'Unknown' };
-            const date = new Date(mom.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-
-            return `
-                <tr class="border-b dark:border-border-dark">
-                    <td class="px-6 py-4">${index + 1}</td>
-                    <th scope="row" class="px-6 py-4 font-medium text-text-primary dark:text-white whitespace-nowrap">
-                        ${mom.title}
-                    </th>
-                    <td class="px-6 py-4">${date}</td>
-                    <td class="px-6 py-4">
-                        <span class="bg-${status.bg}-100 text-${status.bg}-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-${status.bg}-900 dark:text-${status.bg}-300">
-                            ${status.text}
-                        </span>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-    }
-
+    // Debounce function
     function debounce(func, wait) {
         let timeout;
         return function executedFunction(...args) {
@@ -339,6 +280,107 @@ document.addEventListener("DOMContentLoaded", () => {
             clearTimeout(timeout);
             timeout = setTimeout(later, wait);
         };
+    }
+
+    // Search input event - FIXED
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(function(e) {
+            const searchValue = e.target.value || ''; // Fix: ambil value dari event
+            filterMoms(searchValue, currentStatus);
+        }, 500));
+    }
+
+    // Filter status event
+    document.querySelectorAll('.filter-status').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            currentStatus = this.dataset.status || '';
+            const searchValue = searchInput ? searchInput.value || '' : '';
+            filterMoms(searchValue, currentStatus);
+        });
+    });
+
+    // Filter function - FIXED
+    function filterMoms(search, status) {
+        // Pastikan search tidak undefined
+        const searchParam = search || '';
+        const statusParam = status || '';
+
+        fetch(`{{ route('dashboard.search') }}?search=${encodeURIComponent(searchParam)}&status=${encodeURIComponent(statusParam)}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            updateTable(data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            const tbody = document.getElementById('mom-table-body');
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-4 text-center text-red-500">Error loading data. Please try again.</td></tr>';
+            }
+        });
+    }
+
+    // Update table function - FIXED
+    function updateTable(moms) {
+        const tbody = document.getElementById('mom-table-body');
+
+        if (!tbody) return;
+
+        const statusColors = {
+            1: { bg: 'yellow', text: 'Pending' },
+            2: { bg: 'green', text: 'Approved' },
+            3: { bg: 'red', text: 'Rejected' }
+        };
+
+        if (!moms || moms.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-4 text-center text-text-secondary">No MoM data available</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = moms.map((mom, index) => {
+            const status = statusColors[mom.status_id] || { bg: 'gray', text: 'Unknown' };
+
+            // Parse date safely
+            let dateStr = 'N/A';
+            try {
+                const date = new Date(mom.created_at);
+                if (!isNaN(date.getTime())) {
+                    dateStr = date.toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                    });
+                }
+            } catch (e) {
+                console.error('Date parsing error:', e);
+            }
+
+            return `
+                <tr class="border-b dark:border-border-dark">
+                    <td class="px-6 py-4">${index + 1}</td>
+                    <th scope="row" class="px-6 py-4 font-medium text-text-primary dark:text-white whitespace-nowrap">
+                        ${mom.title || 'Untitled'}
+                    </th>
+                    <td class="px-6 py-4">${dateStr}</td>
+                    <td class="px-6 py-4">
+                        <span class="bg-${status.bg}-100 text-${status.bg}-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-${status.bg}-900 dark:text-${status.bg}-300">
+                            ${status.text}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        }).join('');
     }
 });
 </script>
