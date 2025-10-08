@@ -30,7 +30,7 @@
     {{-- Form Container --}}
     <div class="bg-component-bg dark:bg-dark-component-bg p-6 md:p-8 rounded-2xl shadow-lg">
         <form id="mom-form" class="space-y-10">
-            @csrf {{-- Pastikan CSRF token disertakan --}}
+            @csrf 
 
             {{-- Informasi Rapat --}}
             <div class="space-y-6">

@@ -29,8 +29,8 @@ class StoreMomRequest extends FormRequest
             'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
             
             // Pimpinan & Notulen 
-            'pimpinan_rapat' => ['required', 'string', 'max:255'], // DIREVISI
-            'notulen' => ['required', 'string', 'max:255'], // DIREVISI
+            'pimpinan_rapat' => ['required', 'string', 'max:255'],
+            'notulen' => ['required', 'string', 'max:255'],
             
             // Pembahasan
             'pembahasan' => ['required', 'string'],
@@ -40,7 +40,7 @@ class StoreMomRequest extends FormRequest
             'attendees_manual.*' => ['required', 'string', 'max:255'],
             
             // Peserta Mitra (JSON string dari frontend)
-            'partner_attendees_json' => ['nullable', 'string'], // Diubah ke nullable (opsional)
+            'partner_attendees_json' => ['nullable', 'string'], 
             
             // Agenda (Array of strings)
             'agendas' => ['required', 'array', 'min:1'], 
@@ -54,8 +54,9 @@ class StoreMomRequest extends FormRequest
             // Lampiran (File Upload)
             'attachments' => ['nullable', 'array'], // Diubah ke nullable (opsional)
             'attachments.*' => ['file', 'mimes:pdf,doc,docx,jpg,jpeg,png', 'max:10240'], // Max 10MB
+
+            // TAMBAHAN UNTUK AUTO-APPROVAL ADMIN
+            'is_admin_submission' => ['nullable', 'in:1'], 
         ];
     }
-
-
 }

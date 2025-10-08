@@ -24,6 +24,10 @@
                 max-width: 100% !important; 
                 height: auto !important;
             }
+        
+            .ql-content ul, .ql-content ol {
+                margin-left: 1.5em !important;
+            }
         }
     
         .border-black { border-color: #000; }
@@ -33,6 +37,21 @@
         .bg-white { background-color: #fff; }
         .text-white { color: #fff; }
         .bg-red-600 { background-color: #dc2626; }
+
+        .content-quill ul {
+            list-style-type: disc;
+            margin-left: 20px; 
+            padding-left: 0;
+        }
+        .content-quill ol {
+            list-style-type: decimal;
+            margin-left: 20px; 
+            padding-left: 0;
+        }
+        .content-quill li {
+            padding-left: 5px; 
+        }
+        
     </style>
 </head>
 <body class="bg-white">
@@ -46,16 +65,34 @@
         $partnerData = $mom->nama_mitra ?? []; // Array of objects (Mitra)
 
         // Menggabungkan semua peserta menjadi satu daftar
-        $allAttendees = $internalAttendees;
+        $allAttendeesRaw = $internalAttendees;
         foreach ($partnerData as $mitra) {
             if (is_array($mitra['attendees'] ?? null)) {
-                $allAttendees = array_merge($allAttendees, $mitra['attendees']);
+                $allAttendeesRaw = array_merge($allAttendeesRaw, $mitra['attendees']);
             }
         }
+        
+        $allAttendees = array_unique($allAttendeesRaw); 
         $totalAttendeesCount = count($allAttendees);
         
         // Mengubah daftar peserta menjadi string yang dipisahkan koma
         $attendeeListString = implode(', ', $allAttendees);
+        
+        // STRUKTUR DATA TANDA TANGAN DINAMIS
+        $signatoryGroups = [];
+
+        
+        
+        // Gabungkan dengan grup Mitra
+        foreach ($partnerData as $mitra) {
+            $signatoryGroups[] = [
+                'name' => $mitra['name'],
+                'attendees' => $mitra['attendees'] ?? []
+            ];
+        }
+        
+        $totalSignatoryGroups = count($signatoryGroups);
+    
     @endphp
 
     <div id="pdf-preview" class="p-6 md:p-8 min-w-[800px] bg-white text-gray-900 font-sans">
@@ -64,11 +101,12 @@
                 <tr>
                     {{-- Judul dan Logo --}}
                     <td class="align-middle text-center border border-black p-2 w-1/4">
+                        
                         <img src="{{ asset('img/logo.png') }}" alt="Company Logo" class="h-32 mx-auto">
                     </td>
                     <td colspan="3" class="text-center align-middle border border-black">
                         <p class="font-bold text-2xl italic">MINUTE OF MEETING</p>
-                        <p class="font-semibold text-xl">{{ $mom->title }}</p>
+                        <p class="semibold text-xl">{{ $mom->title }}</p>
                     </td>
                 </tr>
 
@@ -84,7 +122,7 @@
                 <tr>
                     <td class="border border-black p-2 font-semibold">Peserta</td>
                     <td colspan="3" class="border border-black p-2">
-                        {{-- Menggunakan string yang dipisahkan koma --}}
+                       
                         @if ($totalAttendeesCount > 0)
                             {{ $attendeeListString }}
                         @else
@@ -132,8 +170,8 @@
                 {{-- Hasil Pembahasan --}}
                 <tr>
                     <td colspan="4" class="border border-black p-4">
-                        <div class="font-sans whitespace-pre-wrap text-sm leading-relaxed">
-                            {{-- Gunakan prose styles di sini untuk Quill content --}}
+                        
+                        <div class="font-sans whitespace-pre-wrap text-sm leading-relaxed content-quill">
                             {!! $mom->pembahasan !!}
                         </div>
                     </td>
@@ -160,37 +198,26 @@
                 </tr>
 
                 {{-- TANDA TANGAN PESERTA DENGAN MULTI-NAMA DINAMIS --}}
+                @if($totalSignatoryGroups > 0)
                 <tr>
                     <td colspan="4" class="pt-10">
                         <table class="w-full text-center border-collapse">
                             <thead>
                                 <tr class="border-b border-black">
-                                    {{-- Kolom Telkom Indonesia --}}
-                                    <th class="p-2 font-semibold w-1/{{ count($partnerData) + 1 }}">PT TELKOM INDONESIA</th>
-                                    {{-- Kolom Mitra Lain (Dinamis) --}}
-                                    @foreach($partnerData as $mitra)
-                                        <th class="p-2 font-semibold w-1/{{ count($partnerData) + 1 }}">{{ $mitra['name'] }}</th>
+                                   
+                                    @foreach($signatoryGroups as $group)
+                                        {{-- Gunakan total kelompok untuk membagi lebar --}}
+                                        <th class="p-2 font-semibold w-1/{{ $totalSignatoryGroups }}">{{ $group['name'] }}</th>
                                     @endforeach
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr class="align-top">
-                                    {{-- Kolom untuk Telkom (Internal Attendees) --}}
-                                    <td class="p-2">
-                                        <div class="flex flex-col">
-                                            @forelse($internalAttendees as $name)
-                                                <p class="pt-16 underline">{{ $name }}</p>
-                                            @empty
-                                                <p class="pt-16 italic text-gray-500">N/A</p>
-                                            @endforelse
-                                        </div>
-                                    </td>
-                                    
-                                    {{-- Kolom untuk Mitra Lain (Dinamis) --}}
-                                    @foreach($partnerData as $mitra)
+                                    {{-- ITERASI SEMUA DAFTAR PESERTA BERDASARKAN GRUP --}}
+                                    @foreach($signatoryGroups as $group)
                                         <td class="p-2">
                                             <div class="flex flex-col">
-                                                @forelse($mitra['attendees'] ?? [] as $name)
+                                                @forelse($group['attendees'] as $name)
                                                     <p class="pt-16 underline">{{ $name }}</p>
                                                 @empty
                                                     <p class="pt-16 italic text-gray-500">N/A</p>
@@ -203,6 +230,7 @@
                         </table>
                     </td>
                 </tr>
+                @endif
 
                 {{-- Lampiran Header --}}
                 <tr><td colspan="4" class="text-center font-bold text-2xl pt-10 pb-4">LAMPIRAN</td></tr>
@@ -214,6 +242,7 @@
                             @forelse($mom->attachments as $attachment)
                                 @if(str_starts_with($attachment->mime_type, 'image/'))
                                     <div class="text-center mb-6">
+                                       
                                         <img src="{{ asset('storage/' . $attachment->file_path) }}" alt="Lampiran Rapat" class="w-full max-w-xl mx-auto border">
                                         <p class="mt-2 text-sm">File: {{ $attachment->file_name }}</p>
                                     </div>
