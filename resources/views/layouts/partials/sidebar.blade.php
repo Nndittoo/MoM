@@ -23,7 +23,11 @@
                 <a href="{{ url('/reminder') }}" class="flex items-center p-3 rounded-lg group transition relative {{ request()->is('reminder') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary' }}">
                     <i class="fa-solid fa-bell w-5 h-5"></i>
                     <span class="ms-3">Reminder</span>
-                    <span class="absolute right-3 inline-flex items-center justify-center w-6 h-6 text-xs font-medium text-white bg-red-500 rounded-full">3</span>
+                    @if(isset($reminderCount) && $reminderCount > 0)
+                    <span class="absolute right-3 inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 text-xs font-bold text-white bg-red-500 rounded-full">
+                        {{ $reminderCount > 99 ? '99+' : $reminderCount }}
+                    </span>
+                    @endif
                 </a>
             </li>
             <li>

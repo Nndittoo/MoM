@@ -40,61 +40,45 @@ class DashboardController extends Controller
     {
         $activities = collect();
 
-        // Ambil MoM yang baru diapprove (2 terakhir)
-        $approvedMoms = Mom::where('status_id', 2)
-                          ->orderBy('updated_at', 'desc')
-                          ->take(2)
-                          ->get()
-                          ->map(function($mom) {
-                              return [
-                                  'type' => 'approved',
-                                  'title' => "MoM #{$mom->version_id} Approved",
-                                  'subtitle' => $mom->title,
-                                  'date' => $mom->updated_at,
-                                  'icon' => 'fa-check',
-                                  'color' => 'green'
-                              ];
-                          });
-
-        // Ambil task yang hampir deadline (2 terdekat)
-        $dueTasks = ActionItem::with('mom')
-                              ->where('due', '>=', Carbon::now())
-                              ->where('due', '<=', Carbon::now()->addDays(7))
-                              ->where('status', 'mendatang')
-                              ->orderBy('due', 'asc')
-                              ->take(2)
-                              ->get()
-                              ->map(function($task) {
-                                  return [
-                                      'type' => 'task_due',
-                                      'title' => 'Task "' . Str::limit($task->item, 30) . '"',
-                                      'subtitle' => 'From MoM #' . $task->mom_id,
-                                      'date' => $task->due,
-                                      'icon' => 'fa-hourglass-half',
-                                      'color' => 'yellow'
-                                  ];
-                              });
-
-        // Ambil MoM yang baru dibuat (1 terakhir)
-        $newMoms = Mom::orderBy('created_at', 'desc')
-                     ->take(1)
+        // Ambil MoM yang baru dibuat (3 terakhir)
+        $newMoms = Mom::with('creator')
+                     ->orderBy('created_at', 'desc')
+                     ->take(3)
                      ->get()
                      ->map(function($mom) {
                          return [
-                             'type' => 'created',
-                             'title' => "New MoM #{$mom->version_id} Created",
+                             'type' => 'mom_created',
+                             'title' => "MoM #{$mom->version_id} Created",
                              'subtitle' => $mom->title,
+                             'creator' => $mom->creator->name ?? 'Unknown',
                              'date' => $mom->created_at,
-                             'icon' => 'fa-plus',
-                             'color' => 'red'
+                             'icon' => 'fa-file-alt',
+                             'color' => 'blue'
                          ];
                      });
 
-        return $activities->merge($approvedMoms)
-                         ->merge($dueTasks)
-                         ->merge($newMoms)
+        // Ambil Action Item yang baru dibuat (3 terakhir)
+        $newTasks = ActionItem::with('mom')
+                              ->orderBy('created_at', 'desc')
+                              ->take(3)
+                              ->get()
+                              ->map(function($task) {
+                                  return [
+                                      'type' => 'task_created',
+                                      'title' => 'New Task Added',
+                                      'subtitle' => Str::limit($task->item, 40),
+                                      'mom_reference' => 'MoM #' . ($task->mom->version_id ?? $task->mom_id),
+                                      'date' => $task->created_at,
+                                      'icon' => 'fa-tasks',
+                                      'color' => 'green'
+                                  ];
+                              });
+
+        // Gabungkan dan urutkan berdasarkan waktu terbaru
+        return $activities->merge($newMoms)
+                         ->merge($newTasks)
                          ->sortByDesc('date')
-                         ->take(5)
+                         ->take(4)
                          ->values();
     }
 
@@ -197,14 +181,32 @@ class DashboardController extends Controller
     {
         $query = Mom::with(['status', 'creator']);
 
+        // Search by title, pimpinan_rapat, notulen, atau location
         if ($request->has('search') && $request->search != '') {
-            $query->where('title', 'like', '%' . $request->search . '%');
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', '%' . $search . '%')
+                  ->orWhere('pimpinan_rapat', 'like', '%' . $search . '%')
+                  ->orWhere('notulen', 'like', '%' . $search . '%')
+                  ->orWhere('location', 'like', '%' . $search . '%');
+            });
         }
 
+        // Filter by status
         if ($request->has('status') && $request->status != '') {
             $query->where('status_id', $request->status);
         }
 
-        return response()->json($query->orderBy('created_at', 'desc')->take(10)->get());
+        $results = $query->orderBy('created_at', 'desc')->take(10)->get();
+
+        // Format response sesuai dengan yang diharapkan frontend
+        return response()->json($results->map(function($mom) {
+            return [
+                'version_id' => $mom->version_id,
+                'title' => $mom->title,
+                'status_id' => $mom->status_id,
+                'created_at' => $mom->created_at->toISOString(), // Format ISO untuk parsing JavaScript
+            ];
+        }));
     }
 }
