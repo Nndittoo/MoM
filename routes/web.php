@@ -13,6 +13,7 @@ use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ReminderController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminCalendarController;
 
 Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -48,7 +49,10 @@ Route::middleware(['auth', 'role:user,admin'])->group(function () {
 
     // Admin Dashboard
     Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
-    Route::get('/calendars', fn () => view('admin.calendars'))->name('admin.calendars');
+    // Admin Calendar
+    Route::get('/calendars', [AdminCalendarController::class, 'index'])->name('admin.calendars');
+    Route::get('/calendars/events', [AdminCalendarController::class, 'getEvents'])->name('admin.calendars.events');
+
     Route::get('/mom', fn () => view('admin.mom'))->name('admin.mom');
     Route::get('/users', fn () => view('admin.users'))->name('admin.users');
     Route::get('/task', fn () => view('admin.task'))->name('admin.task');
@@ -63,7 +67,7 @@ Route::middleware(['auth', 'role:user,admin'])->group(function () {
         return view('user.create', compact('users'));
     })->name('user.create');
 
-    
+
     Route::post('/moms', [MomController::class, 'store'])->name('moms.store');
 });
 
