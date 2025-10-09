@@ -212,14 +212,12 @@
                                             @php 
                                                 // 1. Ambil data, coba decode, atau default ke array kosong
                                                 $peserta = is_string($mom->nama_peserta) ? json_decode($mom->nama_peserta, true) : ($mom->nama_peserta ?? []);
-                                                $mitra = is_string($mom->nama_mitra) ? json_decode($mom->nama_mitra, true) : ($mom->nama_mitra ?? []);
 
                                                 // 2. Pastikan keduanya adalah array sebelum digabung
                                                 $peserta = is_array($peserta) ? $peserta : [];
-                                                $mitra = is_array($mitra) ? $mitra : [];
 
                                                 // 3. Gabungkan dan filter elemen kosong/null
-                                                $allParticipants = array_filter(array_merge($peserta, $mitra));
+                                                $allParticipants = array_filter(array_merge($peserta));
                                                 
                                                 // 4. Hitung dan tentukan peserta yang ditampilkan
                                                 $totalParticipants = count($allParticipants);
