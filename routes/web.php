@@ -53,7 +53,7 @@ Route::middleware(['auth', 'role:user,admin'])->group(function () {
     Route::get('/users', fn () => view('admin.users'))->name('admin.users');
     Route::get('/task', fn () => view('admin.task'))->name('admin.task');
     Route::get('/notification', fn () => view('admin.notification'))->name('admin.notification');
-    Route::get('/details', fn () => view('admin.details'))->name('admin.details');
+    Route::get('/detail', fn () => view('admin.details'))->name('admin.detail');
     Route::get('/shows', fn () => view('admin.shows'))->name('admin.shows');
     Route::get('/creates', fn () => view('admin.create'))->name('admin.creates');
 
@@ -67,7 +67,7 @@ Route::middleware(['auth', 'role:user,admin'])->group(function () {
 });
 
 /**
- * SIGN UP 
+ * SIGN UP
  */
 Route::get('/sign-up', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/sign-up', [AuthController::class, 'register'])->name('register.post');
@@ -81,7 +81,7 @@ Route::prefix('admin')->middleware(['auth','role:admin'])->group(function () {
     Route::post('/approvals/reject/{mom}', [ApprovalController::class, 'reject'])->name('admin.approvals.reject');
     Route::get('/moms/create', [MomController::class, 'create'])->name('admin.moms.create');
     Route::get('/moms/{mom}', [MomController::class, 'show_admin'])->name('admin.moms.show');
-    
+
 });
 
 Route::get('/draft', [DraftController::class, 'index'])->name('draft.index')->middleware('auth');
