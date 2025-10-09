@@ -32,7 +32,10 @@ class AppServiceProvider extends ServiceProvider
             'admin.notification',
             'admin.shows',
             'admin.create', 
-            'admin.calendars',  
+            'admin.calendars',
+            'admin.moms.edit',
+            'admin.details',
+            'admin.edit',
            
         ], function ($view) {
             // Hitung MoM yang berstatus "Menunggu" 

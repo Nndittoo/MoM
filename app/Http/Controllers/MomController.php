@@ -13,6 +13,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth; // Tambahkan ini
 use Throwable;
 
 class MomController extends Controller
@@ -51,7 +52,7 @@ class MomController extends Controller
             $statusToUse = $defaultStatus;
             $statusMessage = 'Menunggu';
 
-            // 2. LOGIKA ADMIN
+            // 2. LOGIKA ADMIN (Jika form Admin mengirim is_admin_submission=1)
             if ($request->has('is_admin_submission') && $request->is_admin_submission == '1') {
                 try {
                     $approvedStatus = MomStatus::where('status', 'Disetujui')->firstOrFail();
@@ -131,7 +132,7 @@ class MomController extends Controller
                     }
 
                     if (!$filePath) {
-                          throw new \Exception("Penyimpanan file mengembalikan nilai kosong.");
+                         throw new \Exception("Penyimpanan file mengembalikan nilai kosong.");
                     }
 
                     $attachmentsData[] = [
@@ -188,28 +189,53 @@ class MomController extends Controller
     }
 
     /**
-     * Menampilkan form edit MoM dan mengirim data lama.
+     * Menampilkan form edit MoM dan mengirim data lama (Untuk Role User).
      */
     public function edit(Mom $mom)
     {
         $users = User::all();
-        // Pastikan relasi attachments dimuat untuk form edit
         $mom->load(['agendas', 'attachments']); 
         return view('user.edit', compact('mom', 'users'));
     }
+
+    /**
+     * Menampilkan form edit MoM dan mengirim data lama (Untuk Role Admin).
+     */
+    public function editAdmin(Mom $mom)
+    {
+        $users = User::all();
+        $mom->load(['agendas', 'attachments']); 
+        return view('admin.edit', compact('mom', 'users')); // Ganti view ke admin.edit
+    }
+
 
     /**
      * Memproses update MoM (dipanggil melalui AJAX POST/PATCH).
      */
     public function update(Request $request, Mom $mom)
     {
-
         DB::beginTransaction();
 
         try {
+            // Menentukan Role dan Status Baru
+            $isAdmin = Auth::check() && Auth::user()->role === 'admin';
+            
+            if ($isAdmin) {
+                // Jika Admin, gunakan status_id yang dikirim dari form (diharapkan 2 / Disetujui)
+                $newStatusId = $request->input('status_id', 2);
+                $statusMessage = 'disetujui';
+                
+                // Hapus komentar penolakan jika MoM diperbarui oleh Admin
+                $mom->rejection_comment = null; 
+
+            } else {
+                // Jika User biasa, MoM yang di-edit harus kembali ke status 'Menunggu' (1)
+                $newStatusId = 1; 
+                $statusMessage = 'dikirim ulang untuk persetujuan';
+            }
+
             // PROSES PENGHAPUSAN FILE LAMA
             if ($request->has('files_to_delete')) {
-                // Input files_to_delete[] harus berupa array ID
                 $idsToDelete = is_array($request->input('files_to_delete')) ? $request->input('files_to_delete') : [$request->input('files_to_delete')];
                 
                 foreach ($idsToDelete as $attachmentId) {
@@ -233,8 +259,8 @@ class MomController extends Controller
                 'end_time' => $request->end_time,
                 'pembahasan' => $request->pembahasan,
                 
-                // Setelah diedit, status MoM dikirim ulang untuk persetujuan
-                'status_id' => 1, 
+                // Terapkan status ID yang sudah ditentukan berdasarkan role
+                'status_id' => $newStatusId, 
 
                 // Data JSON/Array
                 'nama_peserta' => $request->input('attendees_manual'), 
@@ -242,7 +268,6 @@ class MomController extends Controller
             ]);
 
             // PROSES UPDATE AGENDA (Hapus lama, tambahkan baru)
-            // Hapus semua agenda lama yang terkait dengan MoM ini
             MomAgenda::where('mom_id', $mom->version_id)->delete();
             
             if ($request->filled('agendas')) {
@@ -261,6 +286,8 @@ class MomController extends Controller
                 $attachmentsData = [];
                 $disk = 'public';
 
+                $uploaderId = Auth::id(); // Ambil ID pengunggah saat ini
+
                 foreach ($request->file('attachments') as $file) {
                     $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
                     $filePath = $file->storeAs('attachments', $fileName, $disk);
@@ -271,7 +298,7 @@ class MomController extends Controller
                         'file_path' => $filePath,
                         'mime_type' => $file->getMimeType(),
                         'file_size' => $file->getSize(),
-                        'uploader_id' => auth()->id(),
+                        'uploader_id' => $uploaderId,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];
@@ -281,13 +308,19 @@ class MomController extends Controller
 
             DB::commit();
 
-            return response()->json(['message' => 'MoM berhasil diupdate dan dikirim ulang untuk persetujuan!', 'mom_id' => $mom->version_id], 200);
+            return response()->json([
+                'message' => 'MoM berhasil diupdate dan ' . $statusMessage . '!', 
+                'mom_id' => $mom->version_id
+            ], 200);
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("MOM Update Failed: " . $e->getMessage() . " on file " . $e->getFile() . " line " . $e->getLine());
 
-            return response()->json(['message' => 'Gagal mengupdate Minutes of Meeting.', 'error_detail' => $e->getMessage()], 500);
+            return response()->json([
+                'message' => 'Gagal mengupdate Minutes of Meeting.', 
+                'error_detail' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -300,6 +333,7 @@ class MomController extends Controller
     public function repository()
     {
         $adminRole = 'admin'; 
+        
         $momsByAdmin = Mom::whereHas('creator', function ($query) use ($adminRole) {
             $query->where('role', $adminRole);
         })

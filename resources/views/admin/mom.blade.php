@@ -48,7 +48,10 @@
                         <div x-data="{ actionsOpen: false }" class="bg-body-bg dark:bg-dark-body-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
                             <div class="relative">
                                 @php
-                                    $imagePath = $mom->attachments->first() ? Storage::url($mom->attachments->first()->file_path) : asset('img/lampiran.png');
+                                    $attachment = $mom->attachments->first();
+                                    $imagePath = ($attachment && str_starts_with($attachment->mime_type, 'image/')) 
+                                        ? Storage::url($attachment->file_path) 
+                                        : asset('img/lampiran.png');
                                 @endphp
                                 <img class="w-full h-48 object-cover" src="{{ $imagePath }}" alt="Dokumentasi Rapat">
                                 <span class="absolute top-3 right-3 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">{{ \Carbon\Carbon::parse($mom->meeting_date)->isoFormat('DD MMMM YYYY') }}</span>
@@ -68,10 +71,38 @@
                                     <div class="flex items-start justify-between">
                                         <div class="text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed">
                                             @php
-                                                $participants = array_merge($mom->nama_peserta ?? [], $mom->nama_mitra ?? []);
-                                                $displayParticipants = array_slice($participants, 0, 2);
+                                                // 1. Ambil data, coba decode, atau default ke array kosong
+                                                $peserta = is_string($mom->nama_peserta) ? json_decode($mom->nama_peserta, true) : ($mom->nama_peserta ?? []);
+                                                $mitra = is_string($mom->nama_mitra) ? json_decode($mom->nama_mitra, true) : ($mom->nama_mitra ?? []);
+                                        
+                                                // 2. Pastikan keduanya adalah array sebelum digabung
+                                                $peserta = is_array($peserta) ? $peserta : [];
+                                                $mitra = is_array($mitra) ? $mitra : [];
+                                        
+                                                // 3. Gabungkan dan filter elemen kosong/null
+                                                $allParticipants = array_filter(array_merge($peserta, $mitra));
+                                                
+                                                // 4. Hitung dan tentukan peserta yang ditampilkan
+                                                $totalParticipants = count($allParticipants);
+                                                $displayParticipants = array_slice($allParticipants, 0, 2);
+                                                $remainingParticipantsCount = $totalParticipants - count($displayParticipants);
                                             @endphp
-                                            @forelse($displayParticipants as $p) • {{ $p['name'] ?? $p['user_name'] ?? 'Peserta' }}<br> @empty Tidak ada peserta. @endforelse
+                                            {{-- Menampilkan 2 Peserta Pertama --}}
+                                            @forelse($displayParticipants as $p)
+                                                •
+                                                @if(is_array($p))
+                                                    {{ $p['name'] ?? $p['user_name'] ?? 'Peserta' }}<br>
+                                                @else
+                                                    {{ $p }}<br>
+                                                @endif
+                                            @empty 
+                                                Tidak ada peserta.
+                                            @endforelse
+                                            
+                                            {{-- Menampilkan indikator "lainnya" jika ada sisa peserta --}}
+                                            @if($remainingParticipantsCount > 0)
+                                                <span class="text-primary font-medium">+ {{ $remainingParticipantsCount }} lainnya</span>
+                                            @endif
                                         </div>
 
                                         {{-- Tombol Pemicu Aksi dengan Label --}}
@@ -84,14 +115,14 @@
 
                                 {{-- Overlay Aksi --}}
                                 <div x-show="actionsOpen"
-                                     x-transition:enter="ease-out duration-300"
-                                     x-transition:enter-start="opacity-0"
-                                     x-transition:enter-end="opacity-100"
-                                     x-transition:leave="ease-in duration-200"
-                                     x-transition:leave-start="opacity-100"
-                                     x-transition:leave-end="opacity-0"
-                                     @click.self="actionsOpen = false"
-                                     class="absolute inset-0 z-10 flex items-center justify-center bg-white/70 dark:bg-black/60 backdrop-blur-sm p-5">
+                                    x-transition:enter="ease-out duration-300"
+                                    x-transition:enter-start="opacity-0"
+                                    x-transition:enter-end="opacity-100"
+                                    x-transition:leave="ease-in duration-200"
+                                    x-transition:leave-start="opacity-100"
+                                    x-transition:leave-end="opacity-0"
+                                    @click.self="actionsOpen = false"
+                                    class="absolute inset-0 z-10 flex items-center justify-center bg-white/70 dark:bg-black/60 backdrop-blur-sm p-5">
 
                                     <div class="relative w-full max-w-xs bg-component-bg dark:bg-dark-component-bg rounded-xl shadow-2xl p-4 border border-border-light dark:border-border-dark">
                                         {{-- Tombol Tutup --}}
@@ -128,10 +159,15 @@
                 <div id="all-mom-content" class="hidden">
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                          @forelse($allMoms as $mom)
-                         {{-- Salin-tempel struktur kartu yang sama persis dari atas untuk konsistensi --}}
-                         <div x-data="{ actionsOpen: false }" class="bg-body-bg dark:bg-dark-body-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
+                        {{-- Salin-tempel struktur kartu yang sama persis dari atas untuk konsistensi --}}
+                        <div x-data="{ actionsOpen: false }" class="bg-body-bg dark:bg-dark-body-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
                             <div class="relative">
-                                @php $imagePath = $mom->attachments->first() ? Storage::url($mom->attachments->first()->file_path) : asset('img/lampiran.png'); @endphp
+                                @php 
+                                    $attachment = $mom->attachments->first();
+                                    $imagePath = ($attachment && str_starts_with($attachment->mime_type, 'image/')) 
+                                        ? Storage::url($attachment->file_path) 
+                                        : asset('img/lampiran.png'); 
+                                @endphp
                                 <img class="w-full h-48 object-cover" src="{{ $imagePath }}" alt="Dokumentasi Rapat">
                                 <span class="absolute top-3 right-3 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">{{ \Carbon\Carbon::parse($mom->meeting_date)->isoFormat('DD MMMM YYYY') }}</span>
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
@@ -147,8 +183,38 @@
                                     <h4 class="text-sm font-semibold text-text-primary dark:text-dark-text-primary mb-3">Peserta</h4>
                                     <div class="flex items-start justify-between">
                                         <div class="text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed">
-                                            @php $participants = array_merge($mom->nama_peserta ?? [], $mom->nama_mitra ?? []); $displayParticipants = array_slice($participants, 0, 2); @endphp
-                                            @forelse($displayParticipants as $p) • {{ $p['name'] ?? $p['user_name'] ?? 'Peserta' }}<br> @empty Tidak ada peserta. @endforelse
+                                            @php 
+                                                // Ambil data, coba decode, atau default ke array kosong
+                                                $peserta = is_string($mom->nama_peserta) ? json_decode($mom->nama_peserta, true) : ($mom->nama_peserta ?? []);
+                                                $mitra = is_string($mom->nama_mitra) ? json_decode($mom->nama_mitra, true) : ($mom->nama_mitra ?? []);
+
+                                                // Memastikan keduanya adalah array sebelum digabung
+                                                $peserta = is_array($peserta) ? $peserta : [];
+                                                
+                                                // Menggabungkan dan filter elemen kosong/null
+                                                $allParticipants = array_filter(array_merge($peserta));
+                                                
+                                                // Hitung dan tentukan peserta yang ditampilkan
+                                                $totalParticipants = count($allParticipants);
+                                                $displayParticipants = array_slice($allParticipants, 0, 2); 
+                                                $remainingParticipantsCount = $totalParticipants - count($displayParticipants);
+                                            @endphp
+                                            {{-- Menampilkan 2 Peserta Pertama --}}
+                                            @forelse($displayParticipants as $p)
+                                                •
+                                                @if(is_array($p))
+                                                    {{ $p['name'] ?? $p['user_name'] ?? 'Peserta' }}<br>
+                                                @else
+                                                    {{ $p }}<br>
+                                                @endif
+                                            @empty
+                                                Tidak ada peserta.
+                                            @endforelse
+                                            
+                                            {{-- Menampilkan indikator "lainnya" jika ada sisa peserta --}}
+                                            @if($remainingParticipantsCount > 0)
+                                                <span class="text-primary font-medium">+ {{ $remainingParticipantsCount }} lainnya</span>
+                                            @endif
                                         </div>
                                         <button @click="actionsOpen = true" class="flex items-center gap-2 text-sm font-medium text-text-secondary dark:text-dark-text-secondary hover:text-primary dark:hover:text-primary-dark p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-dark-body-bg">
                                             <i class="fa-solid fa-ellipsis-vertical"></i><span>Aksi</span>
@@ -165,7 +231,7 @@
                                             <a href="{{ url('/admin/details/' . $mom->version_id) }}" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-text-primary dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-body-bg rounded-lg">
                                                 <i class="fa-solid fa-eye w-4"></i><span>Lihat Detail</span>
                                             </a>
-                                            <a href="#" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-text-primary dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-body-bg rounded-lg">
+                                            <a href="{{ route('admin.moms.edit', $mom->version_id) }}" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-text-primary dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-body-bg rounded-lg">
                                                 <i class="fa-solid fa-pen-to-square w-4"></i><span>Edit</span>
                                             </a>
                                             <form action="#" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus MoM ini?');">
@@ -191,11 +257,9 @@
 @endsection
 
 @push('scripts')
-{{-- Pastikan AlpineJS sudah diimpor di layout utama Anda atau di sini --}}
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
 <script>
-    // ... script switchTab Anda yang sudah ada ...
     function switchTab(tabId) {
         const myMomTab = document.getElementById('my-mom-tab');
         const allMomTab = document.getElementById('all-mom-tab');
@@ -203,28 +267,32 @@
         const allMomContent = document.getElementById('all-mom-content');
 
         const activeClasses = ['text-primary', 'border-primary'];
-        const inactiveClasses = ['border-transparent', 'hover:text-gray-600', 'hover:border-gray-300', 'text-text-secondary'];
+        const inactiveClasses = ['border-transparent', 'hover:text-gray-600', 'hover:border-gray-300', 'dark:hover:text-gray-300'];
 
+        // Reset classes for both tabs
         myMomTab.classList.remove(...activeClasses, ...inactiveClasses);
         allMomTab.classList.remove(...activeClasses, ...inactiveClasses);
-        myMomTab.classList.add(...inactiveClasses);
-        allMomTab.classList.add(...inactiveClasses);
+        
+        // Add inactive classes initially (this handles styling consistency)
+        myMomTab.classList.add(...inactiveClasses, 'text-text-secondary');
+        allMomTab.classList.add(...inactiveClasses, 'text-text-secondary');
+
 
         myMomContent.classList.add('hidden');
         allMomContent.classList.add('hidden');
 
         if (tabId === 'my-mom') {
+            myMomTab.classList.remove(...inactiveClasses, 'text-text-secondary');
             myMomTab.classList.add(...activeClasses);
-            myMomTab.classList.remove(...inactiveClasses);
             myMomContent.classList.remove('hidden');
         } else {
+            allMomTab.classList.remove(...inactiveClasses, 'text-text-secondary');
             allMomTab.classList.add(...activeClasses);
-            allMomTab.classList.remove(...inactiveClasses);
             allMomContent.classList.remove('hidden');
         }
     }
     document.addEventListener('DOMContentLoaded', function() {
         switchTab('my-mom');
-    });;
+    });
 </script>
 @endpush

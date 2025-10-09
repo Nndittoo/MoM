@@ -61,6 +61,7 @@ Route::middleware(['auth', 'role:user,admin'])->group(function () {
     Route::get('/shows', fn () => view('admin.shows'))->name('admin.shows');
     Route::get('/creates', fn () => view('admin.create'))->name('admin.creates');
     Route::get('/mom', [MomController::class, 'repository'])->name('admin.repository');
+    Route::get('/admin/moms/{mom}/edit', [MomController::class, 'editAdmin'])->name('admin.moms.edit');
 
     Route::get('/create', function () {
         $users = App\Models\User::all(['id', 'name']);
