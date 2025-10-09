@@ -21,12 +21,12 @@
                                                                 : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
                     <i class="fa-solid fa-check-to-slot w-5 h-5"></i>
                     <span class="ms-3">Persetujuan MoM</span>
-                    
+
                     @php
                         // Ensure the variable has a fallback value of 0
                         $count = $pendingApprovalsCount ?? 0;
                     @endphp
-                    
+
                     @if(isset($count))
                         <span class="absolute right-3 inline-flex items-center justify-center w-6 h-6 text-xs font-medium text-white bg-red-500 rounded-full"
                               style="{{ $count === 0 ? 'opacity: 0.5;' : '' }}">
@@ -47,8 +47,8 @@
             </li>
 
             <li>
-                <a href="{{ route('admin.calendars') }}" 
-                   class="flex items-center p-3 rounded-lg group transition 
+                <a href="{{ route('admin.calendars') }}"
+                   class="flex items-center p-3 rounded-lg group transition
                    {{ request()->routeIs('admin.calendars') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
                     <i class="fa-solid fa-calendar w-5 h-5"></i>
                     <span class="ms-3">Calendar</span>
@@ -56,26 +56,26 @@
             </li>
 
             <li>
-                <a href="{{ route('admin.task') }}" 
-                   class="flex items-center p-3 rounded-lg group transition 
+                <a href="{{ route('admin.task') }}"
+                   class="flex items-center p-3 rounded-lg group transition
                    {{ request()->routeIs('admin.task') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
                     <i class="fa-solid fa-tasks w-5 h-5"></i>
                     <span class="ms-3">Task</span>
                 </a>
             </li>
-            
+
             <li>
-                <a href="{{ route("admin.notification") }}" 
-                   class="flex items-center p-3 rounded-lg group transition 
+                <a href="{{ route("admin.notification") }}"
+                   class="flex items-center p-3 rounded-lg group transition
                    {{ request()->routeIs('admin.notification') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
                     <i class="fa-solid fa-bell w-5 h-5"></i>
                     <span class="ms-3">Notifications</span>
                 </a>
             </li>
-            
+
             <li>
-                <a href="{{ route("admin.users") }}" 
-                   class="flex items-center p-3 rounded-lg group transition 
+                <a href="{{ route("admin.users") }}"
+                   class="flex items-center p-3 rounded-lg group transition
                    {{ request()->routeIs('admin.users') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
                     <i class="fa-solid fa-users w-5 h-5"></i>
                     <span class="ms-3">Manajemen Pengguna</span>
