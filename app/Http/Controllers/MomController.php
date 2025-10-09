@@ -383,5 +383,36 @@ class MomController extends Controller
         return view('admin.mom', compact('momsByAdmin', 'allMoms'));
     }
 
+    public function destroy(Mom $mom)
+    {
+        if (Auth::check() && Auth::user()->role !== 'admin') {
+            return response()->json(['message' => 'Anda tidak memiliki izin untuk menghapus MoM.'], 403);
+        }
 
+        DB::beginTransaction();
+
+        try {
+            // Hapus Lampiran (Attachments) dari Storage
+            if ($mom->attachments) {
+                foreach ($mom->attachments as $attachment) {
+                    // Hapus file dari disk
+                    Storage::disk('public')->delete($attachment->file_path);
+                }
+            }
+
+            // Hapus Relasi Lain dan MoM itu sendiri
+            $mom->delete(); // Menghapus MoM (dan relasi jika ada cascade delete di DB/Model)
+
+            DB::commit();
+
+            return response()->json(['message' => "MoM '{$mom->title}' berhasil dihapus!"], 200);
+
+        } catch (Throwable $e) {
+            DB::rollBack();
+            Log::error("MOM Deletion Failed: " . $e->getMessage());
+
+            return response()->json(['message' => 'Gagal menghapus Minutes of Meeting.', 'error_detail' => $e->getMessage()], 500);
+        }
+    }
 }
+

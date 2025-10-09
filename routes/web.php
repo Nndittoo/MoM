@@ -95,6 +95,7 @@ Route::prefix('admin')->middleware(['auth','role:admin'])->group(function () {
     Route::post('/approvals/reject/{mom}', [ApprovalController::class, 'reject'])->name('admin.approvals.reject');
     Route::get('/moms/create', [MomController::class, 'create'])->name('admin.moms.create');
     Route::get('/moms/{mom}', [MomController::class, 'show_admin'])->name('admin.moms.show');
+    
 
 });
 
@@ -118,4 +119,6 @@ Route::middleware(['auth'])->name('moms.')->prefix('moms')->group(function () {
     // Route untuk memproses update data (AJAX Spoofing PATCH)
     Route::patch('/{mom}', [MomController::class, 'update'])->name('update');
 });
+
+Route::delete('/moms/{mom}', [MomController::class, 'destroy'])->name('moms.destroy'); 
 

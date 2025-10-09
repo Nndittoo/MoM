@@ -2,7 +2,18 @@
 
 @section('title', 'Repository MoM | MoM Telkom')
 
+{{-- Tambahkan meta tag CSRF jika belum ada di layout utama --}}
+@push('styles')
+    {{-- Di sini tempat Anda menaruh link CSS tambahan --}}
+@endpush
+
 @section('content')
+{{-- Kerangka Toast: border dihapus, hanya menggunakan shadow dan background --}}
+<div id="toast" class="hidden fixed top-5 right-5 z-50 items-center gap-3 px-4 py-3 rounded-xl shadow-lg bg-white dark:bg-dark-component-bg text-text-primary dark:text-dark-text-primary transition-all duration-500 opacity-0">
+    <div class="flex-shrink-0"><i class="fa-solid fa-circle-check text-green-500 text-lg"></i></div>
+    <div class="text-sm font-medium" id="toast-message">Notifikasi</div>
+</div>
+
 <div class="pt-2">
     <div class="space-y-6">
         {{-- Header --}}
@@ -62,7 +73,7 @@
 
                         @forelse($momsByAdmin as $mom)
                         {{-- Inisialisasi Alpine.js di kartu utama --}}
-                        <div x-data="{ actionsOpen: false }" class="bg-body-bg dark:bg-dark-body-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
+                        <div x-data="{ actionsOpen: false }" id="mom-card-{{ $mom->version_id }}" class="bg-body-bg dark:bg-dark-body-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
                             <div class="relative">
                                 @php
                                     $attachment = $mom->attachments->first();
@@ -90,14 +101,12 @@
                                             @php
                                                 // 1. Ambil data, coba decode, atau default ke array kosong
                                                 $peserta = is_string($mom->nama_peserta) ? json_decode($mom->nama_peserta, true) : ($mom->nama_peserta ?? []);
-                                                $mitra = is_string($mom->nama_mitra) ? json_decode($mom->nama_mitra, true) : ($mom->nama_mitra ?? []);
                                         
                                                 // 2. Pastikan keduanya adalah array sebelum digabung
                                                 $peserta = is_array($peserta) ? $peserta : [];
-                                                $mitra = is_array($mitra) ? $mitra : [];
-                                        
+                                                
                                                 // 3. Gabungkan dan filter elemen kosong/null
-                                                $allParticipants = array_filter(array_merge($peserta, $mitra));
+                                                $allParticipants = array_filter(array_merge($peserta));
                                                 
                                                 // 4. Hitung dan tentukan peserta yang ditampilkan
                                                 $totalParticipants = count($allParticipants);
@@ -152,15 +161,15 @@
                                             <a href="{{ url('/admin/details/' . $mom->version_id) }}" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-text-primary dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-body-bg rounded-lg">
                                                 <i class="fa-solid fa-eye w-4"></i><span>Lihat Detail</span>
                                             </a>
-                                            <a href="#" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-text-primary dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-body-bg rounded-lg">
+                                            <a href="{{ route('admin.moms.edit', $mom->version_id) }}" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-text-primary dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-body-bg rounded-lg">
                                                 <i class="fa-solid fa-pen-to-square w-4"></i><span>Edit</span>
                                             </a>
-                                            <form action="#" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus MoM ini?');">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
-                                                    <i class="fa-solid fa-trash-can w-4"></i><span>Hapus</span>
-                                                </button>
-                                            </form>
+                                            
+                                            {{-- MODIFIKASI: Tombol Hapus memanggil JS --}}
+                                            <button @click.prevent="deleteMom({{ $mom->version_id }}, $event)" 
+                                                class="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
+                                                <i class="fa-solid fa-trash-can w-4"></i><span>Hapus</span>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -177,7 +186,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                          @forelse($allMoms as $mom)
                         {{-- Salin-tempel struktur kartu yang sama persis dari atas untuk konsistensi --}}
-                        <div x-data="{ actionsOpen: false }" class="bg-body-bg dark:bg-dark-body-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
+                        <div x-data="{ actionsOpen: false }" id="mom-card-{{ $mom->version_id }}" class="bg-body-bg dark:bg-dark-body-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
                             <div class="relative">
                                 @php 
                                     $attachment = $mom->attachments->first();
@@ -201,17 +210,18 @@
                                     <div class="flex items-start justify-between">
                                         <div class="text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed">
                                             @php 
-                                                // Ambil data, coba decode, atau default ke array kosong
+                                                // 1. Ambil data, coba decode, atau default ke array kosong
                                                 $peserta = is_string($mom->nama_peserta) ? json_decode($mom->nama_peserta, true) : ($mom->nama_peserta ?? []);
                                                 $mitra = is_string($mom->nama_mitra) ? json_decode($mom->nama_mitra, true) : ($mom->nama_mitra ?? []);
 
-                                                // Memastikan keduanya adalah array sebelum digabung
+                                                // 2. Pastikan keduanya adalah array sebelum digabung
                                                 $peserta = is_array($peserta) ? $peserta : [];
+                                                $mitra = is_array($mitra) ? $mitra : [];
+
+                                                // 3. Gabungkan dan filter elemen kosong/null
+                                                $allParticipants = array_filter(array_merge($peserta, $mitra));
                                                 
-                                                // Menggabungkan dan filter elemen kosong/null
-                                                $allParticipants = array_filter(array_merge($peserta));
-                                                
-                                                // Hitung dan tentukan peserta yang ditampilkan
+                                                // 4. Hitung dan tentukan peserta yang ditampilkan
                                                 $totalParticipants = count($allParticipants);
                                                 $displayParticipants = array_slice($allParticipants, 0, 2); 
                                                 $remainingParticipantsCount = $totalParticipants - count($displayParticipants);
@@ -251,12 +261,12 @@
                                             <a href="{{ route('admin.moms.edit', $mom->version_id) }}" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-text-primary dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-body-bg rounded-lg">
                                                 <i class="fa-solid fa-pen-to-square w-4"></i><span>Edit</span>
                                             </a>
-                                            <form action="#" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus MoM ini?');">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
-                                                    <i class="fa-solid fa-trash-can w-4"></i><span>Hapus</span>
-                                                </button>
-                                            </form>
+                                            
+                                            {{-- MODIFIKASI: Tombol Hapus memanggil JS --}}
+                                            <button @click.prevent="deleteMom({{ $mom->version_id }}, $event)" 
+                                                class="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
+                                                <i class="fa-solid fa-trash-can w-4"></i><span>Hapus</span>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -277,6 +287,77 @@
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
 <script>
+    // FUNGSI UTILITY: Tampilkan Toast (Implementasi dasar tanpa border)
+    const showToast = (message, isError = false) => {
+        const toast = document.getElementById("toast");
+        if (!toast) {
+            alert(message); // Fallback jika toast tidak ada
+            return;
+        }
+
+        const icon = toast.querySelector('i');
+        const messageContainer = document.getElementById("toast-message"); 
+
+        // Atur ikon dan teks pesan
+        icon.className = isError
+            ? 'fa-solid fa-circle-xmark text-red-500 text-lg'
+            : 'fa-solid fa-circle-check text-green-500 text-lg';
+        messageContainer.textContent = message;
+
+        // Hilangkan kelas tersembunyi dan tampilkan
+        toast.classList.remove("hidden", "opacity-0");
+        toast.classList.add("opacity-100");
+
+        // Sembunyikan setelah 5 detik
+        setTimeout(() => {
+            toast.classList.remove("opacity-100");
+            toast.classList.add("opacity-0");
+            setTimeout(() => { toast.classList.add("hidden"); }, 500);
+        }, 5000);
+    };
+
+
+    // FUNGSI BARU UNTUK MENGHAPUS MOM VIA AJAX
+    window.deleteMom = async function (momId, event) {
+        if (!confirm('Apakah Anda yakin ingin menghapus MoM ini? Tindakan ini tidak dapat dibatalkan.')) {
+            return;
+        }
+        
+        // Temukan elemen kartu MoM terdekat
+        const momCard = document.getElementById(`mom-card-${momId}`); 
+        
+        try {
+            // URL DELETE yang benar adalah /moms/{momId}
+            const response = await fetch(`/moms/${momId}`, {
+                method: 'DELETE',
+                headers: {
+                    // Pastikan meta tag CSRF ada di layout utama
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                },
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // 1. Hapus elemen kartu MoM dari DOM
+                if (momCard) {
+                    momCard.remove(); 
+                }
+
+                // 2. Tampilkan Toast Sukses
+                showToast(data.message || 'MoM berhasil dihapus!');
+                
+            } else {
+                showToast(data.message || 'Gagal menghapus MoM. Silakan coba lagi.', true);
+            }
+        } catch (error) {
+            console.error('Error saat menghapus MoM:', error);
+            showToast('Terjadi kesalahan koneksi.', true);
+        }
+    }
+
+
     function switchTab(tabId) {
         const myMomTab = document.getElementById('my-mom-tab');
         const allMomTab = document.getElementById('all-mom-tab');
