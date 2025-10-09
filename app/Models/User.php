@@ -14,7 +14,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role', 
+        'role',
     ];
 
     protected $hidden = [
@@ -29,7 +29,7 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-    
+
     // Relasi untuk MoM yang dibuatnya (Creator)
     public function createdMoms()
     {
@@ -47,12 +47,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Mom::class, 'notulen_id', 'id');
     }
-    
+
     // Relasi Peserta Rapat (Many-to-Many)
     public function attendedMoms()
     {
         // Parameter ketiga: Foreign key model ini (User) di tabel pivot (mom_attendees)
-        return $this->belongsToMany(Mom::class, 'mom_attendees', 'user_id', 'mom_id') 
+        return $this->belongsToMany(Mom::class, 'mom_attendees', 'user_id', 'mom_id')
                     ->withPivot('status')
                     ->withTimestamps();
     }

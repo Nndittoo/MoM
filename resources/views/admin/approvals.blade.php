@@ -107,8 +107,6 @@
 </div>
 @endsection
 
-
-
 @push('scripts')
 <script>
 /* TOAST */
@@ -164,7 +162,7 @@ const handleAjaxAction = async (url, method, data = null, successCallback = () =
     }
 };
 
-/* CLOSE MODAL (VERSI FIX BACKDROP) */
+/* CLOSE MODAL  */
 const closeRejectionModal = () => {
     const modal = document.getElementById('rejection-modal');
 
@@ -172,7 +170,7 @@ const closeRejectionModal = () => {
     modal.classList.add('hidden');
     modal.setAttribute('aria-hidden', 'true');
 
-    // ====== HAPUS SEMUA BACKDROP ======
+    // HAPUS SEMUA BACKDROP
     const backdrops = [
         '.modal-backdrop',
         '.fixed.inset-0.bg-gray-900',
@@ -217,9 +215,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const comment = form.querySelector('#rejection-comment').value;
         const url = form.dataset.url;
 
-        // ========================================================
-        // PERUBAHAN DI SINI
-        // ========================================================
         const success = () => {
             // Muat ulang halaman untuk menampilkan daftar MoM yang terbaru
             window.location.reload();

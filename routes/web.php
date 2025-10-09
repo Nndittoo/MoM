@@ -12,6 +12,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ReminderController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminCalendarController;
 
 Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -24,9 +26,7 @@ Route::post('/logout', [AuthController::class, 'logout'])
  * USER AREA
  */
 Route::middleware(['auth', 'role:user,admin'])->group(function () {
-    // Dashboard routes - pindahkan ke dalam middleware
     Route::get('/api/search-moms', [DashboardController::class, 'searchMoms'])->name('api.search.moms');
-
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/search', [DashboardController::class, 'searchMoms'])->name('dashboard.search');
 
@@ -47,22 +47,27 @@ Route::middleware(['auth', 'role:user,admin'])->group(function () {
     Route::get('/export', fn () => view('user.export'))->name('user.export');
     Route::get('/mom/export', fn () => view('admin.export'))->name('admin.export');
 
-    Route::get('/admin', fn () => view('admin.dashboard'))->name('admin.dashboard');
-    Route::get('/calendars', fn () => view('admin.calendars'))->name('admin.calendars');
+    // Admin Dashboard
+    Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+    // Admin Calendar
+    Route::get('/calendars', [AdminCalendarController::class, 'index'])->name('admin.calendars');
+    Route::get('/calendars/events', [AdminCalendarController::class, 'getEvents'])->name('admin.calendars.events');
+
     Route::get('/mom', fn () => view('admin.mom'))->name('admin.mom');
     Route::get('/users', fn () => view('admin.users'))->name('admin.users');
     Route::get('/task', fn () => view('admin.task'))->name('admin.task');
     Route::get('/notification', fn () => view('admin.notification'))->name('admin.notification');
-    Route::get('/detail', fn () => view('admin.details'))->name('admin.detail');
+    Route::get('/admin/details/{mom}', [MomController::class, 'show_admin'])->name('admin.details');
     Route::get('/shows', fn () => view('admin.shows'))->name('admin.shows');
     Route::get('/creates', fn () => view('admin.create'))->name('admin.creates');
+    Route::get('/mom', [MomController::class, 'repository'])->name('admin.repository');
 
     Route::get('/create', function () {
         $users = App\Models\User::all(['id', 'name']);
         return view('user.create', compact('users'));
     })->name('user.create');
 
-    // POST route tetap sama, tetapi namanya lebih jelas
+
     Route::post('/moms', [MomController::class, 'store'])->name('moms.store');
 });
 
@@ -86,7 +91,7 @@ Route::prefix('admin')->middleware(['auth','role:admin'])->group(function () {
 
 Route::get('/draft', [DraftController::class, 'index'])->name('draft.index')->middleware('auth');
 Route::get('/moms/{mom}', [MomController::class, 'show'])->name('moms.detail');
-Route::get('/moms/{mom}/edit', [MomController::class, 'edit'])->name('moms.edit');
+//Route::get('/moms/{mom}/edit', [MomController::class, 'edit'])->name('user.edit');
 Route::get('/export/{mom}', [MomController::class, 'export'])->name('moms.export');
 
 // Action Items routes
@@ -94,5 +99,14 @@ Route::prefix('action-items')->group(function () {
     Route::post('/', [ActionItemController::class, 'store'])->name('action_items.store');
     Route::delete('/{actionItem}', [ActionItemController::class, 'destroy'])->name('action_items.destroy');
 
+
+});
+
+Route::middleware(['auth'])->name('moms.')->prefix('moms')->group(function () {
+    // Route untuk menampilkan form edit
+    Route::get('/{mom}/edit', [MomController::class, 'edit'])->name('edit');
+
+    // Route untuk memproses update data (AJAX Spoofing PATCH)
+    Route::patch('/{mom}', [MomController::class, 'update'])->name('update');
 });
 

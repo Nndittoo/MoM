@@ -31,7 +31,7 @@ return new class extends Migration
             
             $table->json('nama_peserta'); // Peserta Internal (array nama)
             $table->json('nama_mitra'); // Peserta Mitra (array of objects)
-            
+            $table->longText('rejection_comment')->nullable();
             $table->timestamps(); 
         });
     }

@@ -26,12 +26,14 @@ class Mom extends Model
         'status_id',
         'nama_peserta', 
         'nama_mitra',
+        'rejection_comment',
     ];
 
     // Casting untuk kolom JSON
     protected $casts = [
         'nama_peserta' => 'array',
         'nama_mitra' => 'array',
+        'meeting_date' => 'date',
     ];
     
     // Relasi ke User
