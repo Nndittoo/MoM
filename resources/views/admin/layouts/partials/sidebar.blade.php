@@ -66,10 +66,15 @@
 
             <li>
                 <a href="{{ route("admin.notification") }}"
-                   class="flex items-center p-3 rounded-lg group transition
-                   {{ request()->routeIs('admin.notification') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
+                class="flex items-center p-3 rounded-lg group transition relative {{ request()->is('notification') ? 'bg-primary/20 text-primary font-semibold' : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
                     <i class="fa-solid fa-bell w-5 h-5"></i>
-                    <span class="ms-3">Notifications</span>
+                    <span class="ms-3 flex-1 whitespace-nowrap">Notifications</span>
+                    {{-- Badge Notifikasi Dinamis --}}
+                    @if(isset($adminNotificationCount) && $adminNotificationCount > 0)
+                        <span class="inline-flex items-center justify-center w-6 h-6 ms-3 text-sm font-medium text-white bg-red-500 rounded-full">
+                            {{ $adminNotificationCount }}
+                        </span>
+                    @endif
                 </a>
             </li>
 

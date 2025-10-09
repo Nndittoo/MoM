@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Http\Controllers\Admin\AdminNotificationController;
 
 class AuthController extends Controller
 {
@@ -63,6 +64,14 @@ class AuthController extends Controller
             'password' => Hash::make($data['password']),
             'role'     => 'user', // default role
         ]);
+
+        // === NOTIFIKASI ADMIN: Pengguna Baru Mendaftar ===
+        AdminNotificationController::createNotification(
+            type: 'user_new',
+            title: 'Pengguna Baru Mendaftar',
+            message: "Pengguna baru dengan nama {$user->name} telah terdaftar di sistem.",
+            relatedId: $user->id
+        );
 
         // redirect ke login + flash message
         return redirect()

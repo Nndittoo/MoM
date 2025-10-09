@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth; // Tambahkan ini
 use Throwable;
+use App\Http\Controllers\Admin\AdminNotificationController;
 
 class MomController extends Controller
 {
@@ -32,10 +33,10 @@ class MomController extends Controller
      */
     public function createAdmin()
     {
-        $users = User::all(); 
+        $users = User::all();
         return view('admin/create', compact('users'));
     }
-    
+
     public function store(StoreMomRequest $request)
     {
         $creatorId = auth()->id();
@@ -52,6 +53,8 @@ class MomController extends Controller
             $statusToUse = $defaultStatus;
             $statusMessage = 'Menunggu';
 
+            $isAdminSubmission = $request->has('is_admin_submission') && $request->is_admin_submission == '1';
+
             // 2. LOGIKA ADMIN (Jika form Admin mengirim is_admin_submission=1)
             if ($request->has('is_admin_submission') && $request->is_admin_submission == '1') {
                 try {
@@ -62,7 +65,7 @@ class MomController extends Controller
                     Log::warning("Status 'Disetujui' tidak ditemukan di tabel MomStatus. Menggunakan status default 'Menunggu'.");
                 }
             }
-            
+
             $partnerAttendees = $request->partner_attendees_json ? json_decode($request->partner_attendees_json, true) : [];
             $manualAttendees = $request->attendees_manual ?? [];
 
@@ -79,8 +82,8 @@ class MomController extends Controller
 
                 'creator_id' => $creatorId,
                 'pembahasan' => $request->pembahasan,
-                'status_id' => $statusToUse->status_id, 
-                
+                'status_id' => $statusToUse->status_id,
+
                 'nama_peserta' => $manualAttendees,
                 'nama_mitra' => $partnerAttendees,
             ]);
@@ -149,6 +152,17 @@ class MomController extends Controller
                 MomAttachment::insert($attachmentsData);
             }
 
+            // === NOTIFIKASI ADMIN: MoM Baru Menunggu Persetujuan ===
+            // Kirim notifikasi hanya jika bukan admin yang membuat
+            if (!$isAdminSubmission) {
+                $creator = auth()->user();
+                AdminNotificationController::createNotification(
+                    type: 'mom_pending',
+                    title: 'MoM Baru Menunggu Persetujuan',
+                    message: "MoM berjudul '{$mom->title}' yang dibuat oleh {$creator->name} menunggu untuk Anda review.",
+                    relatedId: $mom->version_id
+                );
+            }
 
             // === NOTIFICATION: MoM Berhasil Dibuat ===
             // NotificationController::createNotification(...);
@@ -237,17 +251,17 @@ class MomController extends Controller
             // PROSES PENGHAPUSAN FILE LAMA
             if ($request->has('files_to_delete')) {
                 $idsToDelete = is_array($request->input('files_to_delete')) ? $request->input('files_to_delete') : [$request->input('files_to_delete')];
-                
+
                 foreach ($idsToDelete as $attachmentId) {
                     $attachment = MomAttachment::find($attachmentId);
-                    
+
                     if ($attachment && $attachment->mom_id === $mom->version_id) {
                         Storage::disk('public')->delete($attachment->file_path);
                         $attachment->delete();
                     }
                 }
             }
-            
+
             // PROSES UPDATE DATA UTAMA MoM
             $mom->update([
                 'title' => $request->title,
@@ -263,13 +277,13 @@ class MomController extends Controller
                 'status_id' => $newStatusId, 
 
                 // Data JSON/Array
-                'nama_peserta' => $request->input('attendees_manual'), 
+                'nama_peserta' => $request->input('attendees_manual'),
                 'nama_mitra' => json_decode($request->input('partner_attendees_json'), true),
             ]);
 
             // PROSES UPDATE AGENDA (Hapus lama, tambahkan baru)
             MomAgenda::where('mom_id', $mom->version_id)->delete();
-            
+
             if ($request->filled('agendas')) {
                 $agendasData = collect($request->agendas)->map(fn ($item, $index) => [
                     'mom_id' => $mom->version_id,
@@ -280,7 +294,7 @@ class MomController extends Controller
                 ])->all();
                 MomAgenda::insert($agendasData);
             }
-            
+
             // PROSES PENAMBAHAN FILE BARU
             if ($request->hasFile('attachments')) {
                 $attachmentsData = [];
@@ -330,24 +344,44 @@ class MomController extends Controller
         return view('user/export', compact('mom'));
     }
 
-    public function repository()
+    public function repository(Request $request)
     {
-        $adminRole = 'admin'; 
+        //Ambil input dari request
         
-        $momsByAdmin = Mom::whereHas('creator', function ($query) use ($adminRole) {
-            $query->where('role', $adminRole);
-        })
-        ->with(['creator', 'status', 'agendas', 'attachments']) 
-        ->orderByDesc('meeting_date')
-        ->get();
+        $search = $request->input('search');
+        $date = $request->input('date');
 
-        $allMoms = Mom::whereIn('status_id', [1, 2, 3])
+        //Query dasar untuk "Semua MoM"
+        $allMomsQuery = Mom::query()
             ->with(['creator', 'status', 'agendas', 'attachments'])
-            ->orderByDesc('meeting_date')
-            ->get();
+            ->orderByDesc('meeting_date');
 
+        // Filter jika ada input
+        if ($search) {
+            // Filter berdasarkan judul atau pembahasan
+            $allMomsQuery->where(function ($query) use ($search) {
+                $query->where('title', 'like', '%' . $search . '%')
+                    ->orWhere('pembahasan', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($date) {
+            // Filter berdasarkan tanggal pertemuan
+            $allMomsQuery->whereDate('meeting_date', $date);
+        }
+
+        // Query untuk "My MoM" dengan mengkloning dan menambahkan filter role admin
+        $momsByAdminQuery = (clone $allMomsQuery)->whereHas('creator', function ($query) {
+            $query->where('role', 'admin');
+        });
+
+        //Eksekusi kedua query untuk mendapatkan hasilnya
+        $allMoms = $allMomsQuery->get();
+        $momsByAdmin = $momsByAdminQuery->get();
+
+        //Kirim data yang sudah difilter ke view
         return view('admin.mom', compact('momsByAdmin', 'allMoms'));
     }
 
-    
+
 }
