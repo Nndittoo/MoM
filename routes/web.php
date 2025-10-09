@@ -25,9 +25,7 @@ Route::post('/logout', [AuthController::class, 'logout'])
  * USER AREA
  */
 Route::middleware(['auth', 'role:user,admin'])->group(function () {
-    // Dashboard routes - pindahkan ke dalam middleware
     Route::get('/api/search-moms', [DashboardController::class, 'searchMoms'])->name('api.search.moms');
-
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/search', [DashboardController::class, 'searchMoms'])->name('dashboard.search');
 
@@ -55,16 +53,17 @@ Route::middleware(['auth', 'role:user,admin'])->group(function () {
     Route::get('/users', fn () => view('admin.users'))->name('admin.users');
     Route::get('/task', fn () => view('admin.task'))->name('admin.task');
     Route::get('/notification', fn () => view('admin.notification'))->name('admin.notification');
-    Route::get('/details', fn () => view('admin.details'))->name('admin.details');
+    Route::get('/admin/details/{mom}', [MomController::class, 'show_admin'])->name('admin.details');
     Route::get('/shows', fn () => view('admin.shows'))->name('admin.shows');
     Route::get('/creates', fn () => view('admin.create'))->name('admin.creates');
+    Route::get('/mom', [MomController::class, 'repository'])->name('admin.repository');
 
     Route::get('/create', function () {
         $users = App\Models\User::all(['id', 'name']);
         return view('user.create', compact('users'));
     })->name('user.create');
 
-    // POST route tetap sama, tetapi namanya lebih jelas
+    
     Route::post('/moms', [MomController::class, 'store'])->name('moms.store');
 });
 

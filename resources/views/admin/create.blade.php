@@ -22,7 +22,7 @@
             <div>
                 <h1 class="text-3xl font-bold text-text-primary dark:text-dark-text-primary">Create New MoM (Admin)</h1>
                 <p class="mt-1 text-text-secondary dark:text-dark-text-secondary">
-                    Buat notulensi rapat baru yang akan otomatis **Disetujui**.
+                    Buat notulensi rapat baru yang akan otomatis berstatus di setujui.
                 </p>
             </div>
         </div>

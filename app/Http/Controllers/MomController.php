@@ -209,4 +209,22 @@ class MomController extends Controller
         $mom->load(['creator', 'agendas', 'actionItems', 'attachments']);
         return view('user/export', compact('mom'));
     }
+
+    public function repository()
+    {
+        $adminRole = 'admin'; 
+        $momsByAdmin = Mom::whereHas('creator', function ($query) use ($adminRole) {
+            $query->where('role', $adminRole);
+        })
+        ->with(['creator', 'status', 'agendas', 'attachments']) 
+        ->orderByDesc('meeting_date')
+        ->get();
+
+        $allMoms = Mom::whereIn('status_id', [1, 2, 3])
+            ->with(['creator', 'status', 'agendas', 'attachments'])
+            ->orderByDesc('meeting_date')
+            ->get();
+
+        return view('admin.mom', compact('momsByAdmin', 'allMoms'));
+    }
 }
