@@ -101,8 +101,8 @@
                                         }
                                     }
                                 }
+                                $allAttendees = array_unique(array_merge($internalNames, $partnerNames));
                                 
-                                $allAttendees = array_merge($internalNames, $partnerNames);
                                 $totalAttendees = count($allAttendees);
 
                                 // Ambil nama creator dengan aman menggunakan Safe Operator
