@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Throwable;
+use App\Http\Controllers\Admin\AdminNotificationController;
 
 // Pastikan Anda telah membuat atau meng-import NotificationController
 // use App\Http\Controllers\NotificationController;
@@ -34,10 +35,10 @@ class MomController extends Controller
      */
     public function createAdmin()
     {
-        $users = User::all(); 
+        $users = User::all();
         return view('admin/create', compact('users'));
     }
-    
+
     public function store(StoreMomRequest $request)
     {
         $creatorId = auth()->id();
@@ -54,8 +55,10 @@ class MomController extends Controller
             $statusToUse = $defaultStatus;
             $statusMessage = 'Menunggu';
 
+            $isAdminSubmission = $request->has('is_admin_submission') && $request->is_admin_submission == '1';
+
             // 2. LOGIKA ADMIN
-            if ($request->has('is_admin_submission') && $request->is_admin_submission == '1') {
+            if ($isAdminSubmission) {
                 try {
                     $approvedStatus = MomStatus::where('status', 'Disetujui')->firstOrFail();
                     $statusToUse = $approvedStatus;
@@ -64,7 +67,7 @@ class MomController extends Controller
                     Log::warning("Status 'Disetujui' tidak ditemukan di tabel MomStatus. Menggunakan status default 'Menunggu'.");
                 }
             }
-            
+
             $partnerAttendees = $request->partner_attendees_json ? json_decode($request->partner_attendees_json, true) : [];
             $manualAttendees = $request->attendees_manual ?? [];
 
@@ -81,8 +84,8 @@ class MomController extends Controller
 
                 'creator_id' => $creatorId,
                 'pembahasan' => $request->pembahasan,
-                'status_id' => $statusToUse->status_id, 
-                
+                'status_id' => $statusToUse->status_id,
+
                 'nama_peserta' => $manualAttendees,
                 'nama_mitra' => $partnerAttendees,
             ]);
@@ -151,6 +154,17 @@ class MomController extends Controller
                 MomAttachment::insert($attachmentsData);
             }
 
+            // === NOTIFIKASI ADMIN: MoM Baru Menunggu Persetujuan ===
+            // Kirim notifikasi hanya jika bukan admin yang membuat
+            if (!$isAdminSubmission) {
+                $creator = auth()->user();
+                AdminNotificationController::createNotification(
+                    type: 'mom_pending',
+                    title: 'MoM Baru Menunggu Persetujuan',
+                    message: "MoM berjudul '{$mom->title}' yang dibuat oleh {$creator->name} menunggu untuk Anda review.",
+                    relatedId: $mom->version_id
+                );
+            }
 
             // === NOTIFICATION: MoM Berhasil Dibuat ===
             // NotificationController::createNotification(...);
@@ -197,7 +211,7 @@ class MomController extends Controller
     {
         $users = User::all();
         // Pastikan relasi attachments dimuat untuk form edit
-        $mom->load(['agendas', 'attachments']); 
+        $mom->load(['agendas', 'attachments']);
         return view('user.edit', compact('mom', 'users'));
     }
 
@@ -214,17 +228,17 @@ class MomController extends Controller
             if ($request->has('files_to_delete')) {
                 // Input files_to_delete[] harus berupa array ID
                 $idsToDelete = is_array($request->input('files_to_delete')) ? $request->input('files_to_delete') : [$request->input('files_to_delete')];
-                
+
                 foreach ($idsToDelete as $attachmentId) {
                     $attachment = MomAttachment::find($attachmentId);
-                    
+
                     if ($attachment && $attachment->mom_id === $mom->version_id) {
                         Storage::disk('public')->delete($attachment->file_path);
                         $attachment->delete();
                     }
                 }
             }
-            
+
             // --- PROSES UPDATE DATA UTAMA MoM ---
             $mom->update([
                 'title' => $request->title,
@@ -235,19 +249,19 @@ class MomController extends Controller
                 'start_time' => $request->start_time,
                 'end_time' => $request->end_time,
                 'pembahasan' => $request->pembahasan,
-                
+
                 // Setelah diedit, status MoM dikirim ulang untuk persetujuan
-                'status_id' => 1, 
+                'status_id' => 1,
 
                 // Data JSON/Array
-                'nama_peserta' => $request->input('attendees_manual'), 
+                'nama_peserta' => $request->input('attendees_manual'),
                 'nama_mitra' => json_decode($request->input('partner_attendees_json'), true),
             ]);
 
             // --- PROSES UPDATE AGENDA (Hapus lama, tambahkan baru) ---
             // Hapus semua agenda lama yang terkait dengan MoM ini
             MomAgenda::where('mom_id', $mom->version_id)->delete();
-            
+
             if ($request->filled('agendas')) {
                 $agendasData = collect($request->agendas)->map(fn ($item, $index) => [
                     'mom_id' => $mom->version_id,
@@ -258,7 +272,7 @@ class MomController extends Controller
                 ])->all();
                 MomAgenda::insert($agendasData);
             }
-            
+
             // --- PROSES PENAMBAHAN FILE BARU ---
             if ($request->hasFile('attachments')) {
                 $attachmentsData = [];
@@ -306,11 +320,11 @@ class MomController extends Controller
     // Fungsi repository yang Anda berikan
     public function repository()
     {
-        $adminRole = 'admin'; 
+        $adminRole = 'admin';
         $momsByAdmin = Mom::whereHas('creator', function ($query) use ($adminRole) {
             $query->where('role', $adminRole);
         })
-        ->with(['creator', 'status', 'agendas', 'attachments']) 
+        ->with(['creator', 'status', 'agendas', 'attachments'])
         ->orderByDesc('meeting_date')
         ->get();
 

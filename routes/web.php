@@ -14,6 +14,7 @@ use App\Http\Controllers\ReminderController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminCalendarController;
+use App\Http\Controllers\Admin\AdminNotificationController;
 
 Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -38,8 +39,9 @@ Route::middleware(['auth', 'role:user,admin'])->group(function () {
     Route::post('/reminder/{id}/complete', [ReminderController::class, 'complete'])->name('reminder.complete');
     Route::get('/calendar', [CalendarController::class, 'index'])->name('user.calendar');
     Route::get('/calendar/events', [CalendarController::class, 'getEvents'])->name('calendar.events');
+
     // Notifications
-    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index   ');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/recent', [NotificationController::class, 'getRecent'])->name('notifications.recent');
     Route::get('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllRead');
@@ -56,7 +58,13 @@ Route::middleware(['auth', 'role:user,admin'])->group(function () {
     Route::get('/mom', fn () => view('admin.mom'))->name('admin.mom');
     Route::get('/users', fn () => view('admin.users'))->name('admin.users');
     Route::get('/task', fn () => view('admin.task'))->name('admin.task');
-    Route::get('/notification', fn () => view('admin.notification'))->name('admin.notification');
+
+    // Admin Notification
+    Route::get('/notification', [AdminNotificationController::class, 'index'])->name('admin.notification');
+    Route::get('/notification/{id}/read', [AdminNotificationController::class, 'read'])->name('admin.notification.read');
+    Route::get('/admin/details/{mom}', [MomController::class, 'show_admin'])->name('admin.details');
+    Route::get('/admin/notifications/recent', [AdminNotificationController::class, 'getRecent'])->name('admin.notifications.recent');
+
     Route::get('/admin/details/{mom}', [MomController::class, 'show_admin'])->name('admin.details');
     Route::get('/shows', fn () => view('admin.shows'))->name('admin.shows');
     Route::get('/creates', fn () => view('admin.create'))->name('admin.creates');
@@ -104,8 +112,8 @@ Route::prefix('action-items')->group(function () {
 
 Route::middleware(['auth'])->name('moms.')->prefix('moms')->group(function () {
     // Route untuk menampilkan form edit
-    Route::get('/{mom}/edit', [MomController::class, 'edit'])->name('edit'); 
-    
+    Route::get('/{mom}/edit', [MomController::class, 'edit'])->name('edit');
+
     // Route untuk memproses update data (AJAX Spoofing PATCH)
     Route::patch('/{mom}', [MomController::class, 'update'])->name('update');
 });
