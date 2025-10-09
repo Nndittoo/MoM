@@ -47,29 +47,7 @@ Route::middleware(['auth', 'role:user,admin'])->group(function () {
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllRead');
     Route::get('/show', fn () => view('user.show'))->name('user.show');
     Route::get('/export', fn () => view('user.export'))->name('user.export');
-    Route::get('/mom/export', fn () => view('admin.export'))->name('admin.export');
 
-    // Admin Dashboard
-    Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
-    // Admin Calendar
-    Route::get('/calendars', [AdminCalendarController::class, 'index'])->name('admin.calendars');
-    Route::get('/calendars/events', [AdminCalendarController::class, 'getEvents'])->name('admin.calendars.events');
-
-    Route::get('/mom', fn () => view('admin.mom'))->name('admin.mom');
-    Route::get('/users', fn () => view('admin.users'))->name('admin.users');
-    Route::get('/task', fn () => view('admin.task'))->name('admin.task');
-
-    // Admin Notification
-    Route::get('/notification', [AdminNotificationController::class, 'index'])->name('admin.notification');
-    Route::get('/notification/{id}/read', [AdminNotificationController::class, 'read'])->name('admin.notification.read');
-    Route::get('/admin/details/{mom}', [MomController::class, 'show_admin'])->name('admin.details');
-    Route::get('/admin/notifications/recent', [AdminNotificationController::class, 'getRecent'])->name('admin.notifications.recent');
-
-    Route::get('/admin/details/{mom}', [MomController::class, 'show_admin'])->name('admin.details');
-    Route::get('/shows', fn () => view('admin.shows'))->name('admin.shows');
-    Route::get('/creates', fn () => view('admin.create'))->name('admin.creates');
-    Route::get('/mom', [MomController::class, 'repository'])->name('admin.repository');
-    Route::get('/admin/moms/{mom}/edit', [MomController::class, 'editAdmin'])->name('admin.moms.edit');
 
     Route::get('/create', function () {
         $users = App\Models\User::all(['id', 'name']);
@@ -87,6 +65,31 @@ Route::get('/sign-up', [AuthController::class, 'showRegister'])->name('register'
 Route::post('/sign-up', [AuthController::class, 'register'])->name('register.post');
 
 Route::prefix('admin')->middleware(['auth','role:admin'])->group(function () {
+
+    // Admin Dashboard
+    Route::get('/', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+    // Admin Calendar
+    Route::get('/calendars', [AdminCalendarController::class, 'index'])->name('admin.calendars');
+    Route::get('/calendars/events', [AdminCalendarController::class, 'getEvents'])->name('admin.calendars.events');
+
+    // Admin Notification
+    Route::get('/notification', [AdminNotificationController::class, 'index'])->name('admin.notification');
+    Route::get('/notification/{id}/read', [AdminNotificationController::class, 'read'])->name('admin.notification.read');
+    Route::get('/admin/details/{mom}', [MomController::class, 'show_admin'])->name('admin.details');
+    Route::get('/admin/notifications/recent', [AdminNotificationController::class, 'getRecent'])->name('admin.notifications.recent');
+
+        Route::get('/mom/export', fn () => view('admin.export'))->name('admin.export');
+
+    Route::get('/mom', fn () => view('admin.mom'))->name('admin.mom');
+    Route::get('/users', fn () => view('admin.users'))->name('admin.users');
+    Route::get('/task', fn () => view('admin.task'))->name('admin.task');
+
+    Route::get('/admin/details/{mom}', [MomController::class, 'show_admin'])->name('admin.details');
+    Route::get('/shows', fn () => view('admin.shows'))->name('admin.shows');
+    Route::get('/creates', fn () => view('admin.create'))->name('admin.creates');
+    Route::get('/mom', [MomController::class, 'repository'])->name('admin.repository');
+    Route::get('/admin/moms/{mom}/edit', [MomController::class, 'editAdmin'])->name('admin.moms.edit');
+
     Route::get('/users', [UserController::class, 'index'])->name('admin.users');
     Route::post('/users/{id}/update-role', [UserController::class, 'updateRole'])->name('admin.users.updateRole');
     Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('admin.users.destroy');
@@ -95,7 +98,7 @@ Route::prefix('admin')->middleware(['auth','role:admin'])->group(function () {
     Route::post('/approvals/reject/{mom}', [ApprovalController::class, 'reject'])->name('admin.approvals.reject');
     Route::get('/moms/create', [MomController::class, 'create'])->name('admin.moms.create');
     Route::get('/moms/{mom}', [MomController::class, 'show_admin'])->name('admin.moms.show');
-    
+
 
 });
 
@@ -120,5 +123,5 @@ Route::middleware(['auth'])->name('moms.')->prefix('moms')->group(function () {
     Route::patch('/{mom}', [MomController::class, 'update'])->name('update');
 });
 
-Route::delete('/moms/{mom}', [MomController::class, 'destroy'])->name('moms.destroy'); 
+Route::delete('/moms/{mom}', [MomController::class, 'destroy'])->name('moms.destroy');
 
