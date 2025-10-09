@@ -1,27 +1,29 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\ActionItem;
 use App\Models\Mom;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
 
-class CalendarController extends Controller
+class AdminCalendarController extends Controller
 {
+    /**
+     * Display admin calendar with all action items from approved MOMs
+     */
     public function index()
     {
-        $userId = Auth::id();
-
-        // Ambil semua action items dengan relasi mom
-        $actionItems = ActionItem::with('mom')
-                                ->whereHas('mom', function ($query) use ($userId) {
-                                        $query->where('creator_id', $userId); // hanya MoM milik user login
-                                    })
-                                 ->where('status', 'mendatang')
-                                 ->orderBy('due', 'asc')
-                                 ->get();
+        // Ambil semua action items dari MoM yang sudah approved
+        $actionItems = ActionItem::with(['mom' => function($query) {
+                            $query->where('status_id', 2); // Only approved MOMs
+                        }])
+                        ->whereHas('mom', function($query) {
+                            $query->where('status_id', 2);
+                        })
+                        ->orderBy('due', 'asc')
+                        ->get();
 
         // Format data untuk calendar
         $events = [];
@@ -43,27 +45,29 @@ class CalendarController extends Controller
             ];
         }
 
-        return view('user.calendar', compact('events'));
+        return view('admin.calendars', compact('events'));
     }
 
-    // API untuk mendapatkan events berdasarkan bulan
+    /**
+     * Get events for specific month (API endpoint)
+     */
     public function getEvents(Request $request)
     {
-        $userId = Auth::id();
         $month = $request->input('month', now()->month);
         $year = $request->input('year', now()->year);
 
         $startDate = Carbon::create($year, $month, 1)->startOfMonth();
         $endDate = Carbon::create($year, $month, 1)->endOfMonth();
 
-        $actionItems = ActionItem::with('mom')
-            ->whereHas('mom', function ($query) use ($userId) {
-                $query->where('creator_id', $userId);
-            })
-            ->where('status', 'mendatang')
-            ->whereBetween('due', [$startDate, $endDate])
-            ->orderBy('due', 'asc')
-            ->get();
+        $actionItems = ActionItem::with(['mom' => function($query) {
+                            $query->where('status_id', 2);
+                        }])
+                        ->whereHas('mom', function($query) {
+                            $query->where('status_id', 2);
+                        })
+                        ->whereBetween('due', [$startDate, $endDate])
+                        ->orderBy('due', 'asc')
+                        ->get();
 
         $events = [];
         foreach ($actionItems as $item) {
