@@ -87,7 +87,7 @@ Route::prefix('admin')->middleware(['auth','role:admin'])->group(function () {
 
 Route::get('/draft', [DraftController::class, 'index'])->name('draft.index')->middleware('auth');
 Route::get('/moms/{mom}', [MomController::class, 'show'])->name('moms.detail');
-Route::get('/moms/{mom}/edit', [MomController::class, 'edit'])->name('moms.edit');
+//Route::get('/moms/{mom}/edit', [MomController::class, 'edit'])->name('user.edit');
 Route::get('/export/{mom}', [MomController::class, 'export'])->name('moms.export');
 
 // Action Items routes
@@ -95,5 +95,14 @@ Route::prefix('action-items')->group(function () {
     Route::post('/', [ActionItemController::class, 'store'])->name('action_items.store');
     Route::delete('/{actionItem}', [ActionItemController::class, 'destroy'])->name('action_items.destroy');
 
+
+});
+
+Route::middleware(['auth'])->name('moms.')->prefix('moms')->group(function () {
+    // Route untuk menampilkan form edit
+    Route::get('/{mom}/edit', [MomController::class, 'edit'])->name('edit'); 
+    
+    // Route untuk memproses update data (AJAX Spoofing PATCH)
+    Route::patch('/{mom}', [MomController::class, 'update'])->name('update');
 });
 

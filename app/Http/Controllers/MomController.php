@@ -15,6 +15,9 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
+// Pastikan Anda telah membuat atau meng-import NotificationController
+// use App\Http\Controllers\NotificationController;
+
 class MomController extends Controller
 {
     /**
@@ -22,19 +25,17 @@ class MomController extends Controller
      */
     public function create()
     {
-        // Variabel $users tetap dikirimkan (untuk creator_id)
         $users = User::all();
         return view('user/create', compact('users'));
     }
 
     /**
      * Menampilkan form untuk membuat MoM baru (untuk Role Admin).
-     * Memuat view yang memiliki hidden input is_admin_submission.
      */
     public function createAdmin()
     {
         $users = User::all(); 
-        return view('admin/create', compact('users')); // <-- Memuat view Admin yang baru
+        return view('admin/create', compact('users'));
     }
     
     public function store(StoreMomRequest $request)
@@ -53,15 +54,13 @@ class MomController extends Controller
             $statusToUse = $defaultStatus;
             $statusMessage = 'Menunggu';
 
-            // 2. LOGIKA ADMIN: Cek apakah ini submission dari Admin (menggunakan hidden input)
+            // 2. LOGIKA ADMIN
             if ($request->has('is_admin_submission') && $request->is_admin_submission == '1') {
                 try {
-                    // Cari status 'Disetujui'
                     $approvedStatus = MomStatus::where('status', 'Disetujui')->firstOrFail();
                     $statusToUse = $approvedStatus;
                     $statusMessage = 'Disetujui';
                 } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-                    // Jika status 'Disetujui' tidak ditemukan, log warning dan gunakan status default
                     Log::warning("Status 'Disetujui' tidak ditemukan di tabel MomStatus. Menggunakan status default 'Menunggu'.");
                 }
             }
@@ -82,7 +81,6 @@ class MomController extends Controller
 
                 'creator_id' => $creatorId,
                 'pembahasan' => $request->pembahasan,
-                // MENGGUNAKAN STATUS YANG SUDAH DITENTUKAN OLEH LOGIKA ADMIN DI ATAS
                 'status_id' => $statusToUse->status_id, 
                 
                 'nama_peserta' => $manualAttendees,
@@ -155,13 +153,7 @@ class MomController extends Controller
 
 
             // === NOTIFICATION: MoM Berhasil Dibuat ===
-            NotificationController::createNotification(
-                userId: $creatorId,
-                momId: $mom->version_id,
-                type: 'created',
-                title: 'MoM Berhasil Dibuat',
-                message: "MoM '{$mom->title}' telah berhasil dibuat dan menunggu approval."
-            );
+            // NotificationController::createNotification(...);
 
             // Commit transaksi
             DB::commit();
@@ -198,10 +190,111 @@ class MomController extends Controller
         return view('admin/details', compact('mom'));
     }
 
+    /**
+     * Menampilkan form edit MoM dan mengirim data lama.
+     */
     public function edit(Mom $mom)
     {
         $users = User::all();
-        return view('moms.edit', compact('mom', 'users'));
+        // Pastikan relasi attachments dimuat untuk form edit
+        $mom->load(['agendas', 'attachments']); 
+        return view('user.edit', compact('mom', 'users'));
+    }
+
+    /**
+     * Memproses update MoM (dipanggil melalui AJAX POST/PATCH).
+     */
+    public function update(Request $request, Mom $mom)
+    {
+
+        DB::beginTransaction();
+
+        try {
+            // --- PROSES PENGHAPUSAN FILE LAMA ---
+            if ($request->has('files_to_delete')) {
+                // Input files_to_delete[] harus berupa array ID
+                $idsToDelete = is_array($request->input('files_to_delete')) ? $request->input('files_to_delete') : [$request->input('files_to_delete')];
+                
+                foreach ($idsToDelete as $attachmentId) {
+                    $attachment = MomAttachment::find($attachmentId);
+                    
+                    if ($attachment && $attachment->mom_id === $mom->version_id) {
+                        Storage::disk('public')->delete($attachment->file_path);
+                        $attachment->delete();
+                    }
+                }
+            }
+            
+            // --- PROSES UPDATE DATA UTAMA MoM ---
+            $mom->update([
+                'title' => $request->title,
+                'location' => $request->location,
+                'pimpinan_rapat' => $request->pimpinan_rapat,
+                'notulen' => $request->notulen,
+                'meeting_date' => $request->meeting_date,
+                'start_time' => $request->start_time,
+                'end_time' => $request->end_time,
+                'pembahasan' => $request->pembahasan,
+                
+                // Setelah diedit, status MoM dikirim ulang untuk persetujuan
+                'status_id' => 1, 
+
+                // Data JSON/Array
+                'nama_peserta' => $request->input('attendees_manual'), 
+                'nama_mitra' => json_decode($request->input('partner_attendees_json'), true),
+            ]);
+
+            // --- PROSES UPDATE AGENDA (Hapus lama, tambahkan baru) ---
+            // Hapus semua agenda lama yang terkait dengan MoM ini
+            MomAgenda::where('mom_id', $mom->version_id)->delete();
+            
+            if ($request->filled('agendas')) {
+                $agendasData = collect($request->agendas)->map(fn ($item, $index) => [
+                    'mom_id' => $mom->version_id,
+                    'item' => $item,
+                    'order' => $index + 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ])->all();
+                MomAgenda::insert($agendasData);
+            }
+            
+            // --- PROSES PENAMBAHAN FILE BARU ---
+            if ($request->hasFile('attachments')) {
+                $attachmentsData = [];
+                $disk = 'public';
+
+                foreach ($request->file('attachments') as $file) {
+                    $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                    $filePath = $file->storeAs('attachments', $fileName, $disk);
+
+                    $attachmentsData[] = [
+                        'mom_id' => $mom->version_id,
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_path' => $filePath,
+                        'mime_type' => $file->getMimeType(),
+                        'file_size' => $file->getSize(),
+                        'uploader_id' => auth()->id(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+                MomAttachment::insert($attachmentsData);
+            }
+
+            // TODO: Kirim notifikasi 'MoM direvisi'
+            // NotificationController::createNotification(...);
+
+            DB::commit();
+
+            return response()->json(['message' => 'MoM berhasil diupdate dan dikirim ulang untuk persetujuan!', 'mom_id' => $mom->version_id], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("MOM Update Failed: " . $e->getMessage() . " on file " . $e->getFile() . " line " . $e->getLine());
+
+            return response()->json(['message' => 'Gagal mengupdate Minutes of Meeting.', 'error_detail' => $e->getMessage()], 500);
+        }
     }
 
     public function export(Mom $mom)
@@ -210,6 +303,7 @@ class MomController extends Controller
         return view('user/export', compact('mom'));
     }
 
+    // Fungsi repository yang Anda berikan
     public function repository()
     {
         $adminRole = 'admin'; 
