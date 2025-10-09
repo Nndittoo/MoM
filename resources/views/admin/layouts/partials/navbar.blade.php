@@ -9,7 +9,7 @@
                     <i class="fa-solid fa-bars w-6 h-6"></i>
                 </button>
 
-                <a href="{{ route('dashboard') }}" class="flex ms-2 md:me-24 items-center">
+                <a href="{{ route('admin.dashboard') }}" class="flex ms-2 md:me-24 items-center">
                     <img src="{{ asset('img/LOGO_TELKOM.png') }}" class="h-12 mr-3" alt="Telkom Logo" />
                     <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">
                         Admin Panel
