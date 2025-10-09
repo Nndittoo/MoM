@@ -53,9 +53,9 @@
                 </div>
             </div>
 
-            {{-- Hasil pembahasan --}}
+            {{-- Card Hasil Pembahasan --}}
             <div class="bg-component-bg dark:bg-dark-component-bg rounded-lg shadow-md p-6">
-                <h3 class="text-xl font-bold mb-4 border-b pb-3">Hasil Pembahasan</h3>
+                <h3 class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-4 border-b dark:border-border-dark pb-3">Hasil Pembahasan</h3>
                 <div class="prose dark:prose-invert max-w-none text-sm">
                     {!! $mom->pembahasan !!}
                 </div>
@@ -166,6 +166,35 @@
     </div>
 </div>
 @endsection
+
+@push('styles')
+<style>
+    /* Tambahkan bullet di dalam pembahasan */
+    .prose ul {
+        list-style-type: disc;
+        margin-left: 1.5rem;
+        padding-left: 1rem;
+    }
+
+    .prose ol {
+        list-style-type: decimal;
+        margin-left: 1.5rem;
+        padding-left: 1rem;
+    }
+
+    .prose li {
+        margin-bottom: 0.25rem;
+    }
+
+    .prose ul li::marker {
+        color: var(--tw-prose-bullets, #6b7280);
+    }
+
+    .dark .prose ul li::marker {
+        color: #d1d5db;
+    }
+</style>
+@endpush
 
 @push('scripts')
 <script>

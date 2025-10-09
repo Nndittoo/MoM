@@ -15,9 +15,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
-// Pastikan Anda telah membuat atau meng-import NotificationController
-// use App\Http\Controllers\NotificationController;
-
 class MomController extends Controller
 {
     /**
@@ -210,7 +207,7 @@ class MomController extends Controller
         DB::beginTransaction();
 
         try {
-            // --- PROSES PENGHAPUSAN FILE LAMA ---
+            // PROSES PENGHAPUSAN FILE LAMA
             if ($request->has('files_to_delete')) {
                 // Input files_to_delete[] harus berupa array ID
                 $idsToDelete = is_array($request->input('files_to_delete')) ? $request->input('files_to_delete') : [$request->input('files_to_delete')];
@@ -225,7 +222,7 @@ class MomController extends Controller
                 }
             }
             
-            // --- PROSES UPDATE DATA UTAMA MoM ---
+            // PROSES UPDATE DATA UTAMA MoM
             $mom->update([
                 'title' => $request->title,
                 'location' => $request->location,
@@ -244,7 +241,7 @@ class MomController extends Controller
                 'nama_mitra' => json_decode($request->input('partner_attendees_json'), true),
             ]);
 
-            // --- PROSES UPDATE AGENDA (Hapus lama, tambahkan baru) ---
+            // PROSES UPDATE AGENDA (Hapus lama, tambahkan baru)
             // Hapus semua agenda lama yang terkait dengan MoM ini
             MomAgenda::where('mom_id', $mom->version_id)->delete();
             
@@ -259,7 +256,7 @@ class MomController extends Controller
                 MomAgenda::insert($agendasData);
             }
             
-            // --- PROSES PENAMBAHAN FILE BARU ---
+            // PROSES PENAMBAHAN FILE BARU
             if ($request->hasFile('attachments')) {
                 $attachmentsData = [];
                 $disk = 'public';
@@ -282,9 +279,6 @@ class MomController extends Controller
                 MomAttachment::insert($attachmentsData);
             }
 
-            // TODO: Kirim notifikasi 'MoM direvisi'
-            // NotificationController::createNotification(...);
-
             DB::commit();
 
             return response()->json(['message' => 'MoM berhasil diupdate dan dikirim ulang untuk persetujuan!', 'mom_id' => $mom->version_id], 200);
@@ -303,7 +297,6 @@ class MomController extends Controller
         return view('user/export', compact('mom'));
     }
 
-    // Fungsi repository yang Anda berikan
     public function repository()
     {
         $adminRole = 'admin'; 
@@ -321,4 +314,6 @@ class MomController extends Controller
 
         return view('admin.mom', compact('momsByAdmin', 'allMoms'));
     }
+
+    
 }
