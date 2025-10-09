@@ -11,7 +11,7 @@
                 <h1 class="text-3xl font-bold text-text-primary dark:text-dark-text-primary">Repository MoM</h1>
                 <p class="mt-1 text-text-secondary dark:text-dark-text-secondary">Cari, lihat, dan kelola semua Minute of Meetings.</p>
             </div>
-            
+
             <a href="{{ route('admin.creates') }}" class="mt-4 md:mt-0 flex justify-center items-center px-4 py-2 text-sm font-semibold text-white bg-primary rounded-lg shadow-lg hover:bg-primary-dark">
                 <i class="fa-solid fa-plus mr-2"></i>Buat MoM Baru
             </a>
@@ -38,13 +38,14 @@
             </ul>
 
             <div class="pt-6">
-                
+
                 {{-- MY MOM CONTENT (MOM DIBUAT OLEH ADMIN) --}}
                 <div id="my-mom-content">
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        
+
                         @forelse($momsByAdmin as $mom)
-                        <div class="bg-component-bg dark:bg-dark-component-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2">
+                        {{-- Inisialisasi Alpine.js di kartu utama --}}
+                        <div x-data="{ actionsOpen: false }" class="bg-body-bg dark:bg-dark-body-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
                             <div class="relative">
                                 @php
                                     $imagePath = $mom->attachments->first() ? Storage::url($mom->attachments->first()->file_path) : asset('img/lampiran.png');
@@ -53,7 +54,9 @@
                                 <span class="absolute top-3 right-3 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">{{ \Carbon\Carbon::parse($mom->meeting_date)->isoFormat('DD MMMM YYYY') }}</span>
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                             </div>
-                            <div class="p-5 flex flex-col">
+
+                            {{-- Konten Kartu dengan posisi relative untuk menampung overlay --}}
+                            <div class="p-5 flex flex-col relative">
                                 <h3 class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-2">{{ $mom->title }}</h3>
                                 <div class="flex items-center text-sm text-text-secondary dark:text-dark-text-secondary mb-3">
                                     <i class="fa-solid fa-user-pen mr-2 text-primary"></i>Dibuat oleh<span class="ml-1 font-medium">{{ $mom->creator->name ?? 'Admin' }}</span>
@@ -62,20 +65,55 @@
                                 <p class="text-sm text-text-secondary dark:text-dark-text-secondary mb-4 line-clamp-2">{{ $mom->pembahasan }}</p>
                                 <div class="pt-4 border-t border-border-light dark:border-border-dark">
                                     <h4 class="text-sm font-semibold text-text-primary dark:text-dark-text-primary mb-3">Peserta</h4>
-                                    <div class="flex items-center justify-between">
+                                    <div class="flex items-start justify-between">
                                         <div class="text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed">
                                             @php
-                                                // NAMA_PESERTA dan NAMA_MITRA sudah otomatis jadi array karena Model Casting
                                                 $participants = array_merge($mom->nama_peserta ?? [], $mom->nama_mitra ?? []);
                                                 $displayParticipants = array_slice($participants, 0, 2);
                                             @endphp
-                                            @forelse($displayParticipants as $p)
-                                                • {{ $p['name'] ?? $p['user_name'] ?? 'Peserta' }}<br>
-                                            @empty
-                                                Tidak ada peserta.
-                                            @endforelse
+                                            @forelse($displayParticipants as $p) • {{ $p['name'] ?? $p['user_name'] ?? 'Peserta' }}<br> @empty Tidak ada peserta. @endforelse
                                         </div>
-                                        <a href="{{ url('/admin/details/' . $mom->version_id) }}" class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
+
+                                        {{-- Tombol Pemicu Aksi dengan Label --}}
+                                        <button @click="actionsOpen = true" class="flex items-center gap-2 text-sm font-medium text-text-secondary dark:text-dark-text-secondary hover:text-primary dark:hover:text-primary-dark p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-dark-body-bg">
+                                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                                            <span>Action</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {{-- Overlay Aksi --}}
+                                <div x-show="actionsOpen"
+                                     x-transition:enter="ease-out duration-300"
+                                     x-transition:enter-start="opacity-0"
+                                     x-transition:enter-end="opacity-100"
+                                     x-transition:leave="ease-in duration-200"
+                                     x-transition:leave-start="opacity-100"
+                                     x-transition:leave-end="opacity-0"
+                                     @click.self="actionsOpen = false"
+                                     class="absolute inset-0 z-10 flex items-center justify-center bg-white/70 dark:bg-black/60 backdrop-blur-sm p-5">
+
+                                    <div class="relative w-full max-w-xs bg-component-bg dark:bg-dark-component-bg rounded-xl shadow-2xl p-4 border border-border-light dark:border-border-dark">
+                                        {{-- Tombol Tutup --}}
+                                        <button @click="actionsOpen = false" class="absolute top-2 right-2 p-2 text-text-secondary hover:text-text-primary dark:text-dark-text-secondary dark:hover:text-dark-text-primary rounded-full hover:bg-gray-200 dark:hover:bg-dark-body-bg">
+                                            <i class="fa-solid fa-xmark"></i>
+                                        </button>
+
+                                        <h5 class="text-lg font-bold text-center mb-4 text-text-primary dark:text-dark-text-primary">Action</h5>
+                                        <div class="flex flex-col gap-2">
+                                            <a href="{{ url('/admin/details/' . $mom->version_id) }}" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-text-primary dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-body-bg rounded-lg">
+                                                <i class="fa-solid fa-eye w-4"></i><span>Lihat Detail</span>
+                                            </a>
+                                            <a href="#" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-text-primary dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-body-bg rounded-lg">
+                                                <i class="fa-solid fa-pen-to-square w-4"></i><span>Edit</span>
+                                            </a>
+                                            <form action="#" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus MoM ini?');">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
+                                                    <i class="fa-solid fa-trash-can w-4"></i><span>Hapus</span>
+                                                </button>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -83,25 +121,22 @@
                         @empty
                             <p class="md:col-span-3 text-center text-text-secondary dark:text-dark-text-secondary p-8">Tidak ada MoM yang dibuat oleh Admin saat ini.</p>
                         @endforelse
-
                     </div>
                 </div>
 
-                {{-- ALL MOM CONTENT (SEMUA STATUS 1, 2, 3) --}}
+                {{-- ALL MOM CONTENT (WAJIB DISAMAKAN STRUKTURNYA) --}}
                 <div id="all-mom-content" class="hidden">
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-
-                        @forelse($allMoms as $mom)
-                        <div class="bg-component-bg dark:bg-dark-component-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2">
+                         @forelse($allMoms as $mom)
+                         {{-- Salin-tempel struktur kartu yang sama persis dari atas untuk konsistensi --}}
+                         <div x-data="{ actionsOpen: false }" class="bg-body-bg dark:bg-dark-body-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
                             <div class="relative">
-                                @php
-                                    $imagePath = $mom->attachments->first() ? Storage::url($mom->attachments->first()->file_path) : asset('img/lampiran.png');
-                                @endphp
+                                @php $imagePath = $mom->attachments->first() ? Storage::url($mom->attachments->first()->file_path) : asset('img/lampiran.png'); @endphp
                                 <img class="w-full h-48 object-cover" src="{{ $imagePath }}" alt="Dokumentasi Rapat">
                                 <span class="absolute top-3 right-3 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">{{ \Carbon\Carbon::parse($mom->meeting_date)->isoFormat('DD MMMM YYYY') }}</span>
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                             </div>
-                            <div class="p-5 flex flex-col">
+                            <div class="p-5 flex flex-col relative">
                                 <h3 class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-2">{{ $mom->title }}</h3>
                                 <div class="flex items-center text-sm text-text-secondary dark:text-dark-text-secondary mb-3">
                                     <i class="fa-solid fa-user-pen mr-2 text-primary"></i>Dibuat oleh<span class="ml-1 font-medium">{{ $mom->creator->name ?? 'Pengguna' }}</span>
@@ -110,28 +145,43 @@
                                 <p class="text-sm text-text-secondary dark:text-dark-text-secondary mb-4 line-clamp-2">{{ $mom->pembahasan }}</p>
                                 <div class="pt-4 border-t border-border-light dark:border-border-dark">
                                     <h4 class="text-sm font-semibold text-text-primary dark:text-dark-text-primary mb-3">Peserta</h4>
-                                    <div class="flex items-center justify-between">
+                                    <div class="flex items-start justify-between">
                                         <div class="text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed">
-                                            @php
-                                                // NAMA_PESERTA dan NAMA_MITRA sudah otomatis jadi array karena Model Casting
-                                                $participants = array_merge($mom->nama_peserta ?? [], $mom->nama_mitra ?? []);
-                                                $displayParticipants = array_slice($participants, 0, 2);
-                                            @endphp
-                                            @forelse($displayParticipants as $p)
-                                                • {{ $p['name'] ?? $p['user_name'] ?? 'Peserta' }}<br>
-                                            @empty
-                                                Tidak ada peserta.
-                                            @endforelse
+                                            @php $participants = array_merge($mom->nama_peserta ?? [], $mom->nama_mitra ?? []); $displayParticipants = array_slice($participants, 0, 2); @endphp
+                                            @forelse($displayParticipants as $p) • {{ $p['name'] ?? $p['user_name'] ?? 'Peserta' }}<br> @empty Tidak ada peserta. @endforelse
                                         </div>
-                                        <a href="{{ url('/admin/details/' . $mom->version_id) }}" class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
+                                        <button @click="actionsOpen = true" class="flex items-center gap-2 text-sm font-medium text-text-secondary dark:text-dark-text-secondary hover:text-primary dark:hover:text-primary-dark p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-dark-body-bg">
+                                            <i class="fa-solid fa-ellipsis-vertical"></i><span>Aksi</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div x-show="actionsOpen" x-transition @click.self="actionsOpen = false" class="absolute inset-0 z-10 flex items-center justify-center bg-white/70 dark:bg-black/60 backdrop-blur-sm p-5">
+                                    <div class="relative w-full max-w-xs bg-component-bg dark:bg-dark-component-bg rounded-xl shadow-2xl p-4 border border-border-light dark:border-border-dark">
+                                        <button @click="actionsOpen = false" class="absolute top-2 right-2 p-2 text-text-secondary hover:text-text-primary dark:text-dark-text-secondary dark:hover:text-dark-text-primary rounded-full hover:bg-gray-200 dark:hover:bg-dark-body-bg">
+                                            <i class="fa-solid fa-xmark"></i>
+                                        </button>
+                                        <h5 class="text-lg font-bold text-center mb-4 text-text-primary dark:text-dark-text-primary">Pilih Aksi</h5>
+                                        <div class="flex flex-col gap-2">
+                                            <a href="{{ url('/admin/details/' . $mom->version_id) }}" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-text-primary dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-body-bg rounded-lg">
+                                                <i class="fa-solid fa-eye w-4"></i><span>Lihat Detail</span>
+                                            </a>
+                                            <a href="#" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-text-primary dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-body-bg rounded-lg">
+                                                <i class="fa-solid fa-pen-to-square w-4"></i><span>Edit</span>
+                                            </a>
+                                            <form action="#" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus MoM ini?');">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
+                                                    <i class="fa-solid fa-trash-can w-4"></i><span>Hapus</span>
+                                                </button>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        @empty
-                            <p class="md:col-span-3 text-center text-text-secondary dark:text-dark-text-secondary p-8">Tidak ada MoM yang tersedia (Status 1, 2, atau 3).</p>
-                        @endforelse
-                        
+                         @empty
+                            <p class="md:col-span-3 text-center text-text-secondary dark:text-dark-text-secondary p-8">Tidak ada MoM tersedia.</p>
+                         @endforelse
                     </div>
                 </div>
             </div>
@@ -141,46 +191,40 @@
 @endsection
 
 @push('scripts')
+{{-- Pastikan AlpineJS sudah diimpor di layout utama Anda atau di sini --}}
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
 <script>
+    // ... script switchTab Anda yang sudah ada ...
     function switchTab(tabId) {
         const myMomTab = document.getElementById('my-mom-tab');
         const allMomTab = document.getElementById('all-mom-tab');
         const myMomContent = document.getElementById('my-mom-content');
         const allMomContent = document.getElementById('all-mom-content');
 
-        // Kelas untuk style tab aktif dan tidak aktif
         const activeClasses = ['text-primary', 'border-primary'];
         const inactiveClasses = ['border-transparent', 'hover:text-gray-600', 'hover:border-gray-300', 'text-text-secondary'];
 
-        // Reset kedua tombol ke status tidak aktif
-        myMomTab.classList.remove(...activeClasses);
-        allMomTab.classList.remove(...activeClasses);
+        myMomTab.classList.remove(...activeClasses, ...inactiveClasses);
+        allMomTab.classList.remove(...activeClasses, ...inactiveClasses);
         myMomTab.classList.add(...inactiveClasses);
         allMomTab.classList.add(...inactiveClasses);
 
-        // Hapus kelas aktif dari tab yang tidak dipilih, lalu tambahkan kelas tidak aktif
-        if (tabId === 'my-mom') {
-            allMomTab.classList.remove(...activeClasses);
-            allMomTab.classList.add(...inactiveClasses);
-        } else { // 'all-mom'
-            myMomTab.classList.remove(...activeClasses);
-            myMomTab.classList.add(...inactiveClasses);
-        }
-        
-        // Sembunyikan kedua konten
         myMomContent.classList.add('hidden');
         allMomContent.classList.add('hidden');
 
-        // Aktifkan tab dan konten yang dipilih
         if (tabId === 'my-mom') {
             myMomTab.classList.add(...activeClasses);
             myMomTab.classList.remove(...inactiveClasses);
             myMomContent.classList.remove('hidden');
-        } else { // 'all-mom'
+        } else {
             allMomTab.classList.add(...activeClasses);
             allMomTab.classList.remove(...inactiveClasses);
             allMomContent.classList.remove('hidden');
         }
     }
+    document.addEventListener('DOMContentLoaded', function() {
+        switchTab('my-mom');
+    });;
 </script>
 @endpush
