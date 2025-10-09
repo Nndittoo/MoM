@@ -11,7 +11,7 @@
                 <h1 class="text-3xl font-bold text-text-primary dark:text-dark-text-primary">Repository MoM</h1>
                 <p class="mt-1 text-text-secondary dark:text-dark-text-secondary">Cari, lihat, dan kelola semua Minute of Meetings.</p>
             </div>
-            
+
             <a href="{{ route('admin.creates') }}" class="mt-4 md:mt-0 flex justify-center items-center px-4 py-2 text-sm font-semibold text-white bg-primary rounded-lg shadow-lg hover:bg-primary-dark">
                 <i class="fa-solid fa-plus mr-2"></i>Buat MoM Baru
             </a>
@@ -38,13 +38,13 @@
             </ul>
 
             <div class="pt-6">
-                
+
                 {{-- MY MOM CONTENT (MOM DIBUAT OLEH ADMIN) --}}
                 <div id="my-mom-content">
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        
+
                         @forelse($momsByAdmin as $mom)
-                        <div class="bg-component-bg dark:bg-dark-component-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2">
+                        <div class="bg-body-bg dark:bg-dark-body-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
                             <div class="relative">
                                 @php
                                     $imagePath = $mom->attachments->first() ? Storage::url($mom->attachments->first()->file_path) : asset('img/lampiran.png');
@@ -65,7 +65,6 @@
                                     <div class="flex items-center justify-between">
                                         <div class="text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed">
                                             @php
-                                                // NAMA_PESERTA dan NAMA_MITRA sudah otomatis jadi array karena Model Casting
                                                 $participants = array_merge($mom->nama_peserta ?? [], $mom->nama_mitra ?? []);
                                                 $displayParticipants = array_slice($participants, 0, 2);
                                             @endphp
@@ -75,7 +74,14 @@
                                                 Tidak ada peserta.
                                             @endforelse
                                         </div>
-                                        <a href="{{ url('/admin/details/' . $mom->version_id) }}" class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
+                                        {{-- Actions Button Group --}}
+                                        <div class="flex items-center gap-3">
+                                            <a href="#" class="flex items-center gap-2 px-3 py-1 text-sm font-medium text-blue-700 bg-blue-100 rounded-lg shadow-sm hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800 transition-colors duration-200" title="Edit MoM">
+                                                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                                <span>Edit</span>
+                                            </a>
+                                            <a href="{{ url('/admin/details/' . $mom->version_id) }}" class="text-sm font-medium text-primary hover:underline">View Details</a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -92,7 +98,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
                         @forelse($allMoms as $mom)
-                        <div class="bg-component-bg dark:bg-dark-component-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2">
+                        <div class="bg-body-bg dark:bg-dark-body-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
                             <div class="relative">
                                 @php
                                     $imagePath = $mom->attachments->first() ? Storage::url($mom->attachments->first()->file_path) : asset('img/lampiran.png');
@@ -113,7 +119,6 @@
                                     <div class="flex items-center justify-between">
                                         <div class="text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed">
                                             @php
-                                                // NAMA_PESERTA dan NAMA_MITRA sudah otomatis jadi array karena Model Casting
                                                 $participants = array_merge($mom->nama_peserta ?? [], $mom->nama_mitra ?? []);
                                                 $displayParticipants = array_slice($participants, 0, 2);
                                             @endphp
@@ -123,7 +128,14 @@
                                                 Tidak ada peserta.
                                             @endforelse
                                         </div>
-                                        <a href="{{ url('/admin/details/' . $mom->version_id) }}" class="text-sm font-medium text-primary hover:underline ml-4">View Details</a>
+                                        {{-- Actions Button Group --}}
+                                        <div class="flex items-center gap-3">
+                                            <a href="#" class="flex items-center gap-2 px-3 py-1 text-sm font-medium text-blue-700 bg-blue-100 rounded-lg shadow-sm hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800 transition-colors duration-200" title="Edit MoM">
+                                                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                                <span>Edit</span>
+                                            </a>
+                                            <a href="{{ url('/admin/details/' . $mom->version_id) }}" class="text-sm font-medium text-primary hover:underline">View Details</a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -131,7 +143,7 @@
                         @empty
                             <p class="md:col-span-3 text-center text-text-secondary dark:text-dark-text-secondary p-8">Tidak ada MoM yang tersedia (Status 1, 2, atau 3).</p>
                         @endforelse
-                        
+
                     </div>
                 </div>
             </div>
@@ -148,39 +160,29 @@
         const myMomContent = document.getElementById('my-mom-content');
         const allMomContent = document.getElementById('all-mom-content');
 
-        // Kelas untuk style tab aktif dan tidak aktif
         const activeClasses = ['text-primary', 'border-primary'];
         const inactiveClasses = ['border-transparent', 'hover:text-gray-600', 'hover:border-gray-300', 'text-text-secondary'];
 
-        // Reset kedua tombol ke status tidak aktif
-        myMomTab.classList.remove(...activeClasses);
-        allMomTab.classList.remove(...activeClasses);
+        myMomTab.classList.remove(...activeClasses, ...inactiveClasses);
+        allMomTab.classList.remove(...activeClasses, ...inactiveClasses);
         myMomTab.classList.add(...inactiveClasses);
         allMomTab.classList.add(...inactiveClasses);
 
-        // Hapus kelas aktif dari tab yang tidak dipilih, lalu tambahkan kelas tidak aktif
-        if (tabId === 'my-mom') {
-            allMomTab.classList.remove(...activeClasses);
-            allMomTab.classList.add(...inactiveClasses);
-        } else { // 'all-mom'
-            myMomTab.classList.remove(...activeClasses);
-            myMomTab.classList.add(...inactiveClasses);
-        }
-        
-        // Sembunyikan kedua konten
         myMomContent.classList.add('hidden');
         allMomContent.classList.add('hidden');
 
-        // Aktifkan tab dan konten yang dipilih
         if (tabId === 'my-mom') {
             myMomTab.classList.add(...activeClasses);
             myMomTab.classList.remove(...inactiveClasses);
             myMomContent.classList.remove('hidden');
-        } else { // 'all-mom'
+        } else {
             allMomTab.classList.add(...activeClasses);
             allMomTab.classList.remove(...inactiveClasses);
             allMomContent.classList.remove('hidden');
         }
     }
+    document.addEventListener('DOMContentLoaded', function() {
+        switchTab('my-mom');
+    });
 </script>
 @endpush
