@@ -25,7 +25,7 @@
             </li>
 
             <li>
-                <a href="{{ route('admin.mom') }}"
+                <a href="{{ route('admin.repository') }}"
                    class="flex items-center p-3 rounded-lg group transition
                    {{ request()->routeIs('admin.mom') ? 'bg-primary/20 text-primary font-semibold'
                                                       : 'text-text-secondary dark:text-dark-text-secondary hover:bg-primary/10' }}">
