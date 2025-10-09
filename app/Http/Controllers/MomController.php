@@ -311,21 +311,41 @@ class MomController extends Controller
         return view('user/export', compact('mom'));
     }
 
-    public function repository()
+    public function repository(Request $request)
     {
-        $adminRole = 'admin';
-        $momsByAdmin = Mom::whereHas('creator', function ($query) use ($adminRole) {
-            $query->where('role', $adminRole);
-        })
-        ->with(['creator', 'status', 'agendas', 'attachments'])
-        ->orderByDesc('meeting_date')
-        ->get();
+        //Ambil input dari request
+        $search = $request->input('search');
+        $date = $request->input('date');
 
-        $allMoms = Mom::whereIn('status_id', [1, 2, 3])
+        //Query dasar untuk "Semua MoM"
+        $allMomsQuery = Mom::query()
             ->with(['creator', 'status', 'agendas', 'attachments'])
-            ->orderByDesc('meeting_date')
-            ->get();
+            ->orderByDesc('meeting_date');
 
+        // Filter jika ada input
+        if ($search) {
+            // Filter berdasarkan judul atau pembahasan
+            $allMomsQuery->where(function ($query) use ($search) {
+                $query->where('title', 'like', '%' . $search . '%')
+                    ->orWhere('pembahasan', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($date) {
+            // Filter berdasarkan tanggal pertemuan
+            $allMomsQuery->whereDate('meeting_date', $date);
+        }
+
+        // Query untuk "My MoM" dengan mengkloning dan menambahkan filter role admin
+        $momsByAdminQuery = (clone $allMomsQuery)->whereHas('creator', function ($query) {
+            $query->where('role', 'admin');
+        });
+
+        //Eksekusi kedua query untuk mendapatkan hasilnya
+        $allMoms = $allMomsQuery->get();
+        $momsByAdmin = $momsByAdminQuery->get();
+
+        //Kirim data yang sudah difilter ke view
         return view('admin.mom', compact('momsByAdmin', 'allMoms'));
     }
 

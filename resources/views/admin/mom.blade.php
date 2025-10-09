@@ -18,12 +18,29 @@
         </div>
 
         {{-- Search and Filter Section --}}
-        <div class="bg-component-bg dark:bg-dark-component-bg p-4 rounded-lg shadow">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <input type="text" placeholder="Cari berdasarkan topik atau proyek..." class="w-full md:col-span-2 bg-body-bg border-border-light rounded-lg text-sm focus:ring-primary focus:border-primary dark:bg-dark-component-bg dark:border-border-dark">
-                <input type="date" class="w-full bg-body-bg border-border-light rounded-lg text-sm focus:ring-primary focus:border-primary dark:bg-dark-component-bg dark:border-border-dark">
+        <form action="{{ route('admin.repository') }}" method="GET">
+            <div class="bg-component-bg dark:bg-dark-component-bg p-4 rounded-lg shadow">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    {{-- Input Pencarian --}}
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari berdasarkan topik atau proyek..."
+                        class="w-full md:col-span-3 bg-body-bg border-border-light rounded-lg text-sm focus:ring-primary focus:border-primary dark:bg-dark-component-bg dark:border-border-dark">
+
+                    {{-- Input Tanggal --}}
+                    <input type="date" name="date" value="{{ request('date') }}"
+                        class="w-full bg-body-bg border-border-light rounded-lg text-sm focus:ring-primary focus:border-primary dark:bg-dark-component-bg dark:border-border-dark">
+
+                    {{-- Tombol Aksi --}}
+                    <div class="flex items-center gap-2">
+                        <button type="submit" class="w-full flex justify-center items-center px-4 py-2 text-sm font-semibold text-white bg-primary rounded-lg shadow hover:bg-primary-dark">
+                            <i class="fa-solid fa-search mr-2"></i>Cari
+                        </button>
+                        <a href="{{ route('admin.repository') }}" class="flex justify-center items-center p-2 text-text-secondary hover:text-text-primary dark:text-dark-text-secondary" title="Reset Filter">
+                            <i class="fa-solid fa-times"></i>
+                        </a>
+                    </div>
+                </div>
             </div>
-        </div>
+        </form>
 
         {{-- Tabs Section --}}
         <div class="bg-component-bg dark:bg-dark-component-bg rounded-lg shadow p-4">
