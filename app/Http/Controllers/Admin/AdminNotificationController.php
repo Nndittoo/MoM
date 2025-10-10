@@ -29,7 +29,7 @@ class AdminNotificationController extends Controller
         switch ($notification->type) {
             case 'mom_pending':
                 // Arahkan ke halaman detail MoM yang perlu di-approve
-                return redirect()->route('admin.details', $notification->related_id);
+                return redirect()->route('admin.shows', $notification->related_id);
             case 'user_new':
                 // Arahkan ke halaman manajemen user
                 return redirect()->route('admin.users');
