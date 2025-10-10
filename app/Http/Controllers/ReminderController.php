@@ -14,19 +14,23 @@ class ReminderController extends Controller
         $now = Carbon::now();
         $userId = Auth::id();
 
+        $startOfToday = $now->copy()->startOfDay();
+        $endOfToday = $now->copy()->endOfDay();
+        $startOfTomorrow = $now->copy()->addDay()->startOfDay();
+        $endOfWeek = $now->copy()->addDays(7)->endOfDay();
+
         //Urgent tasks (deadline < 24 jam)
         $urgentTasks = ActionItem::with('mom')
             ->whereHas('mom', function ($query) use ($userId) {
                 $query->where('creator_id', $userId);
             })
             ->where('status', 'mendatang')
-            ->where('due', '>', $now)
-            ->where('due', '<=', $now->copy()->addHours(24))
+            ->whereBetween('due', [$startOfToday, $endOfToday])
             ->orderBy('due', 'asc')
             ->get()
-            ->map(function ($task) use ($now) {
+            ->map(function ($task) {
                 $dueDate = Carbon::parse($task->due);
-                $diffInHours = $now->diffInHours($dueDate, false);
+                $diffInHours = Carbon::now()->diffInHours($dueDate, false);
 
                 return [
                     'action_id' => $task->action_id,
@@ -35,8 +39,8 @@ class ReminderController extends Controller
                     'mom_id' => $task->mom_id,
                     'deadline' => $dueDate,
                     'deadline_formatted' => $dueDate->translatedFormat('l, d F Y'),
-                    'hours_remaining' => ceil($diffInHours),
-                    'badge' => $this->getTimeBadge(ceil($diffInHours)),
+                    'hours_remaining' => max(0, ceil($diffInHours)),
+                    'badge' => $this->getTimeBadge(max(0, ceil($diffInHours))),
                     'border_color' => 'border-red-500',
                     'bg_color' => 'bg-red-100',
                     'text_color' => 'text-red-600',
@@ -51,13 +55,12 @@ class ReminderController extends Controller
                 $query->where('creator_id', $userId);
             })
             ->where('status', 'mendatang')
-            ->where('due', '>', $now->copy()->addHours(24))
-            ->where('due', '<=', $now->copy()->addDays(7))
+            ->whereBetween('due', [$startOfTomorrow, $endOfWeek])
             ->orderBy('due', 'asc')
             ->get()
-            ->map(function ($task) use ($now) {
+            ->map(function ($task) {
                 $dueDate = Carbon::parse($task->due);
-                $diffInDays = ceil($now->diffInDays($dueDate, false));
+                $diffInDays = Carbon::now()->startOfDay()->diffInDays($dueDate->startOfDay(), false);
 
                 return [
                     'action_id' => $task->action_id,
@@ -98,7 +101,7 @@ class ReminderController extends Controller
         $now = Carbon::now();
 
         return ActionItem::where('status', 'mendatang')
-            ->where('due', '>', $now)
+            ->where('due', '>=', $now)
             ->where('due', '<=', $now->copy()->addDays(7))
             ->whereHas('mom', function ($query) use ($userId) {
                 if ($userId) {

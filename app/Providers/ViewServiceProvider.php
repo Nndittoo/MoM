@@ -41,15 +41,21 @@ class ViewServiceProvider extends ServiceProvider
                 }
 
                 $user = Auth::user();
+                $userId = $user->id;
                 $now = Carbon::now();
+
+                $startOfToday = $now->copy()->startOfDay();
+                $endOfWeek = $now->copy()->addDays(7)->endOfDay();
 
                 // USER DATA
                 $reminderCount = ActionItem::where('status', 'mendatang')
-                    ->where('due', '>', $now)
-                    ->where('due', '<=', $now->copy()->addDays(7))
+                    ->whereBetween('due', [$startOfToday, $endOfWeek])
+                    ->whereHas('mom', function ($query) use ($userId) {
+                        $query->where('creator_id', $userId);
+                    })
                     ->count();
 
-                $notificationCount = Notification::where('user_id', Auth::id())
+                $notificationCount = Notification::where('user_id', $userId)
                     ->where('is_read', false)
                     ->count();
 

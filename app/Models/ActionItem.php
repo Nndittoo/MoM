@@ -4,13 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class ActionItem extends Model
 {
     use HasFactory;
 
     protected $table = 'action_items';
-    protected $primaryKey = 'action_id'; 
+    protected $primaryKey = 'action_id';
 
     protected $fillable = [
         'mom_id',
@@ -20,12 +21,24 @@ class ActionItem extends Model
     ];
 
     protected $casts = [
-        'due' => 'date',
+        'due' => 'datetime',
     ];
+
+    public function setDueAttribute($value)
+    {
+        if ($value) {
+            // Convert ke Carbon instance jika belum
+            $date = Carbon::parse($value);
+            // Set waktu menjadi 23:59:59
+            $this->attributes['due'] = $date->setHours(23)->setMinutes(59)->setSeconds(59);
+        } else {
+            $this->attributes['due'] = null;
+        }
+    }
 
     public function getRouteKeyName()
     {
-        return 'action_id'; 
+        return 'action_id';
     }
 
     public function mom()
