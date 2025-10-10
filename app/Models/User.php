@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
@@ -15,6 +16,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'avatar',
     ];
 
     protected $hidden = [
@@ -55,5 +57,15 @@ class User extends Authenticatable
         return $this->belongsToMany(Mom::class, 'mom_attendees', 'user_id', 'mom_id')
                     ->withPivot('status')
                     ->withTimestamps();
+    }
+
+      /** URL siap pakai untuk <img> */
+    public function getAvatarUrlAttribute(): string
+    {
+        if (!empty($this->avatar) && Storage::disk('public')->exists($this->avatar)) {
+            return Storage::disk('public')->url($this->avatar); // /storage/avatars/xxx.jpg
+        }
+        // fallback (bebas: pakai asset lokal atau URL publik)
+        return asset('img/avatar-default.png');
     }
 }

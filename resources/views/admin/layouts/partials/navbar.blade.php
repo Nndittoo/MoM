@@ -3,7 +3,9 @@
         <div class="flex items-center justify-between">
             {{-- === Left Section === --}}
             <div class="flex items-center justify-start rtl:justify-end">
-                <button data-drawer-target="admin-sidebar" data-drawer-toggle="admin-sidebar"
+                <button
+                    data-drawer-target="admin-sidebar"
+                    data-drawer-toggle="admin-sidebar"
                     type="button"
                     class="inline-flex items-center p-2 text-sm text-text-secondary rounded-lg sm:hidden hover:bg-primary/10 dark:text-dark-text-secondary dark:hover:bg-primary/20">
                     <i class="fa-solid fa-bars w-6 h-6"></i>
@@ -44,27 +46,41 @@
                 </div>
 
                 {{-- User Profile Dropdown --}}
+                @auth
                 <div class="flex items-center ms-3">
-                    <button type="button"
+                    <button
+                        type="button"
                         class="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-primary/50"
                         data-dropdown-toggle="dropdown-user">
-                        <img class="w-8 h-8 rounded-full"
-                            src="https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_1280.png"
-                            alt="user photo">
+                        <img
+                            class="w-8 h-8 rounded-full object-cover"
+                            src="{{ auth()->user()->avatar_url }}"
+                            alt="avatar"
+                            onerror="this.src='{{ asset('img/avatar-default.png') }}'">
                     </button>
 
-                    <div class="z-50 hidden my-4 text-base list-none bg-component-bg divide-y divide-border-light rounded-md shadow-lg dark:bg-dark-component-bg dark:divide-border-dark"
-                        id="dropdown-user">
+                    <div
+                        id="dropdown-user"
+                        class="z-50 hidden my-4 text-base list-none bg-component-bg divide-y divide-border-light rounded-md shadow-lg dark:bg-dark-component-bg dark:divide-border-dark">
                         <div class="px-4 py-3">
                             <p class="text-sm text-text-primary dark:text-dark-text-primary">{{ auth()->user()->name }}</p>
-                            <p class="text-sm font-medium text-text-secondary truncate dark:text-dark-text-secondary">{{ auth()->user()->email }}</p>
+                            <p class="text-sm font-medium text-text-secondary truncate dark:text-dark-text-secondary">
+                                {{ auth()->user()->email }}
+                            </p>
                         </div>
 
                         <ul class="py-1">
                             <li>
+                                <a href="{{ route('profile.edit') }}"
+                                   class="block px-4 py-2 text-sm text-text-secondary hover:bg-body-bg dark:hover:bg-dark-body-bg">
+                                    Profile
+                                </a>
+                            </li>
+                            <li>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
-                                    <button type="submit"
+                                    <button
+                                        type="submit"
                                         class="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-500/20">
                                         <i class="fa-solid fa-arrow-right-from-bracket mr-2"></i>Sign out
                                     </button>
@@ -73,6 +89,7 @@
                         </ul>
                     </div>
                 </div>
+                @endauth
             </div>
         </div>
     </div>
@@ -155,6 +172,5 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     fetchNotifications();
-
 });
 </script>

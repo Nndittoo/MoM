@@ -208,7 +208,7 @@ class MomController extends Controller
     public function edit(Mom $mom)
     {
         $users = User::all();
-        $mom->load(['agendas', 'attachments']); 
+        $mom->load(['agendas', 'attachments']);
         return view('user.edit', compact('mom', 'users'));
     }
 
@@ -218,7 +218,7 @@ class MomController extends Controller
     public function editAdmin(Mom $mom)
     {
         $users = User::all();
-        $mom->load(['agendas', 'attachments']); 
+        $mom->load(['agendas', 'attachments']);
         return view('admin.edit', compact('mom', 'users')); // Ganti view ke admin.edit
     }
 
@@ -233,18 +233,18 @@ class MomController extends Controller
         try {
             // Menentukan Role dan Status Baru
             $isAdmin = Auth::check() && Auth::user()->role === 'admin';
-            
+
             if ($isAdmin) {
                 // Jika Admin, gunakan status_id yang dikirim dari form (diharapkan 2 / Disetujui)
                 $newStatusId = $request->input('status_id', 2);
                 $statusMessage = 'disetujui';
-                
+
                 // Hapus komentar penolakan jika MoM diperbarui oleh Admin
-                $mom->rejection_comment = null; 
+                $mom->rejection_comment = null;
 
             } else {
                 // Jika User biasa, MoM yang di-edit harus kembali ke status 'Menunggu' (1)
-                $newStatusId = 1; 
+                $newStatusId = 1;
                 $statusMessage = 'dikirim ulang untuk persetujuan';
             }
 
@@ -272,9 +272,9 @@ class MomController extends Controller
                 'start_time' => $request->start_time,
                 'end_time' => $request->end_time,
                 'pembahasan' => $request->pembahasan,
-                
+
                 // Terapkan status ID yang sudah ditentukan berdasarkan role
-                'status_id' => $newStatusId, 
+                'status_id' => $newStatusId,
 
                 // Data JSON/Array
                 'nama_peserta' => $request->input('attendees_manual'),
@@ -323,7 +323,7 @@ class MomController extends Controller
             DB::commit();
 
             return response()->json([
-                'message' => 'MoM berhasil diupdate dan ' . $statusMessage . '!', 
+                'message' => 'MoM berhasil diupdate dan ' . $statusMessage . '!',
                 'mom_id' => $mom->version_id
             ], 200);
 
@@ -332,7 +332,7 @@ class MomController extends Controller
             Log::error("MOM Update Failed: " . $e->getMessage() . " on file " . $e->getFile() . " line " . $e->getLine());
 
             return response()->json([
-                'message' => 'Gagal mengupdate Minutes of Meeting.', 
+                'message' => 'Gagal mengupdate Minutes of Meeting.',
                 'error_detail' => $e->getMessage()
             ], 500);
         }
@@ -347,7 +347,7 @@ class MomController extends Controller
     public function repository(Request $request)
     {
         //Ambil input dari request
-        
+
         $search = $request->input('search');
         $date = $request->input('date');
 
