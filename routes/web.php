@@ -55,7 +55,6 @@ Route::middleware(['auth', 'role:user,admin'])->group(function () {
         return view('user.create', compact('users'));
     })->name('user.create');
 
-
     Route::post('/moms', [MomController::class, 'store'])->name('moms.store');
 });
 
@@ -76,7 +75,6 @@ Route::prefix('admin')->middleware(['auth','role:admin'])->group(function () {
     // Admin Notification
     Route::get('/notification', [AdminNotificationController::class, 'index'])->name('admin.notification');
     Route::get('/notification/{id}/read', [AdminNotificationController::class, 'read'])->name('admin.notification.read');
-
     Route::get('/admin/notifications/recent', [AdminNotificationController::class, 'getRecent'])->name('admin.notifications.recent');
 
         Route::get('/mom/export', fn () => view('admin.export'))->name('admin.export');
@@ -103,7 +101,6 @@ Route::prefix('admin')->middleware(['auth','role:admin'])->group(function () {
     Route::post('/approvals/reject/{mom}', [ApprovalController::class, 'reject'])->name('admin.approvals.reject');
     Route::get('/moms/create', [MomController::class, 'create'])->name('admin.moms.create');
     Route::get('/moms/{mom}', [MomController::class, 'show_admin'])->name('admin.moms.show');
-
 
 });
 
