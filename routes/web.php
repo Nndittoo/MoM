@@ -75,7 +75,7 @@ Route::prefix('admin')->middleware(['auth','role:admin'])->group(function () {
     // Admin Notification
     Route::get('/notification', [AdminNotificationController::class, 'index'])->name('admin.notification');
     Route::get('/notification/{id}/read', [AdminNotificationController::class, 'read'])->name('admin.notification.read');
-    Route::get('/admin/details/{mom}', [MomController::class, 'show_admin'])->name('admin.details');
+    Route::get('/details/{mom}', [MomController::class, 'show_admin'])->name('admin.details');
     Route::get('/admin/notifications/recent', [AdminNotificationController::class, 'getRecent'])->name('admin.notifications.recent');
 
         Route::get('/mom/export', fn () => view('admin.export'))->name('admin.export');
