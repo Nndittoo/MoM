@@ -15,6 +15,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminCalendarController;
 use App\Http\Controllers\Admin\AdminNotificationController;
+use App\Http\Controllers\Admin\AdminTaskController;
 
 Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -75,16 +76,20 @@ Route::prefix('admin')->middleware(['auth','role:admin'])->group(function () {
     // Admin Notification
     Route::get('/notification', [AdminNotificationController::class, 'index'])->name('admin.notification');
     Route::get('/notification/{id}/read', [AdminNotificationController::class, 'read'])->name('admin.notification.read');
-    Route::get('/admin/details/{mom}', [MomController::class, 'show_admin'])->name('admin.details');
+
     Route::get('/admin/notifications/recent', [AdminNotificationController::class, 'getRecent'])->name('admin.notifications.recent');
 
         Route::get('/mom/export', fn () => view('admin.export'))->name('admin.export');
 
     Route::get('/mom', fn () => view('admin.mom'))->name('admin.mom');
     Route::get('/users', fn () => view('admin.users'))->name('admin.users');
-    Route::get('/task', fn () => view('admin.task'))->name('admin.task');
 
-    Route::get('/admin/details/{mom}', [MomController::class, 'show_admin'])->name('admin.details');
+    // Admin Task Management
+    Route::get('/task', [AdminTaskController::class, 'index'])->name('admin.task');
+    Route::post('/task/{action_id}/update-status', [AdminTaskController::class, 'updateStatus'])->name('admin.task.update-status');
+    Route::get('/task/search', [AdminTaskController::class, 'search'])->name('admin.task.search');
+
+    Route::get('/details/{mom}', [MomController::class, 'show_admin'])->name('admin.details');
     Route::get('/shows', fn () => view('admin.shows'))->name('admin.shows');
     Route::get('/creates', fn () => view('admin.create'))->name('admin.creates');
     Route::get('/mom', [MomController::class, 'repository'])->name('admin.repository');
