@@ -1,4 +1,3 @@
-create.blade.php
 @extends('admin.layouts.app')
 
 @section('title', 'Create MoM | MoM Telkom')
@@ -31,9 +30,9 @@ create.blade.php
     {{-- Form Container --}}
     <div class="bg-component-bg dark:bg-dark-component-bg p-6 md:p-8 rounded-2xl shadow-lg">
         <form id="mom-form" class="space-y-10">
-            @csrf {{-- Pastikan CSRF token disertakan --}}
+            @csrf 
             
-            {{-- HIDDEN INPUT UNTUK AUTO-APPROVAL ADMIN --}}
+            {{-- Hidden input untuk auto-approval admin --}}
             <input type="hidden" name="is_admin_submission" value="1">
             
             {{-- Informasi Rapat --}}
@@ -43,13 +42,13 @@ create.blade.php
                     <div><label for="judul" class="block mb-2 text-sm font-medium">Judul Rapat</label><input type="text" name="title" id="judul" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Contoh: Rapat Progres Proyek Q3" required></div>
                     <div><label for="tempat" class="block mb-2 text-sm font-medium">Tempat</label><input type="text" name="location" id="tempat" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Contoh: Ruang Rapat Lt. 5 / Online" required></div>
                     
-                    {{-- INPUT MANUAL PIMPINAN --}}
+                    {{-- Input manual pimpinan rapat --}}
                     <div>
                         <label for="pimpinan_rapat" class="block mb-2 text-sm font-medium">Pimpinan Rapat</label>
                         <input type="text" name="pimpinan_rapat" id="pimpinan_rapat" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Nama Pimpinan" required>
                     </div>
                     
-                    {{-- INPUT MANUAL NOTULEN --}}
+                    {{-- Input manual notulen --}}
                     <div>
                         <label for="notulen" class="block mb-2 text-sm font-medium">Notulen</label>
                         <input type="text" name="notulen" id="notulen" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Nama Notulen" required>
@@ -66,10 +65,10 @@ create.blade.php
             <div class="space-y-6">
                 <h2 class="text-base font-semibold text-text-primary dark:text-dark-text-primary border-b border-border-light dark:border-border-dark pb-3">Peserta & Agenda</h2>
                 
-                {{-- PESERTA INTERNAL (Dynamic Unit Input) --}}
+                {{-- Peserta rapat --}}
                 <div class="grid grid-cols-1 gap-8">
                     <div>
-                        <label class="block mb-2 text-sm font-medium">Peserta Internal (Per Unit/Bagian)</label>
+                        <label class="block mb-2 text-sm font-medium">Peserta Rapat (Per Unit/Bagian)</label>
                         <div class="flex flex-col md:flex-row gap-4 items-end">
                             <div class="w-full">
                                 <input type="text" id="input-internal-unit" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Nama Unit/Bagian (Contoh: Unit HC)">
@@ -78,13 +77,12 @@ create.blade.php
                         </div>
                         
                         <div id="list-internal-attendees-container" class="space-y-4 mt-4">
-                            {{-- Unit dan nama peserta akan dirender di sini oleh JS --}}
                         </div>
                         <p class="mt-1 text-xs text-text-secondary">Tambah Unit, lalu masukkan nama-nama peserta dari Unit tersebut.</p>
                     </div>
                 </div>
                 
-                {{-- AGENDA (Add Button + JS List) --}}
+                {{-- Agenda (Add Button + JS List) --}}
                 <div class="grid grid-cols-1 gap-8 pt-6 border-t border-border-light dark:border-border-dark">
                     <div>
                         <label class="block mb-2 text-sm font-medium">Agenda</label>
@@ -114,7 +112,6 @@ create.blade.php
 
                 {{-- Container untuk daftar Mitra yang sudah ditambahkan --}}
                 <div id="list-mitra-container" class="space-y-4">
-                    {{-- Mitra items akan di-render di sini oleh JS --}}
                 </div>
                 <p class="mt-1 text-xs text-text-secondary">Tambah Mitra dan masukkan nama-nama orang yang hadir di bawahnya.</p>
             </div>
@@ -192,9 +189,9 @@ create.blade.php
         
         // --- SETUP DATA GLOBAL ---
         const dataStorage = {
-            internalAttendees: [], // Peserta internal: [{ unit: 'Unit ABC', attendees: ['Nama A', 'Nama B'] }]
+            internalAttendees: [], 
             agendas: [], 
-            partnerAttendees: [], // Peserta mitra (pihak luar)
+            partnerAttendees: [], 
             filesToUpload: []
         };
 
@@ -261,7 +258,7 @@ create.blade.php
         });
 
 
-        // --- FUNGSI BARU: Setup Peserta Internal (Dynamic Unit Input) ---
+        // --- Setup Peserta Internal (Dynamic Unit Input) ---
         function setupInternalAttendees() {
             const inputUnit = document.getElementById('input-internal-unit');
             const btnAddUnit = document.getElementById('btn-add-internal-unit');
@@ -643,19 +640,13 @@ create.blade.php
                 if (response.ok) {
                     showToast('MoM berhasil di submit!', false);
                     
-                    // =======================================================
-                    // LOGIKA REDIRECT TAMBAHAN
-                    // =======================================================
                     if (data.redirect_url) {
-                         // Tunggu 1 detik agar user sempat melihat toast sukses
                         setTimeout(() => {
                             window.location.href = data.redirect_url;
                         }, 1000); 
-                        return; // Hentikan eksekusi kode reset di bawahnya
+                        return; 
                     }
-                    // =======================================================
                     
-                    // LOGIKA FALLBACK (JIKA REDIRECT_URL TIDAK TERSEDIA)
                     form.reset(); 
                     dataStorage.internalAttendees = []; 
                     dataStorage.agendas = [];

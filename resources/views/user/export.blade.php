@@ -52,6 +52,28 @@
             padding-left: 5px; 
         }
         
+        /* CSS KUSTOM UNTUK PESERTA DINAMIS (HORIZONTAL WRAPPING) */
+        .attendee-container {
+            display: flex; /* Memungkinkan item (unit) berjajar */
+            flex-wrap: wrap; /* Item akan pindah baris jika tidak muat */
+            gap: 1.5rem; /* Jarak antar unit/grup */
+            padding: 0;
+            margin: 0;
+        }
+        .attendee-group {
+            /* flex-grow: 1; */
+            min-width: 150px; /* Lebar minimum agar tidak terlalu kecil */
+        }
+        .attendee-group h4 {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .attendee-group ul {
+            list-style-type: disc;
+            padding-left: 15px; /* Indentasi untuk bullet point */
+            margin: 0;
+        }
+        
     </style>
 </head>
 <body class="bg-white">
@@ -60,39 +82,55 @@
         use Carbon\Carbon;
         $meetingDate = Carbon::parse($mom->meeting_date);
         
-        // --- LOGIC MENGAMBIL DATA PESERTA DARI JSON ---
-        $internalAttendees = $mom->nama_peserta ?? []; // Array of names (Internal)
-        $partnerData = $mom->nama_mitra ?? []; // Array of objects (Mitra)
+        // --- DECODING DAN EKSTRAKSI DATA PESERTA DARI JSON/ARRAY ---
 
-        // Menggabungkan semua peserta menjadi satu daftar
-        $allAttendeesRaw = $internalAttendees;
-        foreach ($partnerData as $mitra) {
-            if (is_array($mitra['attendees'] ?? null)) {
-                $allAttendeesRaw = array_merge($allAttendeesRaw, $mitra['attendees']);
+        // Dapatkan data mentah Internal (nama_peserta)
+        $internalDataContainers = is_array($mom->nama_peserta ?? null) 
+                                ? $mom->nama_peserta 
+                                : json_decode($mom->nama_peserta ?? '[]', true);
+        
+        // Dapatkan data mentah Mitra (nama_mitra)
+        $partnerDataContainers = is_array($mom->nama_mitra ?? null) 
+                                ? $mom->nama_mitra 
+                                : json_decode($mom->nama_mitra ?? '[]', true);
+
+        
+        // --- LOGIC PESERTA INTERNAL (UNTUK TAMPILAN PER UNIT) ---
+        $internalAttendeeGroups = []; 
+        $allAttendeesRaw = []; // List flat untuk total hitungan
+        
+        foreach ($internalDataContainers as $unit) {
+            if (is_array($unit['attendees'] ?? null) && !empty($unit['attendees'])) {
+                $internalAttendeeGroups[] = [
+                    'name' => $unit['unit'] ?? 'Unit Internal',
+                    'attendees' => $unit['attendees']
+                ];
+                $allAttendeesRaw = array_merge($allAttendeesRaw, $unit['attendees']);
             }
         }
         
+        // --- LOGIC PESERTA MITRA & TANDA TANGAN ---
+        $signatoryGroups = [];
+        
+        foreach ($partnerDataContainers as $mitra) {
+            if (is_array($mitra['attendees'] ?? null) && !empty($mitra['attendees'])) {
+                $allAttendeesRaw = array_merge($allAttendeesRaw, $mitra['attendees']);
+                
+                // Siapkan Grup Tanda Tangan (Mitra)
+                $signatoryGroups[] = [
+                    'name' => $mitra['name'] ?? 'Pihak Mitra',
+                    'attendees' => $mitra['attendees'] ?? []
+                ];
+            }
+        }
+        
+        // Finalisasi Hitungan Total Peserta (Internal + Mitra)
         $allAttendees = array_unique($allAttendeesRaw); 
         $totalAttendeesCount = count($allAttendees);
         
-        // Mengubah daftar peserta menjadi string yang dipisahkan koma
-        $attendeeListString = implode(', ', $allAttendees);
-        
-        // STRUKTUR DATA TANDA TANGAN DINAMIS
-        $signatoryGroups = [];
-
-        
-        
-        // Gabungkan dengan grup Mitra
-        foreach ($partnerData as $mitra) {
-            $signatoryGroups[] = [
-                'name' => $mitra['name'],
-                'attendees' => $mitra['attendees'] ?? []
-            ];
-        }
-        
+        // Finalisasi Grup Tanda Tangan
         $totalSignatoryGroups = count($signatoryGroups);
-    
+        
     @endphp
 
     <div id="pdf-preview" class="p-6 md:p-8 min-w-[800px] bg-white text-gray-900 font-sans">
@@ -118,19 +156,29 @@
                     <td class="border border-black p-2">{{ $mom->notulen }}</td> 
                 </tr>
 
-                {{-- Daftar Peserta --}}
+                {{-- Daftar Peserta (MODIFIKASI: Hanya Internal, Grouped, Horizontal Wrap) --}}
                 <tr>
                     <td class="border border-black p-2 font-semibold">Peserta</td>
                     <td colspan="3" class="border border-black p-2">
-                       
-                        @if ($totalAttendeesCount > 0)
-                            {{ $attendeeListString }}
+                        @if (count($internalAttendeeGroups) > 0)
+                            <div class="attendee-container">
+                                @foreach($internalAttendeeGroups as $group)
+                                    <div class="attendee-group">
+                                        <h4>{{ $group['name'] }}</h4>
+                                        <ul>
+                                            @foreach($group['attendees'] as $name)
+                                                <li>{{ $name }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endforeach
+                            </div>
                         @else
-                            Tidak ada peserta tercatat.
+                            Tidak ada peserta internal tercatat.
                         @endif
                     </td>
                 </tr>
-
+                
                 {{-- Waktu --}}
                 <tr>
                     <td class="border border-black p-2 font-semibold">Waktu</td>
@@ -204,7 +252,7 @@
                         <table class="w-full text-center border-collapse">
                             <thead>
                                 <tr class="border-b border-black">
-                                   
+                                    
                                     @foreach($signatoryGroups as $group)
                                         {{-- Gunakan total kelompok untuk membagi lebar --}}
                                         <th class="p-2 font-semibold w-1/{{ $totalSignatoryGroups }}">{{ $group['name'] }}</th>
@@ -255,8 +303,8 @@
             <div class="flex justify-center">
                 <div class="text-center w-full max-w-xl">
                     <img src="{{ asset('storage/' . $imageAttachments[0]->file_path) }}" 
-                         alt="Lampiran Rapat" 
-                         class="w-full h-auto mx-auto border object-contain">
+                              alt="Lampiran Rapat" 
+                              class="w-full h-auto mx-auto border object-contain">
                     <p class="mt-2 text-sm">File: {{ $imageAttachments[0]->file_name }}</p>
                 </div>
             </div>
@@ -266,20 +314,18 @@
                 @foreach($imageAttachments as $index => $attachment)
                     @if ($imageCount % 2 !== 0 && $index === $imageCount - 1)
                         {{-- Jika total gambar ganjil dan ini adalah gambar terakhir,
-                             tutup grid saat ini, dan tampilkan gambar ini di tengah
-                             di luar grid. 
+                            tutup grid saat ini, dan tampilkan gambar ini di tengah
+                            di luar grid. --}}
                         </div> {{-- Tutup grid-cols-2 sebelum gambar terakhir --}}
                         <div class="flex justify-center w-full mt-4"> 
                             <div class="text-center w-1/2">
                                 <img src="{{ asset('storage/' . $attachment->file_path) }}" 
-                                     alt="Lampiran Rapat" 
-                                     class="w-full h-auto mx-auto border object-contain">
+                                      alt="Lampiran Rapat" 
+                                      class="w-full h-auto mx-auto border object-contain">
                                 <p class="mt-2 text-sm">File: {{ $attachment->file_name }}</p>
                             </div>
                         </div>
-                        {{-- Karena sudah menutup div.grid-cols-2 di atas,
-                             tidak perlu membukanya lagi untuk loop ini.
-                             Break loop karena gambar terakhir sudah diurus. --}}
+                        {{-- Break loop karena gambar terakhir sudah diurus. --}}
                         @break 
                     @else
                         {{-- Untuk semua gambar lain (atau jika total genap), tampilkan di grid --}}

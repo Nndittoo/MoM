@@ -12,9 +12,25 @@
         : asset('img/lampiran-kosong.png'); 
     
     $statusText = $mom->status->status ?? 'Unknown';
-    $internalNames = $mom->nama_peserta ?? [];
-    $allAttendees = array_merge($internalNames);
-    $totalAttendees = count($allAttendees);
+    
+    // Ambil data peserta internal dan eksternal (asumsikan disimpan sebagai JSON atau di-cast array di model)
+    $internalData = is_array($mom->nama_peserta) ? $mom->nama_peserta : json_decode($mom->nama_peserta ?? '[]', true);
+    $partnerData = isset($mom->partner_attendees) && is_array($mom->partner_attendees) ? $mom->partner_attendees : json_decode($mom->partner_attendees ?? '[]', true); 
+
+    // Gabungkan semua container unit/mitra
+    $allAttendeeContainers = array_merge($internalData, $partnerData);
+    
+    $allAttendeeNames = [];
+    
+    // Ekstrak hanya nama-nama peserta ke dalam array flat
+    foreach ($allAttendeeContainers as $container) {
+        if (isset($container['attendees']) && is_array($container['attendees'])) {
+            $allAttendeeNames = array_merge($allAttendeeNames, $container['attendees']);
+        }
+    }
+    
+    $totalAttendees = count($allAttendeeNames);
+    
 @endphp
 
 @section('content')
@@ -85,11 +101,13 @@
 
         {{-- Kolom kanan --}}
         <div class="lg:col-span-1 space-y-6">
+
             {{-- Peserta --}}
             <div class="bg-component-bg dark:bg-dark-component-bg rounded-lg shadow-md p-6">
                 <h3 class="text-xl font-bold mb-4"><i class="fa-solid fa-users mr-2"></i>Peserta ({{ $totalAttendees }})</h3>
                 <ul class="space-y-2 text-sm list-disc list-inside">
-                    @forelse($allAttendees as $attendeeName)
+                    
+                    @forelse($allAttendeeNames as $attendeeName) 
                         <li>{{ $attendeeName }}</li>
                     @empty
                         <span class="italic text-text-secondary">Tidak ada peserta tercatat.</span>
@@ -169,7 +187,7 @@
 
 @push('styles')
 <style>
-    /* Tambahkan bullet di dalam pembahasan */
+    /* Menambahkan bullet di dalam pembahasan */
     .prose ul {
         list-style-type: disc;
         margin-left: 1.5rem;
@@ -200,12 +218,11 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const storeActionItemUrl = "{{ route('action_items.store') }}";
-    // The route name is correct, the issue was with the ID passed and the Model binding.
     const deleteActionItemUrl = "{{ route('action_items.destroy', ':actionItem') }}"; 
     const listContainer = document.getElementById('tindak-lanjut-list');
     const form = document.getElementById('tindak-lanjut-form');
 
-    // DELETE FUNCTION
+    // Fungsi Delete
     window.deleteActionItem = async function (actionItemId) {
         if (!confirm("Yakin ingin menghapus tindak lanjut ini?")) return;
 
@@ -215,7 +232,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const response = await fetch(url, {
                 method: 'DELETE',
                 headers: {
-                    // Assuming you have the CSRF token in a meta tag
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 
                     'Accept': 'application/json',
                 },
@@ -223,7 +239,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (response.ok) {
                 document.getElementById(`action-item-${actionItemId}`)?.remove();
-                // Check if the list is now empty and display "Tidak ada tindak lanjut." 
+               
                 if (listContainer.children.length === 0) {
                     listContainer.innerHTML = '<p class="text-sm text-text-secondary">Tidak ada tindak lanjut.</p>';
                 }
@@ -237,7 +253,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
-    // ADD FUNCTION
+    // Fungsi Tambah
     form.addEventListener('submit', async function (e) {
         e.preventDefault();
         const formData = new FormData(form);
@@ -246,7 +262,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const response = await fetch(storeActionItemUrl, {
                 method: 'POST',
                 headers: {
-                    // Use the CSRF token from the form
                     'X-CSRF-TOKEN': formData.get('_token'), 
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json',
@@ -257,11 +272,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const data = await response.json();
 
             if (response.ok) {
-                // Retrieve the correct primary key 'action_id' from the response
-                const newId = data.action_item.action_id; 
                 
+                const newId = data.action_item.action_id; 
                 const newItem = document.createElement('div');
-                const formattedDate = new Date(formData.get('due')).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+                const dateOptions = { day: '2-digit', month: 'short', year: 'numeric' };
+                const formattedDate = new Date(formData.get('due') + 'T00:00:00').toLocaleDateString('id-ID', dateOptions); // Tambahkan T00:00:00 untuk menghindari masalah zona waktu
                 
                 newItem.className = 'p-3 bg-body-bg dark:bg-dark-body-bg rounded-lg flex justify-between items-center';
                 newItem.id = `action-item-${newId}`;
@@ -275,7 +290,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     </button>
                 `;
                 
-                // Remove the "Tidak ada tindak lanjut" message if it exists
                 if (listContainer.children.length === 1 && listContainer.firstElementChild.tagName === 'P') {
                     listContainer.firstElementChild.remove();
                 }
@@ -283,9 +297,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 listContainer.appendChild(newItem);
                 form.reset();
                 
-                // Hide the modal (assuming Flowbite or similar JS for modal control)
                 if (window.Flowbite?.Modal) {
-                    new Flowbite.Modal(document.getElementById('tindak-lanjut-modal')).hide();
+                    const modalElement = document.getElementById('tindak-lanjut-modal');
+                    const modal = new Flowbite.Modal(modalElement);
+                    modal.hide();
                 } else {
                     document.getElementById('tindak-lanjut-modal').classList.add('hidden');
                 }

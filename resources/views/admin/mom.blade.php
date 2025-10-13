@@ -2,13 +2,12 @@
 
 @section('title', 'Repository MoM | MoM Telkom')
 
-{{-- Tambahkan meta tag CSRF jika belum ada di layout utama --}}
 @push('styles')
-    {{-- Di sini tempat Anda menaruh link CSS tambahan --}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 @endpush
 
 @section('content')
-{{-- Kerangka Toast: border dihapus, hanya menggunakan shadow dan background --}}
+{{-- Toast --}}
 <div id="toast" class="hidden fixed top-5 right-5 z-50 items-center gap-3 px-4 py-3 rounded-xl shadow-lg bg-white dark:bg-dark-component-bg text-text-primary dark:text-dark-text-primary transition-all duration-500 opacity-0">
     <div class="flex-shrink-0"><i class="fa-solid fa-circle-check text-green-500 text-lg"></i></div>
     <div class="text-sm font-medium" id="toast-message">Notifikasi</div>
@@ -76,6 +75,7 @@
                         <div x-data="{ actionsOpen: false }" id="mom-card-{{ $mom->version_id }}" class="bg-body-bg dark:bg-dark-body-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
                             <div class="relative">
                                 @php
+                                    // LOGIKA UNTUK GAMBAR PREVIEW
                                     $attachment = $mom->attachments->first();
                                     $imagePath = ($attachment && str_starts_with($attachment->mime_type, 'image/')) 
                                         ? Storage::url($attachment->file_path) 
@@ -99,28 +99,35 @@
                                     <div class="flex items-start justify-between">
                                         <div class="text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed">
                                             @php
-                                                // 1. Ambil data, coba decode, atau default ke array kosong
-                                                $peserta = is_string($mom->nama_peserta) ? json_decode($mom->nama_peserta, true) : ($mom->nama_peserta ?? []);
-                                        
-                                                // 2. Pastikan keduanya adalah array sebelum digabung
-                                                $peserta = is_array($peserta) ? $peserta : [];
+                                                // MENGURAI JSON UNIT DINAMIS DAN MENGHITUNG PESERTA
+                                                $pesertaInternal = is_string($mom->nama_peserta) ? json_decode($mom->nama_peserta, true) : ($mom->nama_peserta ?? []);
+                                                $pesertaMitra = is_string($mom->nama_mitra) ? json_decode($mom->nama_mitra, true) : ($mom->nama_mitra ?? []);
+
+                                                // Mengumpulkan semua nama peserta (flat list)
+                                                $allNames = [];
                                                 
-                                                // 3. Gabungkan dan filter elemen kosong/null
-                                                $allParticipants = array_filter(array_merge($peserta));
-                                                
-                                                // 4. Hitung dan tentukan peserta yang ditampilkan
+                                                // Dari Internal Units
+                                                foreach ($pesertaInternal as $unit) {
+                                                    if (is_array($unit['attendees'] ?? null)) {
+                                                        $allNames = array_merge($allNames, $unit['attendees']);
+                                                    }
+                                                }
+                                                // Dari Mitra
+                                                foreach ($pesertaMitra as $mitra) {
+                                                     if (is_array($mitra['attendees'] ?? null)) {
+                                                        $allNames = array_merge($allNames, $mitra['attendees']);
+                                                    }
+                                                }
+
+                                                $allParticipants = array_unique(array_filter($allNames));
                                                 $totalParticipants = count($allParticipants);
                                                 $displayParticipants = array_slice($allParticipants, 0, 2);
                                                 $remainingParticipantsCount = $totalParticipants - count($displayParticipants);
                                             @endphp
+                                            
                                             {{-- Menampilkan 2 Peserta Pertama --}}
                                             @forelse($displayParticipants as $p)
-                                                •
-                                                @if(is_array($p))
-                                                    {{ $p['name'] ?? $p['user_name'] ?? 'Peserta' }}<br>
-                                                @else
-                                                    {{ $p }}<br>
-                                                @endif
+                                                • {{ $p }}<br>
                                             @empty 
                                                 Tidak ada peserta.
                                             @endforelse
@@ -165,7 +172,7 @@
                                                 <i class="fa-solid fa-pen-to-square w-4"></i><span>Edit</span>
                                             </a>
                                             
-                                            {{-- MODIFIKASI: Tombol Hapus memanggil JS --}}
+                                            {{-- Tombol Hapus memanggil JS --}}
                                             <button @click.prevent="deleteMom({{ $mom->version_id }}, $event)" 
                                                 class="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
                                                 <i class="fa-solid fa-trash-can w-4"></i><span>Hapus</span>
@@ -181,18 +188,42 @@
                     </div>
                 </div>
 
-                {{-- ALL MOM CONTENT (WAJIB DISAMAKAN STRUKTURNYA) --}}
+                {{-- ALL MOM CONTENT --}}
                 <div id="all-mom-content" class="hidden">
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                         @forelse($allMoms as $mom)
+                        @forelse($allMoms as $mom)
                         {{-- Salin-tempel struktur kartu yang sama persis dari atas untuk konsistensi --}}
                         <div x-data="{ actionsOpen: false }" id="mom-card-{{ $mom->version_id }}" class="bg-body-bg dark:bg-dark-body-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
                             <div class="relative">
                                 @php 
+                                    // LOGIKA UNTUK GAMBAR PREVIEW
                                     $attachment = $mom->attachments->first();
                                     $imagePath = ($attachment && str_starts_with($attachment->mime_type, 'image/')) 
                                         ? Storage::url($attachment->file_path) 
                                         : asset('img/lampiran.png'); 
+
+                                    // MENGURAI JSON UNIT DINAMIS DAN MENGHITUNG PESERTA
+                                    $pesertaInternal = is_string($mom->nama_peserta) ? json_decode($mom->nama_peserta, true) : ($mom->nama_peserta ?? []);
+                                    $pesertaMitra = is_string($mom->nama_mitra) ? json_decode($mom->nama_mitra, true) : ($mom->nama_mitra ?? []);
+
+                                    // Mengumpulkan semua nama peserta (flat list)
+                                    $allNames = [];
+                                    
+                                    foreach ($pesertaInternal as $unit) {
+                                        if (is_array($unit['attendees'] ?? null)) {
+                                            $allNames = array_merge($allNames, $unit['attendees']);
+                                        }
+                                    }
+                                    foreach ($pesertaMitra as $mitra) {
+                                         if (is_array($mitra['attendees'] ?? null)) {
+                                            $allNames = array_merge($allNames, $mitra['attendees']);
+                                        }
+                                    }
+
+                                    $allParticipants = array_unique(array_filter($allNames));
+                                    $totalParticipants = count($allParticipants);
+                                    $displayParticipants = array_slice($allParticipants, 0, 2);
+                                    $remainingParticipantsCount = $totalParticipants - count($displayParticipants);
                                 @endphp
                                 <img class="w-full h-48 object-cover" src="{{ $imagePath }}" alt="Dokumentasi Rapat">
                                 <span class="absolute top-3 right-3 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">{{ \Carbon\Carbon::parse($mom->meeting_date)->isoFormat('DD MMMM YYYY') }}</span>
@@ -209,29 +240,9 @@
                                     <h4 class="text-sm font-semibold text-text-primary dark:text-dark-text-primary mb-3">Peserta</h4>
                                     <div class="flex items-start justify-between">
                                         <div class="text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed">
-                                            @php 
-                                                // 1. Ambil data, coba decode, atau default ke array kosong
-                                                $peserta = is_string($mom->nama_peserta) ? json_decode($mom->nama_peserta, true) : ($mom->nama_peserta ?? []);
-
-                                                // 2. Pastikan keduanya adalah array sebelum digabung
-                                                $peserta = is_array($peserta) ? $peserta : [];
-
-                                                // 3. Gabungkan dan filter elemen kosong/null
-                                                $allParticipants = array_filter(array_merge($peserta));
-                                                
-                                                // 4. Hitung dan tentukan peserta yang ditampilkan
-                                                $totalParticipants = count($allParticipants);
-                                                $displayParticipants = array_slice($allParticipants, 0, 2); 
-                                                $remainingParticipantsCount = $totalParticipants - count($displayParticipants);
-                                            @endphp
                                             {{-- Menampilkan 2 Peserta Pertama --}}
                                             @forelse($displayParticipants as $p)
-                                                •
-                                                @if(is_array($p))
-                                                    {{ $p['name'] ?? $p['user_name'] ?? 'Peserta' }}<br>
-                                                @else
-                                                    {{ $p }}<br>
-                                                @endif
+                                                • {{ $p }}<br>
                                             @empty
                                                 Tidak ada peserta.
                                             @endforelse
@@ -259,8 +270,6 @@
                                             <a href="{{ route('admin.moms.edit', $mom->version_id) }}" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-text-primary dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-body-bg rounded-lg">
                                                 <i class="fa-solid fa-pen-to-square w-4"></i><span>Edit</span>
                                             </a>
-                                            
-                                            {{-- MODIFIKASI: Tombol Hapus memanggil JS --}}
                                             <button @click.prevent="deleteMom({{ $mom->version_id }}, $event)" 
                                                 class="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
                                                 <i class="fa-solid fa-trash-can w-4"></i><span>Hapus</span>
@@ -270,9 +279,9 @@
                                 </div>
                             </div>
                         </div>
-                         @empty
+                        @empty
                             <p class="md:col-span-3 text-center text-text-secondary dark:text-dark-text-secondary p-8">Tidak ada MoM tersedia.</p>
-                         @endforelse
+                        @endforelse
                     </div>
                 </div>
             </div>
@@ -315,7 +324,7 @@
     };
 
 
-    // FUNGSI BARU UNTUK MENGHAPUS MOM VIA AJAX
+    // MENGHAPUS MOM VIA AJAX
     window.deleteMom = async function (momId, event) {
         if (!confirm('Apakah Anda yakin ingin menghapus MoM ini? Tindakan ini tidak dapat dibatalkan.')) {
             return;
@@ -325,11 +334,9 @@
         const momCard = document.getElementById(`mom-card-${momId}`); 
         
         try {
-            // URL DELETE yang benar adalah /moms/{momId}
             const response = await fetch(`/moms/${momId}`, {
                 method: 'DELETE',
                 headers: {
-                    // Pastikan meta tag CSRF ada di layout utama
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                     'Accept': 'application/json',
                 },
@@ -338,12 +345,12 @@
             const data = await response.json();
 
             if (response.ok) {
-                // 1. Hapus elemen kartu MoM dari DOM
+                // Hapus elemen kartu MoM dari DOM
                 if (momCard) {
                     momCard.remove(); 
                 }
 
-                // 2. Tampilkan Toast Sukses
+                // Tampilkan Toast Sukses
                 showToast(data.message || 'MoM berhasil dihapus!');
                 
             } else {
@@ -388,6 +395,11 @@
         }
     }
     document.addEventListener('DOMContentLoaded', function() {
+        // Terapkan Alpine.js secara global jika belum
+        if (typeof Alpine === 'undefined') {
+            // Jika Alpine belum dimuat (walaupun sudah defer di push scripts)
+            // Biarkan Alpine yang di push scripts yang menangani defer.
+        }
         switchTab('my-mom');
     });
 </script>
