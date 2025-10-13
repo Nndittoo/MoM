@@ -13,7 +13,7 @@
 
     $statusText = $mom->status->status ?? 'Unknown';
     
-    // Ambil data peserta internal dan eksternal (asumsikan disimpan sebagai JSON atau di-cast array di model)
+    // Ambil data peserta internal dan eksternal
     $internalData = is_array($mom->nama_peserta) ? $mom->nama_peserta : json_decode($mom->nama_peserta ?? '[]', true);
     $partnerData = isset($mom->partner_attendees) && is_array($mom->partner_attendees) ? $mom->partner_attendees : json_decode($mom->partner_attendees ?? '[]', true); 
 
@@ -25,10 +25,14 @@
     // Ekstrak hanya nama-nama peserta ke dalam array flat
     foreach ($allAttendeeContainers as $container) {
         if (isset($container['attendees']) && is_array($container['attendees'])) {
-            $allAttendeeNames = array_merge($allAttendeeNames, $container['attendees']);
+            // Filter untuk memastikan hanya string yang diambil
+            $validAttendees = array_filter($container['attendees'], fn($name) => is_string($name) && !empty($name));
+            $allAttendeeNames = array_merge($allAttendeeNames, $validAttendees);
         }
     }
     
+    // Hilangkan duplikasi dan hitung total
+    $allAttendeeNames = array_unique($allAttendeeNames);
     $totalAttendees = count($allAttendeeNames);
     
 @endphp
@@ -219,6 +223,33 @@ document.addEventListener('DOMContentLoaded', function () {
     const deleteActionItemUrl = "{{ route('action_items.destroy', ':actionItem') }}"; 
     const listContainer = document.getElementById('tindak-lanjut-list');
     const form = document.getElementById('tindak-lanjut-form');
+    const modalElement = document.getElementById('tindak-lanjut-modal');
+    
+    // Inisialisasi Flowbite Modal
+    let modalInstance = null;
+    if (typeof Flowbite !== 'undefined' && Flowbite.Modal) {
+         modalInstance = new Flowbite.Modal(modalElement);
+    }
+
+    // Fallback function for hiding the modal (and cleaning up body classes)
+    const hideModalAndClean = () => {
+        if (modalInstance) {
+            modalInstance.hide();
+        } else {
+            // Manual hiding fallback
+            modalElement.classList.add('hidden');
+        }
+        
+        // Hapus kelas yang mengunci scroll
+        document.body.classList.remove('overflow-hidden'); 
+
+        // Hapus elemen backdrop 
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) {
+            backdrop.remove();
+        }
+        // ====================================================
+    };
 
     // Fungsi Delete
     window.deleteActionItem = async function (actionItemId) {
@@ -236,7 +267,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (response.ok) {
                 document.getElementById(`action-item-${actionItemId}`)?.remove();
-               
+                
                 if (listContainer.children.length === 0) {
                     listContainer.innerHTML = '<p class="text-sm text-text-secondary">Tidak ada tindak lanjut.</p>';
                 }
@@ -246,7 +277,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Terjadi kesalahan koneksi.');
+            alert('Terjadi kesalahan koneksi saat menghapus.');
         }
     };
 
@@ -266,12 +297,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 body: formData,
             });
 
+            // Ambil data JSON respons
+            const data = await response.json(); 
+
             if (response.ok) {
-                
                 const newId = data.action_item.action_id; 
                 const newItem = document.createElement('div');
                 const dateOptions = { day: '2-digit', month: 'short', year: 'numeric' };
-                const formattedDate = new Date(formData.get('due') + 'T00:00:00').toLocaleDateString('id-ID', dateOptions); // Tambahkan T00:00:00 untuk menghindari masalah zona waktu
+                const formattedDate = new Date(formData.get('due') + 'T00:00:00').toLocaleDateString('id-ID', dateOptions); 
                 
                 newItem.className = 'p-3 bg-body-bg dark:bg-dark-body-bg rounded-lg flex justify-between items-center';
                 newItem.id = `action-item-${newId}`;
@@ -285,26 +318,29 @@ document.addEventListener('DOMContentLoaded', function () {
                     </button>
                 `;
                 
-                if (listContainer.children.length === 1 && listContainer.firstElementChild.tagName === 'P') {
-                    listContainer.firstElementChild.remove();
+                const emptyMessage = listContainer.querySelector('.text-text-secondary');
+                if (emptyMessage && listContainer.children.length === 1 && emptyMessage.textContent.includes('Tidak ada tindak lanjut')) {
+                    listContainer.innerHTML = '';
                 }
-
+                
                 listContainer.appendChild(newItem);
                 form.reset();
                 
-                if (window.Flowbite?.Modal) {
-                    const modalElement = document.getElementById('tindak-lanjut-modal');
-                    const modal = new Flowbite.Modal(modalElement);
-                    modal.hide();
-                } else {
-                    document.getElementById('tindak-lanjut-modal').classList.add('hidden');
-                }
+                // Fungsi clean up
+                hideModalAndClean();
+                
             } else {
-                const data = await response.json();
-                alert('Gagal menambahkan tindak lanjut:\n' + (data.message || 'Terjadi kesalahan.'));
+                let errorMessage = data.message || 'Error server saat menambahkan tugas.';
+                if (response.status === 422 && data.errors) {
+                    errorMessage = 'Validasi Gagal: ' + 
+                                 (data.errors.item ? data.errors.item[0] + ' ' : '') + 
+                                 (data.errors.due ? data.errors.due[0] + ' ' : '') +
+                                 (data.errors.mom_id ? data.errors.mom_id[0] : '');
+                }
+                alert('Gagal menambahkan tindak lanjut:\n' + errorMessage);
             }
         } catch (error) {
-            console.error(error);
+            console.error('Network Error:', error);
             alert('Terjadi kesalahan koneksi.');
         }
     });
