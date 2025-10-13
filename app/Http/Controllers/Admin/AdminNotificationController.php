@@ -34,6 +34,7 @@ class AdminNotificationController extends Controller
                 // Arahkan ke halaman manajemen user
                 return redirect()->route('admin.users');
             case 'task_urgent':
+            case 'task_overdue':
                  // Arahkan ke halaman daftar tugas
                 return redirect()->route('admin.task');
             default:

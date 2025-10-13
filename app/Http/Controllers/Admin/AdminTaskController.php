@@ -58,7 +58,6 @@ class AdminTaskController extends Controller
                             $q->where('status_id', 2);
                         })
                         ->where('status', 'mendatang')
-                        ->where('due', '<', Carbon::now())
                         ->count(),
         ];
 

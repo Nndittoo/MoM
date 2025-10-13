@@ -83,6 +83,7 @@
                     <option value="all">Semua Status</option>
                     <option value="mendatang">On Going</option>
                     <option value="selesai">Done</option>
+                    <option value="terlambat">Overdue</option>
                 </select>
 
                 <button id="reset-filter" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">
@@ -96,9 +97,17 @@
             @forelse($tasks as $task)
                 @php
                     $deadline = \Carbon\Carbon::parse($task->due);
-                    $isOverdue = $deadline->isPast() && $task->status == 'mendatang';
-                    $isDueSoon = !$isOverdue && $deadline->diffInDays(now()) < 3 && $task->status == 'mendatang';
-                    $borderColor = $isOverdue ? 'border-red-500' : ($isDueSoon ? 'border-yellow-500' : 'border-transparent');
+                    $isOverdue = $task->status == 'terlambat';
+                    $isDueSoon = !$isOverdue && $task->status == 'mendatang' && $deadline->diffInDays(now()) < 3;
+
+                    // Border color based on status
+                    if ($isOverdue) {
+                        $borderColor = 'border-red-500';
+                    } elseif ($isDueSoon) {
+                        $borderColor = 'border-yellow-500';
+                    } else {
+                        $borderColor = 'border-transparent';
+                    }
                 @endphp
 
                 <div class="task-card relative group bg-component-bg dark:bg-dark-component-bg rounded-xl border-l-4 {{ $borderColor }} shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 overflow-hidden"
@@ -129,9 +138,14 @@
                                 <i class="fa-solid fa-calendar-day mr-2"></i>
                                 {{ $deadline->translatedFormat('d F Y') }}
                                 @if($isOverdue)
-                                    <span class="ml-2 px-2 py-0.5 text-xs bg-red-100 text-red-700 rounded-full">Overdue</span>
+                                    @php
+                                        $daysOverdue = now()->startOfDay()->diffInDays($deadline);
+                                    @endphp
+                                    <span class="ml-2 px-2 py-0.5 text-xs bg-red-100 text-red-700 rounded-full dark:bg-red-900 dark:text-red-300">
+                                        Terlambat {{ $daysOverdue }} hari
+                                    </span>
                                 @elseif($isDueSoon)
-                                    <span class="ml-2 px-2 py-0.5 text-xs bg-yellow-100 text-yellow-700 rounded-full">Soon</span>
+                                    <span class="ml-2 px-2 py-0.5 text-xs bg-yellow-100 text-yellow-700 rounded-full dark:bg-yellow-900 dark:text-yellow-300">Soon</span>
                                 @endif
                             </span>
                         </div>
@@ -143,6 +157,10 @@
                             @if($task->status == 'selesai')
                                 <span class="status-badge flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
                                     <i class="fa-solid fa-circle-check"></i> Done
+                                </span>
+                            @elseif($task->status == 'terlambat')
+                                <span class="status-badge flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-full bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300">
+                                    <i class="fa-solid fa-exclamation-triangle"></i> Overdue
                                 </span>
                             @else
                                 <span class="status-badge flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300">
@@ -163,6 +181,7 @@
                             <select class="status-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                 <option value="mendatang" {{ $task->status == 'mendatang' ? 'selected' : '' }}>On Going</option>
                                 <option value="selesai" {{ $task->status == 'selesai' ? 'selected' : '' }}>Done</option>
+                                <option value="terlambat" {{ $task->status == 'terlambat' ? 'selected' : '' }}>Overdue</option>
                             </select>
                             <button type="submit"
                                 class="save-button px-4 py-2 text-xs font-medium text-center text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all duration-300">
@@ -249,21 +268,36 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Update badge
-                    statusBadge.classList.remove('bg-yellow-100', 'text-yellow-700', 'bg-green-100', 'text-green-700',
-                                               'dark:bg-yellow-900', 'dark:text-yellow-300', 'dark:bg-green-900', 'dark:text-green-300');
+                    // Update badge - remove all status classes
+                    statusBadge.classList.remove(
+                        'bg-yellow-100', 'text-yellow-700', 'dark:bg-yellow-900', 'dark:text-yellow-300',
+                        'bg-green-100', 'text-green-700', 'dark:bg-green-900', 'dark:text-green-300',
+                        'bg-red-100', 'text-red-700', 'dark:bg-red-900', 'dark:text-red-300'
+                    );
 
+                    // Update badge based on new status
                     if (newStatus === 'selesai') {
                         statusBadge.innerHTML = `<i class="fa-solid fa-circle-check"></i> Done`;
                         statusBadge.classList.add('bg-green-100', 'text-green-700', 'dark:bg-green-900', 'dark:text-green-300');
+                    } else if (newStatus === 'terlambat') {
+                        statusBadge.innerHTML = `<i class="fa-solid fa-exclamation-triangle"></i> Overdue`;
+                        statusBadge.classList.add('bg-red-100', 'text-red-700', 'dark:bg-red-900', 'dark:text-red-300');
                     } else {
                         statusBadge.innerHTML = `<i class="fa-solid fa-spinner animate-spin-slow"></i> On Going`;
                         statusBadge.classList.add('bg-yellow-100', 'text-yellow-700', 'dark:bg-yellow-900', 'dark:text-yellow-300');
                     }
 
-                    // Update card data attribute
+                    // Update card data attribute and border
                     const card = form.closest('.task-card');
                     card.dataset.status = newStatus;
+
+                    // Update border color
+                    card.classList.remove('border-red-500', 'border-yellow-500', 'border-transparent');
+                    if (newStatus === 'terlambat') {
+                        card.classList.add('border-red-500');
+                    } else {
+                        card.classList.add('border-transparent');
+                    }
 
                     // Show success message
                     showNotification('Status berhasil diupdate!', 'success');
@@ -273,15 +307,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     form.classList.remove('flex');
                     statusDisplay.classList.remove('hidden');
 
-                    // Reload stats
+                    // Reload stats after short delay
                     setTimeout(() => location.reload(), 1000);
                 } else {
-                    showNotification('Gagal mengupdate status', 'error');
+                    showNotification(data.message || 'Gagal mengupdate status', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showNotification('Terjadi kesalahan', 'error');
+                showNotification('Terjadi kesalahan saat mengupdate status', 'error');
             })
             .finally(() => {
                 submitBtn.innerHTML = originalBtnText;
