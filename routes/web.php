@@ -17,6 +17,9 @@ use App\Http\Controllers\Admin\AdminCalendarController;
 use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\Admin\AdminTaskController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use Illuminate\Http\Request;
 
 Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -79,7 +82,7 @@ Route::prefix('admin')->middleware(['auth','role:admin'])->group(function () {
     Route::get('/notification/{id}/read', [AdminNotificationController::class, 'read'])->name('admin.notification.read');
     Route::get('/admin/notifications/recent', [AdminNotificationController::class, 'getRecent'])->name('admin.notifications.recent');
 
-        Route::get('/mom/export', fn () => view('admin.export'))->name('admin.export');
+    Route::get('/mom/export', fn () => view('admin.export'))->name('admin.export');
 
     Route::get('/mom', fn () => view('admin.mom'))->name('admin.mom');
     Route::get('/users', fn () => view('admin.users'))->name('admin.users');
@@ -134,3 +137,21 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo.update');
     Route::delete('/profile/photo', [ProfileController::class, 'deletePhoto'])->name('profile.photo.delete');
 });
+
+// Form minta email (Forgot Password)
+Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])
+    ->middleware('guest')
+    ->name('password.request');
+
+Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
+    ->middleware('guest')
+    ->name('password.email');
+
+// Halaman set password baru (dibuka dari email reset)
+Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])
+    ->middleware('guest')
+    ->name('password.reset');
+
+Route::post('/reset-password', [NewPasswordController::class, 'store'])
+    ->middleware('guest')
+    ->name('password.store');

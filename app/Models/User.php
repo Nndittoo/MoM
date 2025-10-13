@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
+use App\Notifications\QueuedResetPassword;
+use Illuminate\Auth\Notifications\ResetPassword;
 
 class User extends Authenticatable
 {
@@ -68,4 +70,9 @@ class User extends Authenticatable
         // fallback (bebas: pakai asset lokal atau URL publik)
         return asset('img/avatar-default.png');
     }
+
+    public function sendPasswordResetNotification($token)
+{
+    $this->notify(new QueuedResetPassword($token));
+}
 }

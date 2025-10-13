@@ -49,7 +49,7 @@
                                 type="password" placeholder="Password" required />
 
                                 <div class="text-right mt-2">
-                                <a href="{{ route('reset') }}" class="text-sm font-semibold text-gray-600 hover:text-red-600 focus:text-red-700">
+                                <a href="{{ route('password.request') }}" class="text-sm font-semibold text-gray-600 hover:text-red-600 focus:text-red-700">
                                     Forgot Password?
                                 </a>
                             </div>
