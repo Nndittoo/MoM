@@ -237,23 +237,68 @@
 
                 {{-- Gambar Lampiran --}}
                 <tr>
-                    <td colspan="4" class="p-4 border border-black">
-                        @if($mom->attachments->isNotEmpty())
-                            @forelse($mom->attachments as $attachment)
-                                @if(str_starts_with($attachment->mime_type, 'image/'))
-                                    <div class="text-center mb-6">
-                                       
-                                        <img src="{{ asset('storage/' . $attachment->file_path) }}" alt="Lampiran Rapat" class="w-full max-w-xl mx-auto border">
-                                        <p class="mt-2 text-sm">File: {{ $attachment->file_name }}</p>
-                                    </div>
-                                @endif
-                            @empty
-                                <p class="text-sm text-center text-gray-500">Tidak ada lampiran gambar yang dapat ditampilkan.</p>
-                            @endforelse
-                        @else
-                            <p class="text-sm text-center text-gray-500">Tidak ada lampiran gambar yang dapat ditampilkan.</p>
-                        @endif
-                    </td>
+                   <td colspan="4" class="p-4 border border-black">
+    @if($mom->attachments->isNotEmpty())
+        @php
+            // Filter hanya lampiran gambar (images)
+            $imageAttachments = $mom->attachments->filter(function($attachment) {
+                return str_starts_with($attachment->mime_type, 'image/');
+            })->values(); // Pastikan koleksi memiliki indeks numerik berurutan
+            $imageCount = $imageAttachments->count();
+        @endphp
+
+        {{-- Logika Tampilan Lampiran --}}
+        @if ($imageCount === 0)
+            <p class="text-sm text-center text-gray-500">Tidak ada lampiran gambar yang dapat ditampilkan.</p>
+        @elseif ($imageCount === 1)
+            {{-- KASUS 1: Hanya 1 gambar, center --}}
+            <div class="flex justify-center">
+                <div class="text-center w-full max-w-xl">
+                    <img src="{{ asset('storage/' . $imageAttachments[0]->file_path) }}" 
+                         alt="Lampiran Rapat" 
+                         class="w-full h-auto mx-auto border object-contain">
+                    <p class="mt-2 text-sm">File: {{ $imageAttachments[0]->file_name }}</p>
+                </div>
+            </div>
+        @else
+            {{-- KASUS 2: 2 atau lebih gambar, dengan penanganan ganjil/genap --}}
+            <div class="grid grid-cols-2 gap-4">
+                @foreach($imageAttachments as $index => $attachment)
+                    @if ($imageCount % 2 !== 0 && $index === $imageCount - 1)
+                        {{-- Jika total gambar ganjil dan ini adalah gambar terakhir,
+                             tutup grid saat ini, dan tampilkan gambar ini di tengah
+                             di luar grid. 
+                        </div> {{-- Tutup grid-cols-2 sebelum gambar terakhir --}}
+                        <div class="flex justify-center w-full mt-4"> 
+                            <div class="text-center w-1/2">
+                                <img src="{{ asset('storage/' . $attachment->file_path) }}" 
+                                     alt="Lampiran Rapat" 
+                                     class="w-full h-auto mx-auto border object-contain">
+                                <p class="mt-2 text-sm">File: {{ $attachment->file_name }}</p>
+                            </div>
+                        </div>
+                        {{-- Karena sudah menutup div.grid-cols-2 di atas,
+                             tidak perlu membukanya lagi untuk loop ini.
+                             Break loop karena gambar terakhir sudah diurus. --}}
+                        @break 
+                    @else
+                        {{-- Untuk semua gambar lain (atau jika total genap), tampilkan di grid --}}
+                        <div class="text-center">
+                            <img src="{{ asset('storage/' . $attachment->file_path) }}" 
+                                 alt="Lampiran Rapat" 
+                                 class="w-full h-auto mx-auto border object-contain">
+                            <p class="mt-2 text-sm">File: {{ $attachment->file_name }}</p>
+                        </div>
+                    @endif
+                @endforeach
+            </div> 
+        @endif
+
+    @else
+        {{-- Tidak ada lampiran sama sekali --}}
+        <p class="text-sm text-center text-gray-500">Tidak ada lampiran gambar yang dapat ditampilkan.</p>
+    @endif
+</td> 
                 </tr>
 
                 {{-- Footer --}}

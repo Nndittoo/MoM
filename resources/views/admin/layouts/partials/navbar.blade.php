@@ -21,32 +21,24 @@
 
             {{-- === Right Section === --}}
             <div class="flex items-center">
-                {{-- Notification Dropdown --}}
-                <button
-                    type="button"
-                    data-dropdown-toggle="notification-dropdown"
-                    id="notification-bell-button"
-                    class="p-2 mr-3 text-text-secondary rounded-full hover:bg-primary/10 relative dark:text-dark-text-secondary dark:hover:bg-primary/20">
-                    <i class="fa-solid fa-bell fa-lg"></i>
-                    {{-- Indikator notifikasi akan disuntik oleh JS --}}
-                </button>
 
-                <div
-                    id="notification-dropdown"
-                    class="z-50 hidden max-w-sm my-4 overflow-hidden text-base list-none bg-component-bg divide-y divide-border-light rounded-lg shadow-lg dark:bg-dark-component-bg dark:divide-border-dark">
+                {{-- Notification Dropdown --}}
+                <button type="button" data-dropdown-toggle="notification-dropdown" id="notification-bell-button" class="p-2 mr-3 text-text-secondary rounded-full hover:bg-primary/10 relative dark:text-dark-text-secondary dark:hover:bg-primary/20">
+                    <i class="fa-solid fa-bell fa-lg"></i>
+                    {{-- Indikator Notifikasi akan ditambahkan oleh JS --}}
+                </button>
+                <div id="notification-dropdown" class="z-50 hidden max-w-sm my-4 overflow-hidden text-base list-none bg-component-bg divide-y divide-border-light rounded-lg shadow-lg dark:bg-dark-component-bg dark:divide-border-dark">
                     <div class="block px-4 py-2 text-base font-medium text-center text-text-primary bg-body-bg dark:bg-dark-component-bg/50 dark:text-dark-text-primary">
                         Notifications
                     </div>
-
                     {{-- Konten Notifikasi akan diisi oleh JS --}}
                     <div id="notification-items-container">
+                        {{-- Placeholder saat loading --}}
                         <div class="p-4 text-center text-sm text-text-secondary dark:text-dark-text-secondary">
                             Loading notifications...
                         </div>
                     </div>
-
-                    <a href="{{ route('admin.notification') }}"
-                       class="block py-2 text-sm font-medium text-center text-text-primary rounded-b-lg bg-body-bg hover:bg-border-light dark:bg-dark-component-bg/50 dark:hover:bg-dark-body-bg dark:text-white">
+                    <a href="{{ route("admin.notification") }}" class="block py-2 text-sm font-medium text-center text-text-primary rounded-b-lg bg-body-bg hover:bg-border-light dark:bg-dark-component-bg/50 dark:hover:bg-dark-body-bg dark:text-white">
                         <div class="inline-flex items-center">
                             <i class="fa-solid fa-eye mr-2"></i>Lihat semua notifikasi
                         </div>
@@ -109,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const bellButton = document.getElementById('notification-bell-button');
     const dropdownContainer = document.getElementById('notification-items-container');
 
-    // indikator titik merah
+    // Template untuk indikator (titik merah)
     const notificationIndicatorTemplate = `
         <span class="absolute top-1 right-1 flex h-3 w-3">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -117,49 +109,50 @@ document.addEventListener('DOMContentLoaded', function () {
         </span>
     `;
 
-    // builder item notifikasi
-    function createNotificationItem(n) {
-        const color = n.color || 'blue';
-        const icon  = n.icon  || 'fa-solid fa-bell';
-        const url   = n.url   || '#';
-        const msg   = n.message || 'Notification';
-        const time  = n.created_at_human || '';
-
+    // Template untuk satu item notifikasi
+    function createNotificationItem(notification) {
         return `
-            <a href="${url}" class="flex px-4 py-3 border-b hover:bg-body-bg dark:hover:bg-dark-body-bg dark:border-border-dark ${!n.is_read ? 'bg-blue-50 dark:bg-blue-900/20' : ''}">
+            <a href="${notification.url}" class="flex px-4 py-3 border-b hover:bg-body-bg dark:hover:bg-dark-body-bg dark:border-border-dark ${!notification.is_read ? 'bg-blue-50 dark:bg-blue-900/20' : ''}">
                 <div class="flex-shrink-0">
-                    <div class="inline-flex items-center justify-center w-8 h-8 bg-${color}-100 rounded-full dark:bg-${color}-900">
-                        <i class="${icon} text-${color}-500"></i>
+                    <div class="inline-flex items-center justify-center w-8 h-8 bg-${notification.color}-100 rounded-full dark:bg-${notification.color}-900">
+                        <i class="${notification.icon} text-${notification.color}-500"></i>
                     </div>
                 </div>
                 <div class="w-full ps-3">
                     <div class="text-text-secondary text-sm mb-1.5 dark:text-dark-text-secondary">
-                        ${msg}
+                        ${notification.message}
                     </div>
-                    <div class="text-xs text-blue-600 dark:text-blue-500">${time}</div>
+                    <div class="text-xs text-blue-600 dark:text-blue-500">${notification.created_at_human}</div>
                 </div>
             </a>
         `;
     }
 
+    // Fungsi untuk mengambil dan menampilkan data
     async function fetchNotifications() {
         try {
-            // gunakan endpoint yang ADA di route:list kamu
-            const res = await fetch('{{ route("notifications.recent") }}');
-            if (!res.ok) throw new Error('Response not ok');
-            const data = await res.json();
+            const response = await fetch('{{ route("admin.notifications.recent") }}');
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
 
-            // update indikator lonceng
-            bellButton.querySelectorAll('span').forEach(s => s.remove());
+            // 1. Update Indikator Lonceng
+            // Hapus indikator lama jika ada
+            const existingIndicator = bellButton.querySelector('span');
+            if (existingIndicator) {
+                existingIndicator.remove();
+            }
+            // Tambahkan indikator baru jika ada notif belum dibaca
             if (data.unread_count > 0) {
                 bellButton.insertAdjacentHTML('beforeend', notificationIndicatorTemplate);
             }
 
-            // isi dropdown
-            dropdownContainer.innerHTML = '';
-            if (Array.isArray(data.notifications) && data.notifications.length > 0) {
-                data.notifications.forEach(n => {
-                    dropdownContainer.insertAdjacentHTML('beforeend', createNotificationItem(n));
+            // 2. Update Isi Dropdown
+            dropdownContainer.innerHTML = ''; // Kosongkan container
+            if (data.notifications.length > 0) {
+                data.notifications.forEach(notification => {
+                    dropdownContainer.innerHTML += createNotificationItem(notification);
                 });
             } else {
                 dropdownContainer.innerHTML = `
@@ -168,8 +161,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                 `;
             }
-        } catch (e) {
-            console.error(e);
+        } catch (error) {
+            console.error('Failed to fetch notifications:', error);
             dropdownContainer.innerHTML = `
                 <div class="p-4 text-center text-sm text-red-500">
                     Gagal memuat notifikasi.

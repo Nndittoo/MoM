@@ -36,8 +36,9 @@ class StoreMomRequest extends FormRequest
             'pembahasan' => ['required', 'string'],
             
             // Peserta Rapat
-            'attendees_manual' => ['required', 'array', 'min:1'], // Array of names (strings)
-            'attendees_manual.*' => ['required', 'string', 'max:255'],
+            // 'attendees_manual' => ['required', 'array', 'min:1'], // Array of names (strings)
+            // 'attendees_manual.*' => ['required', 'string', 'max:255'],
+            'internal_attendees_json' => ['required', 'string'], 
             
             // Peserta Mitra (JSON string dari frontend)
             'partner_attendees_json' => ['nullable', 'string'], 

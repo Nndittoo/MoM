@@ -13,7 +13,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth; // Tambahkan ini
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\URL; 
 use Throwable;
 use App\Http\Controllers\Admin\AdminNotificationController;
 
@@ -56,7 +57,7 @@ class MomController extends Controller
             $isAdminSubmission = $request->has('is_admin_submission') && $request->is_admin_submission == '1';
 
             // 2. LOGIKA ADMIN (Jika form Admin mengirim is_admin_submission=1)
-            if ($request->has('is_admin_submission') && $request->is_admin_submission == '1') {
+            if ($isAdminSubmission) {
                 try {
                     $approvedStatus = MomStatus::where('status', 'Disetujui')->firstOrFail();
                     $statusToUse = $approvedStatus;
@@ -67,7 +68,7 @@ class MomController extends Controller
             }
 
             $partnerAttendees = $request->partner_attendees_json ? json_decode($request->partner_attendees_json, true) : [];
-            $manualAttendees = $request->attendees_manual ?? [];
+            $internalAttendees = $request->internal_attendees_json ? json_decode($request->internal_attendees_json, true) : [];
 
             // Membuat MoM utama
             $mom = Mom::create([
@@ -84,7 +85,7 @@ class MomController extends Controller
                 'pembahasan' => $request->pembahasan,
                 'status_id' => $statusToUse->status_id,
 
-                'nama_peserta' => $manualAttendees,
+                'nama_peserta' => $internalAttendees,
                 'nama_mitra' => $partnerAttendees,
             ]);
 
@@ -135,7 +136,7 @@ class MomController extends Controller
                     }
 
                     if (!$filePath) {
-                         throw new \Exception("Penyimpanan file mengembalikan nilai kosong.");
+                           throw new \Exception("Penyimpanan file mengembalikan nilai kosong.");
                     }
 
                     $attachmentsData[] = [
@@ -156,24 +157,28 @@ class MomController extends Controller
             // Kirim notifikasi hanya jika bukan admin yang membuat
             if (!$isAdminSubmission) {
                 $creator = auth()->user();
-                AdminNotificationController::createNotification(
-                    type: 'mom_pending',
-                    title: 'MoM Baru Menunggu Persetujuan',
-                    message: "MoM berjudul '{$mom->title}' yang dibuat oleh {$creator->name} menunggu untuk Anda review.",
-                    relatedId: $mom->version_id
-                );
+                // Pastikan AdminNotificationController tersedia
+                if (class_exists(AdminNotificationController::class) && method_exists(AdminNotificationController::class, 'createNotification')) {
+                    AdminNotificationController::createNotification(
+                        type: 'mom_pending',
+                        title: 'MoM Baru Menunggu Persetujuan',
+                        message: "MoM berjudul '{$mom->title}' yang dibuat oleh {$creator->name} menunggu untuk Anda review.",
+                        relatedId: $mom->version_id
+                    );
+                }
             }
-
-            // === NOTIFICATION: MoM Berhasil Dibuat ===
-            // NotificationController::createNotification(...);
 
             // Commit transaksi
             DB::commit();
 
+            // Tentukan URL redirect: Menggunakan rute 'admin.repository'
+            $redirectUrl = route('admin.repository'); 
+            
             return response()->json([
                 'message' => 'Minutes of Meeting berhasil dibuat dan berstatus ' . $statusMessage . '!',
                 'mom_id' => $mom->version_id,
-                'mom' => $mom->load(['attachments', 'agendas'])
+                'mom' => $mom->load(['attachments', 'agendas']),
+                'redirect_url' => $redirectUrl, // <-- URL redirect
             ], 201);
 
         } catch (\Exception $e) {
@@ -277,7 +282,7 @@ class MomController extends Controller
                 'status_id' => $newStatusId,
 
                 // Data JSON/Array
-                'nama_peserta' => $request->input('attendees_manual'),
+                'nama_peserta' => json_decode($request->input('internal_attendees_json'), true),
                 'nama_mitra' => json_decode($request->input('partner_attendees_json'), true),
             ]);
 
@@ -415,4 +420,3 @@ class MomController extends Controller
         }
     }
 }
-
