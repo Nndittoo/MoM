@@ -231,27 +231,35 @@ document.addEventListener('DOMContentLoaded', function () {
          modalInstance = new Flowbite.Modal(modalElement);
     }
 
-    // Fallback function for hiding the modal (and cleaning up body classes)
+    // Fungsi Kritis: Menyembunyikan modal dan membersihkan DOM dari backdrop/overlay
     const hideModalAndClean = () => {
+        // --- 1. Sembunyikan Modal ---
         if (modalInstance) {
             modalInstance.hide();
         } else {
-            // Manual hiding fallback
+            // Fallback manual jika Flowbite API gagal/tidak diinisialisasi
             modalElement.classList.add('hidden');
+            // Hapus kelas display: block/flex yang mungkin ditambahkan Flowbite
+            modalElement.style.display = 'none';
         }
         
+        // --- 2. Bersihkan BODY ---
         // Hapus kelas yang mengunci scroll
         document.body.classList.remove('overflow-hidden'); 
-
-        // Hapus elemen backdrop 
+        
+        // --- 3. Hapus ELEMEN BACKDROP DINDAMIS ---
+        // Flowbite modern menggunakan class 'modal-backdrop' pada elemen div yang dibuatnya secara dinamis
         const backdrop = document.querySelector('.modal-backdrop');
         if (backdrop) {
             backdrop.remove();
         }
+        // Jika Anda menggunakan versi Flowbite lama atau ada konfigurasi custom, 
+        // Flowbite mungkin juga meninggalkan elemen dengan atribut 'modal-backdrop'
+        document.querySelector('[modal-backdrop]')?.remove();
         // ====================================================
     };
 
-    // Fungsi Delete
+    // Fungsi Delete (tidak diubah)
     window.deleteActionItem = async function (actionItemId) {
         if (!confirm("Yakin ingin menghapus tindak lanjut ini?")) return;
         const url = deleteActionItemUrl.replace(':actionItem', actionItemId);
@@ -297,7 +305,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 body: formData,
             });
 
-            // Ambil data JSON respons
             const data = await response.json(); 
 
             if (response.ok) {
@@ -326,7 +333,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 listContainer.appendChild(newItem);
                 form.reset();
                 
-                // Fungsi clean up
+                // Gunakan fungsi clean up
                 hideModalAndClean();
                 
             } else {
