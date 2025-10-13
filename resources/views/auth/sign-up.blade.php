@@ -43,7 +43,20 @@
         <div class="max-w-4xl w-full bg-gray-800 shadow-2xl rounded-2xl flex flex-col md:flex-row h-auto overflow-hidden border border-gray-700">
 
             {{-- Left: Form --}}
-            <div class="w-full md:w-1/2 p-6 sm:p-12 flex flex-col justify-center">
+<div class="w-full md:w-1/2 hidden md:flex items-center justify-center bg-gray-900 relative">
+                <div class="absolute inset-0 bg-cover bg-center opacity-20" style="background-image: url('{{ asset("img/LOGO.png") }}'); background-size: contain; background-repeat: no-repeat; background-position: center;">
+                </div>
+                <div class="relative z-10 p-8 text-center">
+                    <h2 class="text-4xl font-extrabold text-white font-orbitron mb-4 text-shadow-lg">
+                        Start Your Productivity Journey.
+                    </h2>
+                    <p class="text-lg text-gray-300">
+                        Join TR1 MoMatic to streamline your meetings and boost team efficiency.
+                    </p>
+                </div>
+            </div>
+            {{-- Right: Image/Slogan --}}
+<div class="w-full md:w-1/2 p-6 sm:p-12 flex flex-col justify-center">
                 <div class="flex justify-center"> {{-- Logo centered for all screen sizes --}}
                     <img src="{{ asset("img/LOGO.png") }}" class="w-[200px] md:w-[250px]" alt="TR1 MoMatic Logo" />
                 </div>
@@ -135,20 +148,6 @@
                         </p>
                     </div>
                 </form>
-            </div>
-
-            {{-- Right: Image/Slogan --}}
-            <div class="w-full md:w-1/2 hidden md:flex items-center justify-center bg-gray-900 relative">
-                <div class="absolute inset-0 bg-cover bg-center opacity-20" style="background-image: url('{{ asset("img/LOGO.png") }}'); background-size: contain; background-repeat: no-repeat; background-position: center;">
-                </div>
-                <div class="relative z-10 p-8 text-center">
-                    <h2 class="text-4xl font-extrabold text-white font-orbitron mb-4 text-shadow-lg">
-                        Start Your Productivity Journey.
-                    </h2>
-                    <p class="text-lg text-gray-300">
-                        Join TR1 MoMatic to streamline your meetings and boost team efficiency.
-                    </p>
-                </div>
             </div>
 
         </div>
