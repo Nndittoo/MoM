@@ -2,15 +2,15 @@
 
 @section('title', 'Detail MoM | MoM Telkom')
 
-@php 
+@php
     use Carbon\Carbon;
     use Illuminate\Support\Facades\Auth;
 
     $attachment = $mom->attachments->first();
-    $imageUrl = $attachment 
-        ? asset('storage/' . $attachment->file_path) 
-        : asset('img/lampiran-kosong.png'); 
-    
+    $imageUrl = $attachment
+        ? asset('storage/' . $attachment->file_path)
+        : asset('img/lampiran-kosong.png');
+
     $statusText = $mom->status->status ?? 'Unknown';
     $internalNames = $mom->nama_peserta ?? [];
     $allAttendees = array_merge($internalNames);
@@ -26,10 +26,10 @@
             <p class="mt-1 text-text-secondary dark:text-dark-text-secondary">{{ $mom->title }}</p>
         </div>
         <div class="flex space-x-2 mt-4 sm:mt-0 w-full sm:w-auto">
-            <a href="{{ route('admin.repository') }}" class="flex-1 sm:flex-initial inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-text-secondary bg-component-bg border border-border-light rounded-lg hover:bg-body-bg dark:bg-dark-component-bg dark:text-dark-text-secondary dark:border-border-dark dark:hover:bg-dark-body-bg">
+            <a href="{{ url()->previous() }}" class="flex-1 sm:flex-initial inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-text-secondary bg-component-bg border border-border-light rounded-lg hover:bg-body-bg dark:bg-dark-component-bg dark:text-dark-text-secondary dark:border-border-dark dark:hover:bg-dark-body-bg">
                 <i class="fa-solid fa-arrow-left mr-2"></i>Kembali
             </a>
-        
+
             <a href="{{ route('moms.export', $mom->version_id) }}" target="_blank" class="flex-1 sm:flex-initial inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-white bg-gradient-primary rounded-lg hover:opacity-90">
                 <i class="fa-solid fa-file-pdf mr-2"></i>Export
             </a>
@@ -112,13 +112,11 @@
                 <h3 class="text-xl font-bold mb-4"><i class="fa-solid fa-bullseye mr-2"></i>Tindak Lanjut</h3>
                 <div id="tindak-lanjut-list" class="space-y-3">
                     @forelse($mom->actionItems as $item)
-                        
                         <div id="action-item-{{ $item->action_id }}" class="p-3 bg-body-bg dark:bg-dark-body-bg rounded-lg flex justify-between items-center">
                             <div>
                                 <p class="font-semibold text-sm">{{ $item->item }}</p>
                                 <p class="text-xs text-text-secondary">Deadline: {{ Carbon::parse($item->due)->translatedFormat('d M Y') }}</p>
                             </div>
-                            
                             <button onclick="deleteActionItem({{ $item->action_id }})" class="text-red-500 hover:text-red-700">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
@@ -128,7 +126,7 @@
                     @endforelse
                 </div>
 
-                {{-- Tambah --}}
+                {{-- Tombol Tambah --}}
                 <button data-modal-target="tindak-lanjut-modal" data-modal-toggle="tindak-lanjut-modal" class="mt-4 w-full flex justify-center items-center px-4 py-2 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700">
                     <i class="fa-solid fa-plus mr-2"></i>Tambah Tindak Lanjut
                 </button>
@@ -167,74 +165,28 @@
 </div>
 @endsection
 
-@push('styles')
-<style>
-    /* Tambahkan bullet di dalam pembahasan */
-    .prose ul {
-        list-style-type: disc;
-        margin-left: 1.5rem;
-        padding-left: 1rem;
-    }
-
-    .prose ol {
-        list-style-type: decimal;
-        margin-left: 1.5rem;
-        padding-left: 1rem;
-    }
-
-    .prose li {
-        margin-bottom: 0.25rem;
-    }
-
-    .prose ul li::marker {
-        color: var(--tw-prose-bullets, #6b7280);
-    }
-
-    .dark .prose ul li::marker {
-        color: #d1d5db;
-    }
-</style>
-@endpush
-
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const storeActionItemUrl = "{{ route('action_items.store') }}";
-    // The route name is correct, the issue was with the ID passed and the Model binding.
-    const deleteActionItemUrl = "{{ route('action_items.destroy', ':actionItem') }}"; 
-    const listContainer = document.getElementById('tindak-lanjut-list');
+    const deleteActionItemUrl = "{{ route('action_items.destroy', ':actionItem') }}";
     const form = document.getElementById('tindak-lanjut-form');
 
     // DELETE FUNCTION
     window.deleteActionItem = async function (actionItemId) {
         if (!confirm("Yakin ingin menghapus tindak lanjut ini?")) return;
-
         const url = deleteActionItemUrl.replace(':actionItem', actionItemId);
 
-        try {
-            const response = await fetch(url, {
-                method: 'DELETE',
-                headers: {
-                    // Assuming you have the CSRF token in a meta tag
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 
-                    'Accept': 'application/json',
-                },
-            });
+        await fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+            },
+        });
 
-            if (response.ok) {
-                document.getElementById(`action-item-${actionItemId}`)?.remove();
-                // Check if the list is now empty and display "Tidak ada tindak lanjut." 
-                if (listContainer.children.length === 0) {
-                    listContainer.innerHTML = '<p class="text-sm text-text-secondary">Tidak ada tindak lanjut.</p>';
-                }
-            } else {
-                const data = await response.json();
-                alert(data.message || 'Gagal menghapus tindak lanjut.');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Terjadi kesalahan koneksi.');
-        }
+        // Refresh halaman agar data ter-update
+        location.reload();
     };
 
     // ADD FUNCTION
@@ -246,52 +198,26 @@ document.addEventListener('DOMContentLoaded', function () {
             const response = await fetch(storeActionItemUrl, {
                 method: 'POST',
                 headers: {
-                    // Use the CSRF token from the form
-                    'X-CSRF-TOKEN': formData.get('_token'), 
+                    'X-CSRF-TOKEN': formData.get('_token'),
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json',
                 },
                 body: formData,
             });
 
-            const data = await response.json();
-
             if (response.ok) {
-                // Retrieve the correct primary key 'action_id' from the response
-                const newId = data.action_item.action_id; 
-                
-                const newItem = document.createElement('div');
-                const formattedDate = new Date(formData.get('due')).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-                
-                newItem.className = 'p-3 bg-body-bg dark:bg-dark-body-bg rounded-lg flex justify-between items-center';
-                newItem.id = `action-item-${newId}`;
-                newItem.innerHTML = `
-                    <div>
-                        <p class="font-semibold text-sm">${formData.get('item')}</p>
-                        <p class="text-xs text-text-secondary">Deadline: ${formattedDate}</p>
-                    </div>
-                    <button onclick="deleteActionItem(${newId})" class="text-red-500 hover:text-red-700">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                `;
-                
-                // Remove the "Tidak ada tindak lanjut" message if it exists
-                if (listContainer.children.length === 1 && listContainer.firstElementChild.tagName === 'P') {
-                    listContainer.firstElementChild.remove();
-                }
+                // Tutup modal
+                const modalEl = document.getElementById('tindak-lanjut-modal');
+                modalEl.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
 
-                listContainer.appendChild(newItem);
-                form.reset();
-                
-                // Hide the modal (assuming Flowbite or similar JS for modal control)
-                if (window.Flowbite?.Modal) {
-                    new Flowbite.Modal(document.getElementById('tindak-lanjut-modal')).hide();
-                } else {
-                    document.getElementById('tindak-lanjut-modal').classList.add('hidden');
-                }
+                // Tunggu sedikit biar animasi close selesai
+                setTimeout(() => {
+                    location.reload(); // 🔄 Refresh halaman
+                }, 400);
             } else {
-                const errors = data.errors ? Object.values(data.errors).flat().join('\n') : data.message;
-                alert('Gagal menambahkan tindak lanjut:\n' + errors);
+                const data = await response.json();
+                alert('Gagal menambahkan tindak lanjut:\n' + (data.message || 'Terjadi kesalahan.'));
             }
         } catch (error) {
             console.error(error);

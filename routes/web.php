@@ -25,6 +25,7 @@ Route::post('/logout', [AuthController::class, 'logout'])
     ->middleware('auth')
     ->name('logout');
 
+Route::get('/reset', [AuthController::class, 'reset'])->name('reset');
 /**
  * USER AREA
  */
