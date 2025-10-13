@@ -79,6 +79,11 @@
                             name="password_confirmation"
                             class="w-full px-6 py-3 mt-4 rounded-lg font-medium bg-gray-100 placeholder-gray-500 text-sm focus:outline-none focus:bg-white border border-gray-200"
                             type="password" placeholder="Confirm Password" />
+                            <div class="text-right mt-2">
+                                <a href="{{ route('reset') }}" class="text-sm font-semibold text-gray-600 hover:text-red-600 focus:text-red-700">
+                                    Forgot Password?
+                                </a>
+                            </div>
 
                         <button type="submit"
                             class="mt-5 tracking-wide font-semibold bg-red-600 text-white w-full py-3 rounded-lg hover:bg-red-700 transition-all duration-300 ease-in-out flex items-center justify-center focus:shadow-outline focus:outline-none">

@@ -48,6 +48,12 @@
                                 class="w-full px-6 py-3 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-red-400 focus:bg-white mt-5"
                                 type="password" placeholder="Password" required />
 
+                                <div class="text-right mt-2">
+                                <a href="{{ route('reset') }}" class="text-sm font-semibold text-gray-600 hover:text-red-600 focus:text-red-700">
+                                    Forgot Password?
+                                </a>
+                            </div>
+
                             @if ($errors->any())
                                 <div class="mt-3 text-red-500 text-sm text-center">
                                     {{ $errors->first() }}
