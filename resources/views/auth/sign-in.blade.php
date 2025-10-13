@@ -7,25 +7,31 @@
     <title>Sign In - Telkom Indonesia</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles if needed */
+        body {
+            font-family: 'Inter', sans-serif; /* Contoh font, sesuaikan jika Anda menggunakan font lain */
+        }
+    </style>
 </head>
 
 <body>
     <div class="min-h-screen bg-gray-50 text-gray-900 flex justify-center items-center p-4">
 
-        <div class="max-w-4xl w-full bg-white shadow-xl rounded-2xl flex flex-row h-[600px] overflow-hidden border border-gray-200">
+        <div class="max-w-4xl w-full bg-white shadow-xl rounded-2xl flex flex-row h-full overflow-hidden border border-gray-200">
 
             <div class="w-full md:w-1/2 p-6 sm:p-12 flex flex-col justify-center">
-                <div class="flex justify-center md:justify-start">
-                    <img src="{{ asset("img/logo.png") }}" class="w-32" alt="Telkom Logo" />
+                <div class="flex justify-center md:justify-start"> {{-- Agar logo di tengah di mobile --}}
+                    <img src="{{ asset("img/logo.png") }}" class="w-[400px]" alt="Telkom Logo" />
                 </div>
-                <div class="mt-10 flex flex-col items-center">
-                    <div class="w-full flex-1">
+                <div class="mt-8 flex flex-col items-center"> {{-- Mengurangi margin top sedikit --}}
+                    <div class="w-full max-w-xs md:max-w-none flex-1"> {{-- Menghapus max-w-xs untuk md --}}
                         <h1 class="text-2xl xl:text-3xl font-extrabold text-center md:text-left text-gray-800">
                             Sign In
                         </h1>
                         @if (session('success'))
-                        <div class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700">
-                        {{ session('success') }}
+                        <div class="mt-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+                            {{ session('success') }}
                         </div>
                         @endif
                         <form action="{{ route('login.post') }}" method="POST" class="mx-auto max-w-xs mt-8">
@@ -41,6 +47,12 @@
                                 name="password"
                                 class="w-full px-6 py-3 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-red-400 focus:bg-white mt-5"
                                 type="password" placeholder="Password" required />
+
+                                <div class="text-right mt-2">
+                                <a href="{{ route('reset') }}" class="text-sm font-semibold text-gray-600 hover:text-red-600 focus:text-red-700">
+                                    Forgot Password?
+                                </a>
+                            </div>
 
                             @if ($errors->any())
                                 <div class="mt-3 text-red-500 text-sm text-center">

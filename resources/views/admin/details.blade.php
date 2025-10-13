@@ -2,15 +2,15 @@
 
 @section('title', 'Detail MoM | MoM Telkom')
 
-@php 
+@php
     use Carbon\Carbon;
     use Illuminate\Support\Facades\Auth;
 
     $attachment = $mom->attachments->first();
-    $imageUrl = $attachment 
-        ? asset('storage/' . $attachment->file_path) 
-        : asset('img/lampiran-kosong.png'); 
-    
+    $imageUrl = $attachment
+        ? asset('storage/' . $attachment->file_path)
+        : asset('img/lampiran-kosong.png');
+
     $statusText = $mom->status->status ?? 'Unknown';
     
     // Ambil data peserta internal dan eksternal (asumsikan disimpan sebagai JSON atau di-cast array di model)
@@ -42,10 +42,10 @@
             <p class="mt-1 text-text-secondary dark:text-dark-text-secondary">{{ $mom->title }}</p>
         </div>
         <div class="flex space-x-2 mt-4 sm:mt-0 w-full sm:w-auto">
-            <a href="{{ route('admin.repository') }}" class="flex-1 sm:flex-initial inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-text-secondary bg-component-bg border border-border-light rounded-lg hover:bg-body-bg dark:bg-dark-component-bg dark:text-dark-text-secondary dark:border-border-dark dark:hover:bg-dark-body-bg">
+            <a href="{{ url()->previous() }}" class="flex-1 sm:flex-initial inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-text-secondary bg-component-bg border border-border-light rounded-lg hover:bg-body-bg dark:bg-dark-component-bg dark:text-dark-text-secondary dark:border-border-dark dark:hover:bg-dark-body-bg">
                 <i class="fa-solid fa-arrow-left mr-2"></i>Kembali
             </a>
-        
+
             <a href="{{ route('moms.export', $mom->version_id) }}" target="_blank" class="flex-1 sm:flex-initial inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-white bg-gradient-primary rounded-lg hover:opacity-90">
                 <i class="fa-solid fa-file-pdf mr-2"></i>Export
             </a>
@@ -130,13 +130,11 @@
                 <h3 class="text-xl font-bold mb-4"><i class="fa-solid fa-bullseye mr-2"></i>Tindak Lanjut</h3>
                 <div id="tindak-lanjut-list" class="space-y-3">
                     @forelse($mom->actionItems as $item)
-                        
                         <div id="action-item-{{ $item->action_id }}" class="p-3 bg-body-bg dark:bg-dark-body-bg rounded-lg flex justify-between items-center">
                             <div>
                                 <p class="font-semibold text-sm">{{ $item->item }}</p>
                                 <p class="text-xs text-text-secondary">Deadline: {{ Carbon::parse($item->due)->translatedFormat('d M Y') }}</p>
                             </div>
-                            
                             <button onclick="deleteActionItem({{ $item->action_id }})" class="text-red-500 hover:text-red-700">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
@@ -146,7 +144,7 @@
                     @endforelse
                 </div>
 
-                {{-- Tambah --}}
+                {{-- Tombol Tambah --}}
                 <button data-modal-target="tindak-lanjut-modal" data-modal-toggle="tindak-lanjut-modal" class="mt-4 w-full flex justify-center items-center px-4 py-2 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700">
                     <i class="fa-solid fa-plus mr-2"></i>Tambah Tindak Lanjut
                 </button>
@@ -225,7 +223,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // Fungsi Delete
     window.deleteActionItem = async function (actionItemId) {
         if (!confirm("Yakin ingin menghapus tindak lanjut ini?")) return;
-
         const url = deleteActionItemUrl.replace(':actionItem', actionItemId);
 
         try {
@@ -269,8 +266,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 body: formData,
             });
 
-            const data = await response.json();
-
             if (response.ok) {
                 
                 const newId = data.action_item.action_id; 
@@ -305,8 +300,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     document.getElementById('tindak-lanjut-modal').classList.add('hidden');
                 }
             } else {
-                const errors = data.errors ? Object.values(data.errors).flat().join('\n') : data.message;
-                alert('Gagal menambahkan tindak lanjut:\n' + errors);
+                const data = await response.json();
+                alert('Gagal menambahkan tindak lanjut:\n' + (data.message || 'Terjadi kesalahan.'));
             }
         } catch (error) {
             console.error(error);

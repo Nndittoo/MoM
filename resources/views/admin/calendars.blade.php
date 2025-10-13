@@ -46,9 +46,24 @@
         </div>
 
         <div>
+            {{-- ============== BAGIAN YANG DIPERBARUI (MULAI) ============== --}}
             <div class="flex items-center justify-between mb-4">
                 <h3 id="eventListTitle" class="text-lg font-semibold text-text-primary dark:text-dark-text-primary"></h3>
+                {{-- Tombol Filter Status --}}
+                <div class="flex items-center gap-2">
+                    <button id="filterAll" class="filter-btn px-3 py-1 text-sm font-medium rounded-lg bg-primary text-white">
+                        Semua
+                    </button>
+                    <button id="filterPending" class="filter-btn px-3 py-1 text-sm font-medium rounded-lg bg-gray-200 dark:bg-gray-700 text-text-secondary dark:text-dark-text-secondary">
+                        Mendatang
+                    </button>
+                    <button id="filterCompleted" class="filter-btn px-3 py-1 text-sm font-medium rounded-lg bg-gray-200 dark:bg-gray-700 text-text-secondary dark:text-dark-text-secondary">
+                        Selesai
+                    </button>
+                </div>
             </div>
+            {{-- ============== BAGIAN YANG DIPERBARUI (SELESAI) ============== --}}
+
             <div id="eventListContainer" class="space-y-4">
                 <div id="noEventPlaceholder" class="text-center py-10 bg-component-bg dark:bg-dark-component-bg rounded-2xl shadow-md">
                     <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -64,6 +79,7 @@
 @endsection
 
 @push('scripts')
+{{-- Tidak ada perubahan pada script, karena sudah mendukung fungsionalitas filter --}}
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         // Data dari backend
@@ -252,11 +268,11 @@
             btn.addEventListener('click', function() {
                 document.querySelectorAll('.filter-btn').forEach(b => {
                     b.classList.remove('bg-primary', 'text-white');
-                    b.classList.add('bg-gray-200', 'dark:bg-gray-700', 'text-text-secondary');
+                    b.classList.add('bg-gray-200', 'dark:bg-gray-700', 'text-text-secondary', 'dark:text-dark-text-secondary');
                 });
 
                 this.classList.add('bg-primary', 'text-white');
-                this.classList.remove('bg-gray-200', 'dark:bg-gray-700', 'text-text-secondary');
+                this.classList.remove('bg-gray-200', 'dark:bg-gray-700', 'text-text-secondary', 'dark:text-dark-text-secondary');
 
                 const filterId = this.id;
                 if (filterId === 'filterAll') currentFilter = 'all';
