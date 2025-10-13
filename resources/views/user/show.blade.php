@@ -14,12 +14,34 @@
     
     $statusText = $mom->status->status ?? 'Unknown';
     
-    // --- LOGIC BARU UNTUK MENGGABUNGKAN PESERTA DARI KOLOM JSON ---
-    $internalNames = $mom->nama_peserta ?? []; // Peserta rapat (array of strings)
+    // MENGGABUNGKAN PESERTA DARI KOLOM JSON (Internal dan Mitra)
+    $internalNames = []; 
+    $partnerNames = [];
     
-    $allAttendees = array_merge($internalNames);
+    // Ambil Peserta Internal (nama_peserta adalah array of units/objects)
+    if (is_array($mom->nama_peserta)) {
+        foreach ($mom->nama_peserta as $unit) {
+            if (is_array($unit['attendees'] ?? null)) {
+                $internalNames = array_merge($internalNames, $unit['attendees']);
+            }
+        }
+    }
+    
+    // Ambil Peserta Mitra (nama_mitra adalah array of partner/objects)
+    if (is_array($mom->nama_mitra)) {
+        foreach ($mom->nama_mitra as $mitra) {
+            if (is_array($mitra['attendees'] ?? null)) {
+                $partnerNames = array_merge($partnerNames, $mitra['attendees']);
+            }
+        }
+    }
+    
+    // Gabungkan, hapus duplikasi, dan filter agar hanya string yang tersisa
+    $allAttendees = array_unique(array_merge($internalNames, $partnerNames));
+    $allAttendees = array_filter($allAttendees, fn($name) => is_string($name) && !empty($name));
+
     $totalAttendees = count($allAttendees);
-    // -----------------------------------------------------------
+    // ---------------------------------------------------------------------------
 @endphp
 
 @section('content')
@@ -31,7 +53,7 @@
             <p class="mt-1 text-text-secondary dark:text-dark-text-secondary">{{ $mom->title }}</p>
         </div>
         <div class="flex space-x-2 mt-4 sm:mt-0 w-full sm:w-auto">
-            <a href="{{ url()->previous() }}" class="flex-1 sm:flex-initial inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-text-secondary bg-component-bg border border-border-light rounded-lg hover:bg-body-bg dark:bg-dark-component-bg dark:text-dark-text-secondary dark:border-border-dark dark:hover:bg-dark-body-bg">
+            <a href="{{ route('draft.index') }}" class="flex-1 sm:flex-initial inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-text-secondary bg-component-bg border border-border-light rounded-lg hover:bg-body-bg dark:bg-dark-component-bg dark:text-dark-text-secondary dark:border-border-dark dark:hover:bg-dark-body-bg">
                 <i class="fa-solid fa-arrow-left mr-2"></i>Kembali
             </a>
         
@@ -117,9 +139,11 @@
             <div class="bg-component-bg dark:bg-dark-component-bg rounded-lg shadow-md p-6">
                 <h3 class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-4"><i class="fa-solid fa-list-check mr-2"></i>Agenda</h3>
                 <ol class="space-y-2 text-sm list-decimal list-inside">
-                    @foreach($mom->agendas as $agenda)
+                    @forelse($mom->agendas as $agenda)
                         <li>{{ $agenda->item }}</li>
-                    @endforeach
+                    @empty
+                        <span class="italic text-text-secondary">Tidak ada agenda tercatat.</span>
+                    @endforelse
                 </ol>
             </div>
             
@@ -277,9 +301,9 @@
                     let errorMessage = data.message || 'Error server saat menambahkan tugas.';
                     if (response.status === 422 && data.errors) {
                         errorMessage = 'Validasi Gagal: ' + 
-                                     (data.errors.item ? data.errors.item[0] + ' ' : '') + 
-                                     (data.errors.due ? data.errors.due[0] + ' ' : '') +
-                                     (data.errors.mom_id ? data.errors.mom_id[0] : '');
+                                            (data.errors.item ? data.errors.item[0] + ' ' : '') + 
+                                            (data.errors.due ? data.errors.due[0] + ' ' : '') +
+                                            (data.errors.mom_id ? data.errors.mom_id[0] : '');
                     }
                     alert('Gagal menyimpan tugas: ' + errorMessage);
                 }

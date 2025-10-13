@@ -65,7 +65,7 @@
             {{-- Tab Content --}}
             <div class="pt-6">
                 
-                {{--START: My MoM Content (Drafts/Rejected)--}}
+                {{--My MoM Content (Drafts/Rejected)--}}
                 <div id="my-mom-content">
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                         
@@ -90,10 +90,19 @@
                                     ? asset('storage/' . $attachment->file_path) 
                                     : asset('img/lampiran-kosong.png');
 
-                                // --- LOGIC UNTUK PESERTA DARI KOLOM JSON ---
-                                $internalNames = $mom->nama_peserta ?? []; 
-                                $partnerNames = [];
+                                // --- LOGIC UNTUK PESERTA ---
+                                $internalNames = []; 
                                 
+                                // Jika nama_peserta adalah array of units
+                                if (is_array($mom->nama_peserta)) {
+                                    foreach ($mom->nama_peserta as $unit) {
+                                        if (is_array($unit['attendees'] ?? null)) {
+                                            $internalNames = array_merge($internalNames, $unit['attendees']);
+                                        }
+                                    }
+                                }
+                                
+                                $partnerNames = [];
                                 if (is_array($mom->nama_mitra)) {
                                     foreach ($mom->nama_mitra as $mitra) {
                                         if (is_array($mitra['attendees'] ?? null)) {
@@ -101,7 +110,10 @@
                                         }
                                     }
                                 }
+                                
                                 $allAttendees = array_unique(array_merge($internalNames, $partnerNames));
+                                // Filter untuk memastikan hanya string yang lolos
+                                $allAttendees = array_filter($allAttendees, fn($name) => is_string($name) && !empty($name));
                                 
                                 $totalAttendees = count($allAttendees);
 
@@ -165,7 +177,7 @@
                         @empty
                             <div class="col-span-3 text-center py-10 bg-body-bg dark:bg-dark-body-bg rounded-xl">
                                 <p class="text-lg text-text-secondary dark:text-dark-text-secondary">Tidak ada MoM yang dibuat oleh Anda dalam status Draft atau Revisi.</p>
-                                <a href="{{ url('/create') }}" class="mt-3 inline-block text-sm font-medium text-primary hover:underline">Buat MoM baru?</a>
+                                <a href="{{ route('user.create') }}" class="mt-3 inline-block text-sm font-medium text-primary hover:underline">Buat MoM baru?</a>
                             </div>
                         @endforelse
                         
@@ -174,17 +186,16 @@
                 {{--END: My MoM Content--}}
                 
                 
-                {{--START: All MoM Content (Approved)--}}
+                {{--All MoM Content (Approved)--}}
                 <div id="all-mom-content" class="hidden">
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                         @php
                             // Pastikan $allMoms sudah didefinisikan dan berisi MoM yang Approved dari controller
-                            $allMoms = $allMoms ?? [];
+                            $allMoms = $allMoms ?? collect();
                         @endphp
                         
                         @forelse($allMoms as $mom)
                             @php
-                                // Status di sini harus selalu 'Disetujui' (Approved)
                                 $statusText = $mom->status->status ?? 'Unknown';
                                 $statusColor = match ($statusText) {
                                     'Disetujui'=> 'bg-green-500', 
@@ -199,10 +210,18 @@
                                     ? asset('storage/' . $attachment->file_path) 
                                     : asset('img/lampiran-kosong.png');
                                     
-                                // --- LOGIC UNTUK PESERTA DARI KOLOM JSON ---
-                                $internalNames = $mom->nama_peserta ?? []; 
-                                $partnerNames = [];
+                                // --- LOGIC UNTUK PESERTA ---
+                                $internalNames = []; 
                                 
+                                if (is_array($mom->nama_peserta)) {
+                                    foreach ($mom->nama_peserta as $unit) {
+                                        if (is_array($unit['attendees'] ?? null)) {
+                                            $internalNames = array_merge($internalNames, $unit['attendees']);
+                                        }
+                                    }
+                                }
+                                
+                                $partnerNames = [];
                                 if (is_array($mom->nama_mitra)) {
                                     foreach ($mom->nama_mitra as $mitra) {
                                         if (is_array($mitra['attendees'] ?? null)) {
@@ -211,7 +230,8 @@
                                     }
                                 }
                                 
-                                $allAttendees = array_merge($internalNames, $partnerNames);
+                                $allAttendees = array_unique(array_merge($internalNames, $partnerNames));
+                                $allAttendees = array_filter($allAttendees, fn($name) => is_string($name) && !empty($name));
                                 $totalAttendees = count($allAttendees);
                                 // Ambil nama creator dengan aman menggunakan Safe Operator
                                 $creatorName = $mom->creator?->name ?? 'N/A';
@@ -278,7 +298,7 @@
         
         {{-- Pagination --}}
         <div class="flex justify-center mt-8 mb-6">
-            {{-- Mengganti div statis dengan link pagination Laravel --}}
+            {{-- Pastikan $myMoms adalah objek paginator --}}
             {{ $myMoms->links() }} 
         </div>
         
