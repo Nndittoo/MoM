@@ -28,6 +28,12 @@
             .ql-content ul, .ql-content ol {
                 margin-left: 1.5em !important;
             }
+            /* Pastikan kolom peserta tetap sejajar di media print */
+            .attendee-group {
+                width: 33% !important;
+                padding-right: 1.5rem !important;
+                margin-bottom: 0.5rem !important;
+            }
         }
     
         .border-black { border-color: #000; }
@@ -52,25 +58,33 @@
             padding-left: 5px; 
         }
         
-        /* CSS KUSTOM UNTUK PESERTA DINAMIS (HORIZONTAL WRAPPING) */
+        /* CSS UNTUK PESERTA DINAMIS (HORIZONTAL WRAPPING SEJAJAR) */
         .attendee-container {
-            display: flex; /* Memungkinkan item (unit) berjajar */
-            flex-wrap: wrap; /* Item akan pindah baris jika tidak muat */
-            gap: 1.5rem; /* Jarak antar unit/grup */
+            display: flex;
+            flex-wrap: wrap; 
             padding: 0;
             margin: 0;
         }
         .attendee-group {
-            /* flex-grow: 1; */
-            min-width: 150px; /* Lebar minimum agar tidak terlalu kecil */
+            /* Menentukan 3 kolom sejajar, menggunakan 33% */
+            width: 33%; 
+            box-sizing: border-box; 
+            padding-right: 1.5rem; /* Ganti gap dengan padding antar kolom */
+            margin-bottom: 0.5rem; /* Jarak antar baris */
         }
         .attendee-group h4 {
             font-weight: bold;
+            margin-top: 0.5rem;
             margin-bottom: 4px;
+        }
+        .attendee-group:nth-child(1),
+        .attendee-group:nth-child(2),
+        .attendee-group:nth-child(3) {
+            margin-top: 0; 
         }
         .attendee-group ul {
             list-style-type: disc;
-            padding-left: 15px; /* Indentasi untuk bullet point */
+            padding-left: 15px; 
             margin: 0;
         }
         
@@ -84,43 +98,47 @@
         
         // --- DECODING DAN EKSTRAKSI DATA PESERTA DARI JSON/ARRAY ---
 
-        // Dapatkan data mentah Internal (nama_peserta)
+        // Data mentah Internal (nama_peserta)
         $internalDataContainers = is_array($mom->nama_peserta ?? null) 
-                                ? $mom->nama_peserta 
-                                : json_decode($mom->nama_peserta ?? '[]', true);
+                                        ? $mom->nama_peserta 
+                                        : json_decode($mom->nama_peserta ?? '[]', true);
         
-        // Dapatkan data mentah Mitra (nama_mitra)
+        // Data mentah Mitra (nama_mitra)
         $partnerDataContainers = is_array($mom->nama_mitra ?? null) 
-                                ? $mom->nama_mitra 
-                                : json_decode($mom->nama_mitra ?? '[]', true);
+                                        ? $mom->nama_mitra 
+                                        : json_decode($mom->nama_mitra ?? '[]', true);
 
         
         // --- LOGIC PESERTA INTERNAL (UNTUK TAMPILAN PER UNIT) ---
         $internalAttendeeGroups = []; 
         $allAttendeesRaw = []; // List flat untuk total hitungan
         
-        foreach ($internalDataContainers as $unit) {
-            if (is_array($unit['attendees'] ?? null) && !empty($unit['attendees'])) {
-                $internalAttendeeGroups[] = [
-                    'name' => $unit['unit'] ?? 'Unit Internal',
-                    'attendees' => $unit['attendees']
-                ];
-                $allAttendeesRaw = array_merge($allAttendeesRaw, $unit['attendees']);
+        if (is_array($internalDataContainers)) {
+            foreach ($internalDataContainers as $unit) {
+                if (is_array($unit['attendees'] ?? null) && !empty($unit['attendees'])) {
+                    $internalAttendeeGroups[] = [
+                        'name' => $unit['unit'] ?? 'Unit Internal',
+                        'attendees' => $unit['attendees']
+                    ];
+                    $allAttendeesRaw = array_merge($allAttendeesRaw, $unit['attendees']);
+                }
             }
         }
         
         // --- LOGIC PESERTA MITRA & TANDA TANGAN ---
         $signatoryGroups = [];
         
-        foreach ($partnerDataContainers as $mitra) {
-            if (is_array($mitra['attendees'] ?? null) && !empty($mitra['attendees'])) {
-                $allAttendeesRaw = array_merge($allAttendeesRaw, $mitra['attendees']);
-                
-                // Siapkan Grup Tanda Tangan (Mitra)
-                $signatoryGroups[] = [
-                    'name' => $mitra['name'] ?? 'Pihak Mitra',
-                    'attendees' => $mitra['attendees'] ?? []
-                ];
+        if (is_array($partnerDataContainers)) {
+            foreach ($partnerDataContainers as $mitra) {
+                if (is_array($mitra['attendees'] ?? null) && !empty($mitra['attendees'])) {
+                    $allAttendeesRaw = array_merge($allAttendeesRaw, $mitra['attendees']);
+                    
+                    // Siapkan Grup Tanda Tangan (Mitra)
+                    $signatoryGroups[] = [
+                        'name' => $mitra['name'] ?? 'Pihak Mitra',
+                        'attendees' => $mitra['attendees'] ?? []
+                    ];
+                }
             }
         }
         
@@ -156,13 +174,14 @@
                     <td class="border border-black p-2">{{ $mom->notulen }}</td> 
                 </tr>
 
-                {{-- Daftar Peserta (MODIFIKASI: Hanya Internal, Grouped, Horizontal Wrap) --}}
+                {{-- Daftar Peserta --}}
                 <tr>
                     <td class="border border-black p-2 font-semibold">Peserta</td>
                     <td colspan="3" class="border border-black p-2">
-                        @if (count($internalAttendeeGroups) > 0)
+                        @if (!empty($internalAttendeeGroups) || !empty($signatoryGroups))
+                            {{-- Menggabungkan Internal dan Mitra untuk tampilan Peserta --}}
                             <div class="attendee-container">
-                                @foreach($internalAttendeeGroups as $group)
+                                @foreach(array_merge($internalAttendeeGroups) as $group)
                                     <div class="attendee-group">
                                         <h4>{{ $group['name'] }}</h4>
                                         <ul>
@@ -174,7 +193,7 @@
                                 @endforeach
                             </div>
                         @else
-                            Tidak ada peserta internal tercatat.
+                            Tidak ada peserta tercatat.
                         @endif
                     </td>
                 </tr>
@@ -242,7 +261,7 @@
                 @endif
 
                 <tr>
-                    <td colspan="4" class="pt-6">Demikian MoM ini dibuat untuk diketahui dan ditindaklanjuti bersama.</td>
+                    <td colspan="4" class="pt-6">Demikian MoM ini dibuat untuk diketahui dan ditindaklanjutkan bersama.</td>
                 </tr>
 
                 {{-- TANDA TANGAN PESERTA DENGAN MULTI-NAMA DINAMIS --}}
@@ -303,8 +322,8 @@
             <div class="flex justify-center">
                 <div class="text-center w-full max-w-xl">
                     <img src="{{ asset('storage/' . $imageAttachments[0]->file_path) }}" 
-                              alt="Lampiran Rapat" 
-                              class="w-full h-auto mx-auto border object-contain">
+                             alt="Lampiran Rapat" 
+                             class="w-full h-auto mx-auto border object-contain">
                     <p class="mt-2 text-sm">File: {{ $imageAttachments[0]->file_name }}</p>
                 </div>
             </div>
@@ -313,15 +332,12 @@
             <div class="grid grid-cols-2 gap-4">
                 @foreach($imageAttachments as $index => $attachment)
                     @if ($imageCount % 2 !== 0 && $index === $imageCount - 1)
-                        {{-- Jika total gambar ganjil dan ini adalah gambar terakhir,
-                            tutup grid saat ini, dan tampilkan gambar ini di tengah
-                            di luar grid. --}}
                         </div> {{-- Tutup grid-cols-2 sebelum gambar terakhir --}}
                         <div class="flex justify-center w-full mt-4"> 
                             <div class="text-center w-1/2">
                                 <img src="{{ asset('storage/' . $attachment->file_path) }}" 
-                                      alt="Lampiran Rapat" 
-                                      class="w-full h-auto mx-auto border object-contain">
+                                         alt="Lampiran Rapat" 
+                                         class="w-full h-auto mx-auto border object-contain">
                                 <p class="mt-2 text-sm">File: {{ $attachment->file_name }}</p>
                             </div>
                         </div>
@@ -345,22 +361,22 @@
         <p class="text-sm text-center text-gray-500">Tidak ada lampiran gambar yang dapat ditampilkan.</p>
     @endif
 </td> 
-                </tr>
+                </tr>
 
-                {{-- Footer --}}
-                <tr><td colspan="4" class="text-center font-normal italic bg-red-600 text-white p-3 border border-black text-xs">All rights reserved by MoM Telkom.</td></tr>
-            </tbody>
-        </table>
-    </div>
+                {{-- Footer --}}
+                <tr><td colspan="4" class="text-center font-normal italic bg-red-600 text-white p-3 border border-black text-xs">All rights reserved by MoM Telkom.</td></tr>
+            </tbody>
+        </table>
+    </div>
 
-    <script>
-        // Otomatis membuka dialog print saat halaman selesai dimuat
-        window.onload = function() {
-            // Memberi waktu browser sebentar untuk merender CSS sebelum mencetak
-            setTimeout(function() {
-                window.print();
-            }, 500);
-        }
-    </script>
+    <script>
+        // Otomatis membuka dialog print saat halaman selesai dimuat
+        window.onload = function() {
+            // Memberi waktu browser sebentar untuk merender CSS sebelum mencetak
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        }
+    </script>
 </body>
 </html>
