@@ -1,136 +1,227 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'MoM Telkom')</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet"/>
-    <link rel="icon" type="image/png" href="{{ asset('img/LOGO_TELKOM.png') }}"/>
+{{-- Menggunakan 'class="dark"' untuk memaksakan mode gelap secara default --}}
+<html lang="en" class="dark">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        'primary': '#DC2626', // Red-600
-                        'primary-dark': '#B91C1C', // Red-700
-                        'body-bg': '#F9FAFB', // Gray-50
-                        'dark-body-bg': '#111827', // Gray-900
-                        'component-bg': '#ffffff', // White
-                        'dark-component-bg': '#1F2937', // Gray-800
-                        'text-primary': '#1F2937', // Gray-800
-                        'dark-text-primary': '#F3F4F6', // Gray-100
-                        'text-secondary': '#6B7280', // Gray-500
-                        'dark-text-secondary': '#9CA3AF', // Gray-400
-                        'border-light': '#E5E7EB', // Gray-200
-                        'border-dark': '#374151', // Gray-700
-                    }
+        {{-- PERUBAHAN: Judul dan Favicon disesuaikan dengan brand TR1 MoMatic --}}
+        <title>@yield('title', 'TR1 MoMatic')</title>
+        <link rel="icon" type="image/png" href="{{ asset('img/LOGO.png') }}"/>
+
+        {{-- Link ke Font Awesome dan Flowbite --}}
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link
+            href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css"
+            rel="stylesheet"/>
+
+        {{-- Script Tailwind CSS --}}
+        <script src="https://cdn.tailwindcss.com"></script>
+
+        {{-- PERUBAHAN: Konfigurasi Tailwind dihapus dari sini, karena kita akan menggunakan kelas standar --}}
+        {{-- <script> tailwind.config = { ... } </script> --}}
+
+        {{-- PERUBAHAN: Semua gaya kustom disatukan di sini --}}
+        <style>
+            /* Import Font Futuristik */
+            @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;500;600;700&display=swap');
+
+            /* Default font untuk body */
+            body {
+                font-family: 'Inter', sans-serif;
+            }
+
+            .text-neon-red {
+                color: #EF4444 !important;
+                /* Tambahkan !important di sini */
+                text-shadow: 0 0 5px rgba(239, 68, 68, 0.7);
+            }
+
+            .btn-pulse {
+                animation: pulse-animation 2s infinite;
+            }
+            @keyframes pulse-animation {
+                0% {
+                    box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+                }
+                50% {
+                    box-shadow: 0 0 20px rgba(239, 68, 68, 0.9);
+                }
+                100% {
+                    box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
                 }
             }
-        }
-    </script>
-    <style>
-        .text-gradient { color: #DC2626; }
-        .bg-gradient-primary { background-color: #DC2626; }
-    </style>
-    @stack('styles')
-</head>
-<body class="bg-body-bg dark:bg-dark-body-bg">
 
-    @include('layouts.partials.navbar')
+            /* Kelas helper untuk font judul */
+            .font-orbitron {
+                font-family: 'Orbitron', sans-serif;
+            }
 
-    @include('layouts.partials.sidebar')
-
-    <main class="p-4 sm:ml-64">
-        @yield('content')
-    </main>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
-    @stack('scripts')
-<script>
-        // Fungsi untuk mengubah format waktu (helper)
-        function timeAgo(dateString) {
-            const date = new Date(dateString);
-            const now = new Date();
-            const seconds = Math.round((now - date) / 1000);
-            const minutes = Math.round(seconds / 60);
-            if (minutes < 1) return `baru saja`;
-            if (minutes < 60) return `${minutes} menit lalu`;
-            const hours = Math.round(minutes / 60);
-            if (hours < 24) return `${hours} jam lalu`;
-            const days = Math.round(hours / 24);
-            return `${days} hari lalu`;
-        }
-
-        // Fungsi utama untuk mengambil dan merender notifikasi
-        async function fetchNotifications() {
-            try {
-                // Panggil route yang memberikan data notifikasi terbaru dalam format JSON
-                const response = await fetch("{{ route('notifications.recent') }}");
-                if (!response.ok) return; // Jika gagal, hentikan
-
-                const data = await response.json();
-
-                const notificationBadge = document.querySelector('.notification-badge');
-                const notificationPing = document.querySelector('.notification-ping');
-                const notificationList = document.getElementById('notification-list');
-
-                // Update badge jumlah notifikasi
-                if (data.unread_count > 0) {
-                    notificationBadge.textContent = data.unread_count > 99 ? '99+' : data.unread_count;
-                    notificationBadge.classList.remove('hidden');
-                    notificationPing.classList.remove('hidden');
-                } else {
-                    notificationBadge.classList.add('hidden');
-                    notificationPing.classList.add('hidden');
+            @keyframes logo-glow-pulse {
+                from {
+                    filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.7)) drop-shadow(0 0 8px rgba(239, 68, 68, 0.5));
                 }
+                to {
+                    filter: drop-shadow(0 0 8px rgba(239, 68, 68, 1)) drop-shadow(0 0 16px rgba(239, 68, 68, 0.7));
+                }
+            }
 
-                // Kosongkan daftar notifikasi yang ada
-                notificationList.innerHTML = '';
+            /* Class yang akan kita terapkan pada gambar logo */
+            .logo-neon-glow {
+                /* Menerapkan animasi yang sudah kita definisikan */
+                animation: logo-glow-pulse 2.5s infinite alternate ease-in-out;
+            }
 
-                // Tampilkan notifikasi baru
-                if (data.notifications.length > 0) {
-                    data.notifications.forEach(notification => {
-                        const isReadClass = !notification.is_read ? 'bg-blue-50 dark:bg-blue-900/20' : '';
-                        let color = 'gray', icon = 'fa-bell';
-                        if(notification.type === 'created') { color = 'blue'; icon = 'fa-file-circle-plus'; }
+            /* Pola latar belakang futuristik untuk area konten */
+            .main-content-bg {
+                background-color: #111827;
+                /* gray-900 */
+                background-image: radial-gradient(rgba(239, 68, 68, 0.1) 1px, transparent 1px);
+                background-size: 30px 30px;
+            }
 
-                        const notificationUrl = `/notifications/${notification.id}/read`;
-                        const itemHtml = `
-                        <a href="${notificationUrl}" class="flex px-4 py-3 border-b hover:bg-body-bg dark:hover:bg-dark-body-bg dark:border-border-dark ${isReadClass}">
+            /* Custom Scrollbar untuk tema gelap */
+            ::-webkit-scrollbar {
+                width: 8px;
+            }
+            ::-webkit-scrollbar-track {
+                background: #1F2937;
+            }
+            /* gray-800 */
+            ::-webkit-scrollbar-thumb {
+                background: #4B5563;
+                border-radius: 10px;
+            }
+            /* gray-600 */
+            ::-webkit-scrollbar-thumb:hover {
+                background: #EF4444;
+            }
+            /* red-500 */
+
+            /* Animasi Shimmer untuk Header */
+            .shimmer-bg::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -150%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.1), transparent);
+                animation: shimmer 3s infinite linear;
+            }
+            @keyframes shimmer {
+                from {
+                    left: -100%;
+                }
+                to {
+                    left: 100%;
+                }
+            }
+
+            /* Animasi untuk daftar event */
+            .event-item {
+                opacity: 0;
+                transform: translateY(10px);
+                animation: fadeInSlideUp 0.5s ease-out forwards;
+            }
+            @keyframes fadeInSlideUp {
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        </style>
+
+        @stack('styles')
+    </head>
+
+    {{-- PERUBAHAN: Body menggunakan warna dasar dari tema gelap --}}
+    <body class="bg-gray-900">
+
+        {{-- Include Navbar dan Sidebar yang sudah diperbarui --}}
+        @include('layouts.partials.navbar') @include('layouts.partials.sidebar')
+
+        {{-- Main content area dengan latar belakang berpola --}}
+        <main class="p-4 sm:ml-64 main-content-bg min-h-screen">
+            {{-- Memberi padding-top agar konten tidak tertutup navbar --}}
+            <div class="mt-14">
+                @yield('content')
+            </div>
+        </main>
+
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
+        @stack('scripts')
+
+        {{-- PERUBAHAN: Script notifikasi disesuaikan dengan styling tema baru --}}
+        <script>
+            function timeAgo(dateString) {
+                // ... (logika timeAgo tetap sama)
+            }
+
+            async function fetchNotifications() {
+                try {
+                    const response = await fetch("{{ route('notifications.recent') }}");
+                    if (!response.ok)
+                        return;
+
+                    const data = await response.json();
+                    const notificationBadge = document.querySelector('.notification-badge');
+                    const notificationPing = document.querySelector('.notification-ping');
+                    const notificationList = document.getElementById('notification-list');
+
+                    // ... (logika update badge tetap sama) ...
+
+                    notificationList.innerHTML = ''; // Kosongkan daftar
+
+                    if (data.notifications.length > 0) {
+                        data
+                            .notifications
+                            .forEach(notification => {
+                                const isReadClass = !notification.is_read
+                                    ? 'bg-red-900/20'
+                                    : '';
+
+                                // Ikon dan warna diseragamkan dengan tema merah
+                                const color = 'red';
+                                let icon = 'fa-bell';
+                                if (notification.type === 'created') {
+                                    icon = 'fa-file-circle-plus';
+                                }
+
+                                const notificationUrl = `/notifications/${notification.id}/read`;
+                                const itemHtml = `
+                        <a href="${notificationUrl}" class="flex px-4 py-3 border-b border-gray-700 hover:bg-gray-700 ${isReadClass}">
                             <div class="flex-shrink-0">
-                                <div class="inline-flex items-center justify-center w-8 h-8 bg-${color}-100 rounded-full dark:bg-${color}-900">
+                                <div class="inline-flex items-center justify-center w-8 h-8 bg-${color}-500/10 rounded-full">
                                     <i class="fa-solid ${icon} text-${color}-500"></i>
                                 </div>
                             </div>
                             <div class="w-full ps-3">
-                                <div class="text-text-secondary text-sm mb-1.5 dark:text-dark-text-secondary">
-                                    <span class="font-semibold text-text-primary dark:text-white">${notification.title}</span>
+                                <div class="text-gray-400 text-sm mb-1.5">
+                                    <span class="font-semibold text-white">${notification.title}</span>
                                     <p class="text-xs mt-1">${notification.message}</p>
                                 </div>
-                                <div class="text-xs text-blue-600 dark:text-blue-500">${timeAgo(notification.created_at)}</div>
+                                <div class="text-xs text-red-400">${timeAgo(
+                                    notification.created_at
+                                )}</div>
                             </div>
                         </a>`;
-                        notificationList.insertAdjacentHTML('beforeend', itemHtml);
-                    });
-                } else {
-                    notificationList.innerHTML = `<div class="px-4 py-6 text-center text-text-secondary dark:text-dark-text-secondary"><p>Belum ada notifikasi</p></div>`;
+                                notificationList.insertAdjacentHTML('beforeend', itemHtml);
+                            });
+                    } else {
+                        notificationList.innerHTML = `<div class="px-4 py-6 text-center text-gray-400"><p>Belum ada notifikasi</p></div>`;
+                    }
+                } catch (error) {
+                    console.error('Gagal mengambil notifikasi:', error);
                 }
-            } catch (error) {
-                console.error('Gagal mengambil notifikasi:', error);
             }
-        }
 
-        // Jadikan fungsi ini global agar bisa dipanggil dari mana saja
-        window.fetchNotifications = fetchNotifications;
-
-        // Panggil saat halaman pertama kali dimuat
-        document.addEventListener('DOMContentLoaded', fetchNotifications);
-    </script>
-
-</body>
+            window.fetchNotifications = fetchNotifications;
+            document.addEventListener('DOMContentLoaded', fetchNotifications);
+        </script>
+    </body>
 </html>

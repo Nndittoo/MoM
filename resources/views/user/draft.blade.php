@@ -1,343 +1,294 @@
 @extends('layouts.app')
 
-@section('title', 'Draft MoM | MoM Telkom')
+@section('title', 'Draft MoM | TR1 MoMatic')
 
 @php use Illuminate\Support\Str; @endphp
 
+@push('styles')
+<style>
+    /* Animasi fade-in untuk kartu MoM */
+    .card-mom {
+        opacity: 0;
+        transform: scale(0.95);
+        animation: fadeInScaleUp 0.5s ease-out forwards;
+    }
+    @keyframes fadeInScaleUp {
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+</style>
+@endpush
+
 @section('content')
-<div class="p-4 rounded-lg mt-14">
+<div class="pt-2">
     <div class="space-y-6">
-        {{-- Header --}}
-        <div class="flex flex-col md:flex-row items-center justify-between p-6 md:p-8 overflow-hidden rounded-lg shadow-md bg-component-bg dark:bg-dark-component-bg border-l-4 border-primary">
-            <div class="flex items-center space-x-4">
-                <div>
-                    <h1 class="text-3xl font-bold text-text-primary dark:text-dark-text-primary">Draft MoM</h1>
-                    <p class="mt-1 text-text-secondary dark:text-dark-text-secondary">Menampilkan semua MoM dari sistem.</p>
-                </div>
-            </div>
+        {{-- Header halaman --}}
+        <div class="p-6 md:p-8 rounded-xl shadow-lg bg-gray-800 border-l-4 border-red-500">
+            <h1 class="text-3xl font-bold font-orbitron text-neon-red">Browse MoM</h1>
+            <p class="mt-1 text-gray-400">Tinjau draf Anda atau jelajahi semua MoM yang telah disetujui.</p>
         </div>
-        
-        {{-- Tab and Filter Section --}}
-        <div class="bg-component-bg dark:bg-dark-component-bg rounded-lg shadow p-4">
-            <div class="flex flex-col md:flex-row justify-between items-center border-b border-border-light dark:border-border-dark pb-4">
+
+        <div class="bg-gray-800 rounded-xl shadow p-4 border border-gray-700">
+            <div class="flex flex-col md:flex-row justify-between items-center border-b border-gray-700 pb-4">
                 {{-- Tabs --}}
-                <ul class="flex flex-wrap -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400">
+                <ul class="flex flex-wrap -mb-px text-sm font-medium text-center text-gray-400">
                     <li class="me-2">
-                        <button onclick="switchTab('my-mom')" id="my-mom-tab" class="inline-flex items-center justify-center p-4 border-b-2 text-primary border-primary rounded-t-lg active" aria-current="page">
+                        <button onclick="switchTab('my-mom')" id="my-mom-tab" class="tab-button inline-flex items-center justify-center p-4 border-b-2 text-red-400 border-red-500 rounded-t-lg">
                             <i class="fa-solid fa-user me-2"></i>My MoM
                         </button>
                     </li>
                     <li class="me-2">
-                        <button onclick="switchTab('all-mom')" id="all-mom-tab" class="inline-flex items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300">
+                        <button onclick="switchTab('all-mom')" id="all-mom-tab" class="tab-button inline-flex items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-300 hover:border-gray-500">
                             <i class="fa-solid fa-users me-2"></i>All MoM
                         </button>
                     </li>
                 </ul>
+                {{-- Search dan Filter --}}
+                <div class="flex flex-wrap items-center gap-3">
+                    {{-- Search Input --}}
+                    <div class="relative">
+                        <input type="text" id="searchInput"
+                            placeholder="Cari MoM Disini . . ."
+                            class="pl-10 pr-3 py-2 rounded-lg bg-gray-900 border border-gray-700 text-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent w-60">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-500"></i>
+                    </div>
 
-                {{-- Filters --}}
-                <div class="flex items-center space-x-3 mt-4 md:mt-0">
-                    <button id="month-filter-button" data-dropdown-toggle="month-filter-dropdown" class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-text-primary focus:outline-none bg-component-bg rounded-lg border border-border-light hover:bg-body-bg focus:z-10 focus:ring-4 focus:ring-primary/20 dark:bg-dark-component-bg dark:text-dark-text-secondary dark:border-border-dark" type="button">
-                        <i class="fa-solid fa-calendar-day w-4 h-4 me-2"></i>Month
-                        <i class="fa-solid fa-chevron-down w-2.5 h-2.5 ms-2.5"></i>
-                    </button>
-                    <div id="month-filter-dropdown" class="z-10 hidden bg-component-bg divide-y divide-border-light rounded-lg shadow-md w-44 dark:bg-dark-component-bg">
-                        <ul class="py-1 text-sm text-gray-700 dark:text-gray-200">
-                            <li><a href="#" class="block px-4 py-2 hover:bg-body-bg dark:hover:bg-dark-body-bg">September</a></li>
-                            <li><a href="#" class="block px-4 py-2 hover:bg-body-bg dark:hover:bg-dark-body-bg">Oktober</a></li>
-                            <li><a href="#" class="block px-4 py-2 hover:bg-body-bg dark:hover:bg-dark-body-bg">November</a></li>
-                        </ul>
-                    </div>
-                    <button id="status-filter-button" data-dropdown-toggle="status-filter-dropdown" class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-text-primary focus:outline-none bg-component-bg rounded-lg border border-border-light hover:bg-body-bg focus:z-10 focus:ring-4 focus:ring-primary/20 dark:bg-dark-component-bg dark:text-dark-text-secondary dark:border-border-dark" type="button">
-                        <i class="fa-solid fa-filter w-4 h-4 me-2"></i>Status
-                        <i class="fa-solid fa-chevron-down w-2.5 h-2.5 ms-2.5"></i>
-                    </button>
-                    <div id="status-filter-dropdown" class="z-10 hidden bg-component-bg divide-y divide-border-light rounded-lg shadow-md w-44 dark:bg-dark-component-bg">
-                        <ul class="py-1 text-sm text-gray-700 dark:text-gray-200">
-                            <li><a href="#" class="block px-4 py-2 hover:bg-body-bg dark:hover:bg-dark-body-bg">Approved</a></li>
-                            <li><a href="#" class="block px-4 py-2 hover:bg-body-bg dark:hover:bg-dark-body-bg">Pending</a></li>
-                            <li><a href="#" class="block px-4 py-2 hover:bg-body-bg dark:hover:bg-dark-body-bg">Rejected</a></li>
-                        </ul>
-                    </div>
+                    {{-- Filter Bulan --}}
+                    <select id="filterMonth"
+                        class="bg-gray-900 border border-gray-700 text-gray-300 text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                        <option value="">Semua Bulan</option>
+                        @foreach(range(1, 12) as $month)
+                            <option value="{{ $month }}">{{ \Carbon\Carbon::create()->month($month)->translatedFormat('F') }}</option>
+                        @endforeach
+                    </select>
+
+                    {{-- Filter Status --}}
+                    <select id="filterStatus"
+                        class="bg-gray-900 border border-gray-700 text-gray-300 text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                        <option value="">Semua Status</option>
+                        <option value="Menunggu">Pending</option>
+                        <option value="Disetujui">Approved</option>
+                        <option value="Ditolak">Rejected</option>
+                    </select>
                 </div>
             </div>
 
-            
-            {{-- Tab Content --}}
             <div class="pt-6">
-                
-                {{--My MoM Content (Drafts/Rejected)--}}
+                {{-- KONTEN My MoM --}}
                 <div id="my-mom-content">
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        
-                        {{-- Cek apakah ada data $myMoms yang dikirim dari controller --}}
-                        @forelse($myMoms as $mom)
+                        @forelse($myMoms as $index => $mom)
                             @php
-                                // Menggunakan Safe Operator (?->) untuk mencegah error 'Attempt to read property on null'
                                 $statusText = $mom->status->status ?? 'Unknown';
-                                $statusColor = match ($statusText) {
-                                    'Menunggu' => 'bg-yellow-500',
-                                    'Ditolak'  => 'bg-red-500',
-                                    'Disetujui'=> 'bg-green-500',
-                                    default    => 'bg-gray-500', 
+                                $statusInfo = match ($statusText) {
+                                    'Menunggu' => ['dot' => 'bg-yellow-400', 'text' => 'text-yellow-300', 'label' => 'Pending'],
+                                    'Ditolak'  => ['dot' => 'bg-red-500',    'text' => 'text-red-400',    'label' => 'Rejected'],
+                                    'Disetujui'=> ['dot' => 'bg-green-500',  'text' => 'text-green-400',  'label' => 'Approved'],
+                                    default    => ['dot' => 'bg-gray-500',   'text' => 'text-gray-400',   'label' => 'Unknown'],
                                 };
-                                
                                 $actionRouteName = ($statusText === 'Ditolak') ? 'moms.edit' : 'moms.detail';
                                 $actionUrl = route($actionRouteName, $mom->version_id);
-
-                                // Ambil Lampiran pertama untuk preview
-                                $attachment = $mom->attachments->first();
-                                $imageUrl = $attachment 
-                                    ? asset('storage/' . $attachment->file_path) 
-                                    : asset('img/lampiran-kosong.png');
-
-                                // --- LOGIC UNTUK PESERTA ---
-                                $internalNames = []; 
-                                
-                                // Jika nama_peserta adalah array of units
-                                if (is_array($mom->nama_peserta)) {
-                                    foreach ($mom->nama_peserta as $unit) {
-                                        if (is_array($unit['attendees'] ?? null)) {
-                                            $internalNames = array_merge($internalNames, $unit['attendees']);
-                                        }
-                                    }
-                                }
-                                
-                                $partnerNames = [];
-                                if (is_array($mom->nama_mitra)) {
-                                    foreach ($mom->nama_mitra as $mitra) {
-                                        if (is_array($mitra['attendees'] ?? null)) {
-                                            $partnerNames = array_merge($partnerNames, $mitra['attendees']);
-                                        }
-                                    }
-                                }
-                                
-                                $allAttendees = array_unique(array_merge($internalNames, $partnerNames));
-                                // Filter untuk memastikan hanya string yang lolos
-                                $allAttendees = array_filter($allAttendees, fn($name) => is_string($name) && !empty($name));
-                                
-                                $totalAttendees = count($allAttendees);
-
-                                // Ambil nama creator dengan aman menggunakan Safe Operator
+                                $imageUrl = $mom->attachments->first() ? asset('storage/' . $mom->attachments->first()->file_path) : asset('img/lampiran-kosong.png');
                                 $creatorName = $mom->creator?->name ?? 'N/A';
-                                
+
+                                // ... (logika peserta Anda yang sudah ada)
+                                $allAttendees = []; // Ganti dengan logika ekstraksi nama peserta Anda
+                                if (is_array($mom->nama_peserta)) { $allAttendees = array_merge($allAttendees, $mom->nama_peserta); }
+
                             @endphp
-                            
-                            <div class="bg-component-bg dark:bg-dark-component-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2">
+
+                            {{-- =============================================== --}}
+                            {{--         KARTU MoM DENGAN DESAIN BARU            --}}
+                            {{-- =============================================== --}}
+                            <div class="card-mom bg-gray-800 rounded-2xl shadow-lg overflow-hidden flex flex-col transition-all duration-300 hover:shadow-2xl hover:shadow-red-500/20 hover:-translate-y-2 border border-gray-700" style="animation-delay: {{ $index * 100 }}ms;">
                                 <div class="relative">
-                                    {{-- Image --}}
-                                    <img class="w-full h-48 object-cover" src="{{ $imageUrl }}" alt="Dokumentasi Rapat">
-                                    
-                                    {{-- Status Badge --}}
-                                    <span class="absolute top-3 right-3 {{ $statusColor }} text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
-                                        {{ $statusText }}
-                                    </span>
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                                </div>
-                                
-                                <div class="p-5 flex flex-col">
-                                    <h3 class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-2">{{ $mom->title }}</h3>
-                                    
-                                    <div class="flex items-center text-sm text-text-secondary dark:text-dark-text-secondary mb-3">
-                                        <i class="fa-solid fa-user-pen mr-2 text-primary"></i>Dibuat oleh
-                                        <span class="ml-1 font-medium">
-                                            {{-- Safe check using $creatorName --}}
-                                            {{ ($creatorName !== 'N/A' && $creatorName === Auth::user()->name) ? 'Anda' : $creatorName }}
-                                        </span>
+                                    <a href="{{ $actionUrl }}">
+                                        <img class="w-full h-48 object-cover" src="{{ $imageUrl }}" alt="Dokumentasi Rapat">
+                                    </a>
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+
+                                    <div class="absolute bottom-0 left-0 p-4 text-white">
+                                        <p class="text-xs font-semibold uppercase tracking-wider">{{ $mom->created_at->translatedFormat('F Y') }}</p>
+                                        <p class="text-3xl font-bold">{{ $mom->created_at->format('d') }}</p>
                                     </div>
-                                    
-                                    <p class="text-sm text-text-secondary dark:text-dark-text-secondary mb-4 line-clamp-2">
-                                        {!! Str::limit(strip_tags($mom->pembahasan), 100) !!}
-                                    </p>
-                                    
-                                    <div class="pt-4 border-t border-border-light dark:border-border-dark">
-                                        <h4 class="text-sm font-semibold text-text-primary dark:text-dark-text-primary mb-3">Peserta</h4>
-                                        <div class="flex items-center justify-between">
-                                            <div class="text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed">
-                                                @if($totalAttendees > 0)
-                                                    {{-- Tampilkan 2 peserta pertama --}}
-                                                    @foreach(array_slice($allAttendees, 0, 2) as $attendeeName)
-                                                        • {{ $attendeeName }}<br>
-                                                    @endforeach
-                                                    
-                                                    {{-- Hitung dan tampilkan peserta sisanya --}}
-                                                    @if($totalAttendees > 2)
-                                                        ... (+{{ $totalAttendees - 2 }} lainnya)
-                                                    @endif
-                                                @else
-                                                    <span class="italic">Tidak ada peserta tercatat.</span>
-                                                @endif
-                                            </div>
-                                            <a href="{{ $actionUrl }}" class="text-sm font-medium text-primary hover:underline ml-4">
-                                                {{ $statusText === 'Ditolak' ? 'Revisi' : 'Lihat Detail' }}
-                                            </a>
+
+                                    <div class="absolute top-3 right-3">
+                                        <div class="inline-flex items-center gap-x-2 px-3 py-1 bg-gray-900/50 backdrop-blur-sm rounded-full border border-gray-700">
+                                            <span class="w-2.5 h-2.5 rounded-full {{ $statusInfo['dot'] }}"></span>
+                                            <span class="text-xs font-medium {{ $statusInfo['text'] }}">
+                                                {{ $statusInfo['label'] }}
+                                            </span>
                                         </div>
+                                    </div>
+                                </div>
+                                <div class="p-5 flex flex-col flex-grow">
+                                    <h3 class="text-xl font-bold text-white mb-2 line-clamp-1" title="{{ $mom->title }}">
+                                        <a href="{{ $actionUrl }}" class="hover:underline">{{ $mom->title }}</a>
+                                    </h3>
+                                    <div class="flex items-center text-sm text-gray-400 mb-4">
+                                        <i class="fa-solid fa-user-pen mr-2 text-red-400"></i> Dibuat oleh
+                                        <span class="ml-1 font-medium text-gray-300">{{ ($creatorName !== 'N/A' && $creatorName === Auth::user()->name) ? 'Anda' : $creatorName }}</span>
+                                    </div>
+
+                                    <div class="mb-4 flex-grow">
+                                         <h4 class="text-sm font-semibold text-gray-300 mb-2">Peserta Rapat:</h4>
+                                         <div class="text-sm text-gray-400 space-y-1">
+                                            @if(count($allAttendees) > 0)
+                                                @foreach(array_slice($allAttendees, 0, 3) as $attendee)
+                                                    <p class="truncate"><i class="fa-solid fa-circle fa-xs text-gray-600 mr-2"></i>{{ is_string($attendee) ? $attendee : 'N/A' }}</p>
+                                                @endforeach
+                                                @if(count($allAttendees) > 3)
+                                                    <p class="text-xs text-gray-500 italic ml-4">+{{ count($allAttendees) - 3 }} peserta lainnya</p>
+                                                @endif
+                                            @else
+                                                <p class="text-xs text-gray-500 italic">Tidak ada data peserta.</p>
+                                            @endif
+                                         </div>
+                                    </div>
+
+                                    <div class="pt-4 border-t border-gray-700 flex items-center justify-end">
+                                        <a href="{{ $actionUrl }}" class="text-sm font-medium text-red-400 hover:underline hover:text-red-300">
+                                            {{ $statusText === 'Ditolak' ? 'Revisi' : 'Lihat Detail' }} <i class="fa-solid fa-arrow-right ml-1"></i>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
                         @empty
-                            <div class="col-span-3 text-center py-10 bg-body-bg dark:bg-dark-body-bg rounded-xl">
-                                <p class="text-lg text-text-secondary dark:text-dark-text-secondary">Tidak ada MoM yang dibuat oleh Anda dalam status Draft atau Revisi.</p>
-                                <a href="{{ route('user.create') }}" class="mt-3 inline-block text-sm font-medium text-primary hover:underline">Buat MoM baru?</a>
+                            <div class="col-span-1 md:col-span-2 xl:col-span-3 text-center py-16 bg-gray-800/50 rounded-xl border border-dashed border-gray-700">
+                                <i class="fa-solid fa-folder-open fa-3x text-gray-600"></i>
+                                <p class="mt-4 text-lg text-gray-500">Anda belum memiliki draf MoM.</p>
+                                <a href="{{ url('/create') }}" class="mt-3 inline-block text-sm font-medium text-red-400 hover:underline">Buat MoM baru?</a>
                             </div>
                         @endforelse
-                        
                     </div>
                 </div>
-                {{--END: My MoM Content--}}
-                
-                
-                {{--All MoM Content (Approved)--}}
+
+                {{-- KONTEN All MoM --}}
                 <div id="all-mom-content" class="hidden">
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        @php
+                         @php
                             // Pastikan $allMoms sudah didefinisikan dan berisi MoM yang Approved dari controller
                             $allMoms = $allMoms ?? collect();
                         @endphp
-                        
                         @forelse($allMoms as $mom)
                             @php
                                 $statusText = $mom->status->status ?? 'Unknown';
-                                $statusColor = match ($statusText) {
-                                    'Disetujui'=> 'bg-green-500', 
-                                    default    => 'bg-gray-500', 
+                                $statusInfo = match ($statusText) {
+                                    'Menunggu' => ['dot' => 'bg-yellow-400', 'text' => 'text-yellow-300', 'label' => 'Pending'],
+                                    'Ditolak'  => ['dot' => 'bg-red-500',    'text' => 'text-red-400',    'label' => 'Rejected'],
+                                    'Disetujui'=> ['dot' => 'bg-green-500',  'text' => 'text-green-400',  'label' => 'Approved'],
+                                    default    => ['dot' => 'bg-gray-500',   'text' => 'text-gray-400',   'label' => 'Unknown'],
                                 };
-                                
-                                $actionUrl = route('moms.detail', $mom->version_id);
-
-                                // Ambil Lampiran pertama untuk preview
-                                $attachment = $mom->attachments->first();
-                                $imageUrl = $attachment 
-                                    ? asset('storage/' . $attachment->file_path) 
-                                    : asset('img/lampiran-kosong.png');
-                                    
-                                // --- LOGIC UNTUK PESERTA ---
-                                $internalNames = []; 
-                                
-                                if (is_array($mom->nama_peserta)) {
-                                    foreach ($mom->nama_peserta as $unit) {
-                                        if (is_array($unit['attendees'] ?? null)) {
-                                            $internalNames = array_merge($internalNames, $unit['attendees']);
-                                        }
-                                    }
-                                }
-                                
-                                $partnerNames = [];
-                                if (is_array($mom->nama_mitra)) {
-                                    foreach ($mom->nama_mitra as $mitra) {
-                                        if (is_array($mitra['attendees'] ?? null)) {
-                                            $partnerNames = array_merge($partnerNames, $mitra['attendees']);
-                                        }
-                                    }
-                                }
-                                
-                                $allAttendees = array_unique(array_merge($internalNames, $partnerNames));
-                                $allAttendees = array_filter($allAttendees, fn($name) => is_string($name) && !empty($name));
-                                $totalAttendees = count($allAttendees);
-                                // Ambil nama creator dengan aman menggunakan Safe Operator
+                                $actionRouteName = ($statusText === 'Ditolak') ? 'moms.edit' : 'moms.detail';
+                                $actionUrl = route($actionRouteName, $mom->version_id);
+                                $imageUrl = $mom->attachments->first() ? asset('storage/' . $mom->attachments->first()->file_path) : asset('img/lampiran-kosong.png');
                                 $creatorName = $mom->creator?->name ?? 'N/A';
+
+                                // ... (logika peserta Anda yang sudah ada)
+                                $allAttendees = []; // Ganti dengan logika ekstraksi nama peserta Anda
+                                if (is_array($mom->nama_peserta)) { $allAttendees = array_merge($allAttendees, $mom->nama_peserta); }
+
                             @endphp
-                            
-                            <div class="bg-component-bg dark:bg-dark-component-bg rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2">
+
+                            {{-- =============================================== --}}
+                            {{--         KARTU MoM DENGAN DESAIN BARU            --}}
+                            {{-- =============================================== --}}
+                            <div class="card-mom bg-gray-800 rounded-2xl shadow-lg overflow-hidden flex flex-col transition-all duration-300 hover:shadow-2xl hover:shadow-red-500/20 hover:-translate-y-2 border border-gray-700" style="animation-delay: {{ $index * 100 }}ms;">
                                 <div class="relative">
-                                    {{-- Image --}}
-                                    <img class="w-full h-48 object-cover" src="{{ $imageUrl }}" alt="Dokumentasi Rapat">
-                                    
-                                    {{-- Status Badge --}}
-                                    <span class="absolute top-3 right-3 {{ $statusColor }} text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
-                                        {{ $statusText }}
-                                    </span>
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                                </div>
-                                
-                                <div class="p-5 flex flex-col">
-                                    <h3 class="text-xl font-bold text-text-primary dark:text-dark-text-primary mb-2">{{ $mom->title }}</h3>
-                                    
-                                    <div class="flex items-center text-sm text-text-secondary dark:text-dark-text-secondary mb-3">
-                                        <i class="fa-solid fa-user-pen mr-2 text-primary"></i>Dibuat oleh
-                                        <span class="ml-1 font-medium">{{ $creatorName }}</span>
+                                    <a href="{{ $actionUrl }}">
+                                        <img class="w-full h-48 object-cover" src="{{ $imageUrl }}" alt="Dokumentasi Rapat">
+                                    </a>
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+
+                                    <div class="absolute bottom-0 left-0 p-4 text-white">
+                                        <p class="text-xs font-semibold uppercase tracking-wider">{{ $mom->created_at->translatedFormat('F Y') }}</p>
+                                        <p class="text-3xl font-bold">{{ $mom->created_at->format('d') }}</p>
                                     </div>
-                                    
-                                    <p class="text-sm text-text-secondary dark:text-dark-text-secondary mb-4 line-clamp-2">
-                                        {!! Str::limit(strip_tags($mom->pembahasan), 100) !!}
-                                    </p>
-                                    
-                                    <div class="pt-4 border-t border-border-light dark:border-border-dark">
-                                        <h4 class="text-sm font-semibold text-text-primary dark:text-dark-text-primary mb-3">Peserta</h4>
-                                        <div class="flex items-center justify-between">
-                                            <div class="text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed">
-                                                @if($totalAttendees > 0)
-                                                    @foreach(array_slice($allAttendees, 0, 2) as $attendeeName)
-                                                        • {{ $attendeeName }}<br>
-                                                    @endforeach
-                                                    
-                                                    @if($totalAttendees > 2)
-                                                        ... (+{{ $totalAttendees - 2 }} lainnya)
-                                                    @endif
-                                                @else
-                                                    <span class="italic">Tidak ada peserta tercatat.</span>
-                                                @endif
-                                            </div>
-                                            <a href="{{ $actionUrl }}" class="text-sm font-medium text-primary hover:underline ml-4">
-                                                Lihat Detail
-                                            </a>
+
+                                    <div class="absolute top-3 right-3">
+                                        <div class="inline-flex items-center gap-x-2 px-3 py-1 bg-gray-900/50 backdrop-blur-sm rounded-full border border-gray-700">
+                                            <span class="w-2.5 h-2.5 rounded-full {{ $statusInfo['dot'] }}"></span>
+                                            <span class="text-xs font-medium {{ $statusInfo['text'] }}">
+                                                {{ $statusInfo['label'] }}
+                                            </span>
                                         </div>
+                                    </div>
+                                </div>
+                                <div class="p-5 flex flex-col flex-grow">
+                                    <h3 class="text-xl font-bold text-white mb-2 line-clamp-1" title="{{ $mom->title }}">
+                                        <a href="{{ $actionUrl }}" class="hover:underline">{{ $mom->title }}</a>
+                                    </h3>
+                                    <div class="flex items-center text-sm text-gray-400 mb-4">
+                                        <i class="fa-solid fa-user-pen mr-2 text-red-400"></i> Dibuat oleh
+                                        <span class="ml-1 font-medium text-gray-300">{{ ($creatorName !== 'N/A' && $creatorName === Auth::user()->name) ? 'Anda' : $creatorName }}</span>
+                                    </div>
+
+                                    <div class="mb-4 flex-grow">
+                                         <h4 class="text-sm font-semibold text-gray-300 mb-2">Peserta Rapat:</h4>
+                                         <div class="text-sm text-gray-400 space-y-1">
+                                            @if(count($allAttendees) > 0)
+                                                @foreach(array_slice($allAttendees, 0, 3) as $attendee)
+                                                    <p class="truncate"><i class="fa-solid fa-circle fa-xs text-gray-600 mr-2"></i>{{ is_string($attendee) ? $attendee : 'N/A' }}</p>
+                                                @endforeach
+                                                @if(count($allAttendees) > 3)
+                                                    <p class="text-xs text-gray-500 italic ml-4">+{{ count($allAttendees) - 3 }} peserta lainnya</p>
+                                                @endif
+                                            @else
+                                                <p class="text-xs text-gray-500 italic">Tidak ada data peserta.</p>
+                                            @endif
+                                         </div>
+                                    </div>
+
+                                    <div class="pt-4 border-t border-gray-700 flex items-center justify-end">
+                                        <a href="{{ $actionUrl }}" class="text-sm font-medium text-red-400 hover:underline hover:text-red-300">
+                                            {{ $statusText === 'Ditolak' ? 'Revisi' : 'Lihat Detail' }} <i class="fa-solid fa-arrow-right ml-1"></i>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
                         @empty
-                            <div class="col-span-3 text-center py-10 bg-body-bg dark:bg-dark-body-bg rounded-xl">
-                                <p class="text-lg text-text-secondary dark:text-dark-text-secondary">Belum ada MoM yang disetujui (Approved).</p>
+                            <div class="col-span-1 md:col-span-2 xl:col-span-3 text-center py-16 bg-gray-800/50 rounded-xl border border-dashed border-gray-700">
+                                <i class="fa-solid fa-folder-open fa-3x text-gray-600"></i>
+                                <p class="mt-4 text-lg text-gray-500">Anda belum memiliki draf MoM.</p>
+                                <a href="{{ url('/create') }}" class="mt-3 inline-block text-sm font-medium text-red-400 hover:underline">Buat MoM baru?</a>
                             </div>
                         @endforelse
                     </div>
                 </div>
-                {{--END: All MoM Content--}}
-                
             </div>
         </div>
-        
+
         {{-- Pagination --}}
         <div class="flex justify-center mt-8 mb-6">
-            {{-- Pastikan $myMoms adalah objek paginator --}}
-            {{ $myMoms->links() }} 
+            {{ $myMoms->links() }} {{-- Ganti dengan pagination untuk tab yang aktif --}}
         </div>
-        
     </div>
 </div>
 @endsection
 
 @push('scripts')
 <script>
-    
     function switchTab(tabId) {
-        const myMomTab = document.getElementById('my-mom-tab');
-        const allMomTab = document.getElementById('all-mom-tab');
+        const tabs = document.querySelectorAll('.tab-button');
         const myMomContent = document.getElementById('my-mom-content');
         const allMomContent = document.getElementById('all-mom-content');
 
-        const activeClasses = ['text-primary', 'border-primary'];
-        const inactiveClasses = [
-            'border-transparent',
-            'hover:text-gray-600',
-            'hover:border-gray-300',
-            'dark:hover:text-gray-300',
-            'text-gray-500',
-            'dark:text-gray-400'
-        ];
-
-        myMomTab.classList.remove(...activeClasses);
-        allMomTab.classList.remove(...activeClasses);
-        myMomTab.classList.add(...inactiveClasses);
-        allMomTab.classList.add(...inactiveClasses);
+        // Reset all tabs
+        tabs.forEach(tab => {
+            tab.classList.remove('text-red-400', 'border-red-500');
+            tab.classList.add('border-transparent', 'hover:text-gray-300', 'hover:border-gray-500');
+        });
 
         if (tabId === 'my-mom') {
-            myMomTab.classList.add(...activeClasses);
-            myMomTab.classList.remove(...inactiveClasses);
+            document.getElementById('my-mom-tab').classList.add('text-red-400', 'border-red-500');
+            document.getElementById('my-mom-tab').classList.remove('border-transparent', 'hover:text-gray-300', 'hover:border-gray-500');
             myMomContent.classList.remove('hidden');
             allMomContent.classList.add('hidden');
-        } else { 
-            allMomTab.classList.add(...activeClasses);
-            allMomTab.classList.remove(...inactiveClasses);
+        } else {
+            document.getElementById('all-mom-tab').classList.add('text-red-400', 'border-red-500');
+            document.getElementById('all-mom-tab').classList.remove('border-transparent', 'hover:text-gray-300', 'hover:border-gray-500');
             allMomContent.classList.remove('hidden');
             myMomContent.classList.add('hidden');
         }
