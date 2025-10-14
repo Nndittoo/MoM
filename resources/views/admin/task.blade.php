@@ -144,8 +144,19 @@
                                     <span class="ml-2 px-2 py-0.5 text-xs bg-red-100 text-red-700 rounded-full dark:bg-red-900 dark:text-red-300">
                                         Terlambat {{ $daysOverdue }} hari
                                     </span>
-                                @elseif($isDueSoon)
-                                    <span class="ml-2 px-2 py-0.5 text-xs bg-yellow-100 text-yellow-700 rounded-full dark:bg-yellow-900 dark:text-yellow-300">Soon</span>
+                                @elseif($task->status == 'mendatang')
+                                    @php
+                                        $daysRemaining = now()->startOfDay()->diffInDays($deadline);
+                                    @endphp
+                                    @if($daysRemaining == 0)
+                                        <span class="ml-2 px-2 py-0.5 text-xs bg-red-100 text-red-700 rounded-full dark:bg-red-900 dark:text-red-300">
+                                            Hari ini
+                                        </span>
+                                    @else
+                                        <span class="ml-2 px-2 py-0.5 text-xs {{ $isDueSoon ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' }}">
+                                            {{ $daysRemaining }} hari lagi
+                                        </span>
+                                    @endif
                                 @endif
                             </span>
                         </div>
