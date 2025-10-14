@@ -96,11 +96,11 @@
                         class="block p-2.5 w-full text-sm text-white bg-gray-700 rounded-lg border border-gray-600 focus:ring-red-500 focus:border-red-500"
                         placeholder="Jelaskan bagian mana yang perlu diperbaiki oleh user..." required></textarea>
                 </div>
-                <button type="submit" class="mt-4 text-white inline-flex items-center btn-neon-red focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                <button type="submit" id="sendReject" class="mt-4 text-white inline-flex items-center btn-neon-red focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center">
                     Kirim Penolakan
                 </button>
             </form>
-        </div> 
+        </div>
     </div>
 </div>
 @endsection
