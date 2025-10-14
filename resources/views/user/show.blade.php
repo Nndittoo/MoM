@@ -53,7 +53,7 @@
             <p class="mt-1 text-gray-400 line-clamp-1" title="{{ $mom->title }}">{{ $mom->title }}</p>
         </div>
         <div class="flex space-x-2 mt-4 sm:mt-0 w-full sm:w-auto">
-            <a href="{{ url()->previous() }}" class="flex-1 sm:flex-initial inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-gray-300 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-700">
+            <a href="{{ route('draft.index') }}" class="flex-1 sm:flex-initial inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-gray-300 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-700">
                 <i class="fa-solid fa-arrow-left mr-2"></i>Kembali
             </a>
             <a href="{{ route('moms.export', $mom->version_id) }}" target="_blank"
