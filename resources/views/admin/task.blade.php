@@ -74,8 +74,11 @@
             @forelse($tasks as $index => $task)
                 @php
                     $deadline = \Carbon\Carbon::parse($task->due);
-                    $isOverdue = $deadline->isPast() && $task->status == 'mendatang';
-                    $isDueSoon = !$isOverdue && $deadline->diffInDays(now()) < 3 && $task->status == 'mendatang';
+                    $today = now()->startOfDay();
+                    $deadlineDate = $deadline->startOfDay();
+
+                    $isOverdue = $deadlineDate->lt($today) && $task->status == 'mendatang';
+                    $isDueSoon = !$isOverdue && $deadlineDate->gte($today) && $deadlineDate->diffInDays($today) < 3 && $task->status == 'mendatang';
                     $borderColor = $isOverdue ? 'border-red-500' : ($isDueSoon ? 'border-yellow-500' : 'border-gray-700');
                 @endphp
                 <div class="task-card relative group bg-gray-800 rounded-xl border-l-4 {{ $borderColor }} shadow-md hover:shadow-2xl hover:shadow-red-500/10 transition-all duration-300 hover:-translate-y-1 overflow-hidden"
