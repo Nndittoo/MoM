@@ -6,25 +6,25 @@
     <title>Export MoM - {{ $mom->title }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-    
+
         @media print {
-            body { 
-                -webkit-print-color-adjust: exact; 
-                print-color-adjust: exact; 
-                font-size: 10pt; 
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                font-size: 10pt;
             }
             table {
                 page-break-inside: auto;
             }
             tr {
-                page-break-inside: avoid; 
+                page-break-inside: avoid;
                 page-break-after: auto;
             }
             img {
-                max-width: 100% !important; 
+                max-width: 100% !important;
                 height: auto !important;
             }
-        
+
             .ql-content ul, .ql-content ol {
                 margin-left: 1.5em !important;
             }
@@ -35,7 +35,7 @@
                 margin-bottom: 0.5rem !important;
             }
         }
-    
+
         .border-black { border-color: #000; }
         .border { border-style: solid; border-width: 1px; }
         .text-gray-900 { color: #1f2937; }
@@ -46,29 +46,29 @@
 
         .content-quill ul {
             list-style-type: disc;
-            margin-left: 20px; 
+            margin-left: 20px;
             padding-left: 0;
         }
         .content-quill ol {
             list-style-type: decimal;
-            margin-left: 20px; 
+            margin-left: 20px;
             padding-left: 0;
         }
         .content-quill li {
-            padding-left: 5px; 
+            padding-left: 5px;
         }
-        
+
         /* CSS UNTUK PESERTA DINAMIS (HORIZONTAL WRAPPING SEJAJAR) */
         .attendee-container {
             display: flex;
-            flex-wrap: wrap; 
+            flex-wrap: wrap;
             padding: 0;
             margin: 0;
         }
         .attendee-group {
             /* Menentukan 3 kolom sejajar, menggunakan 33% */
-            width: 33%; 
-            box-sizing: border-box; 
+            width: 33%;
+            box-sizing: border-box;
             padding-right: 1.5rem; /* Ganti gap dengan padding antar kolom */
             margin-bottom: 0.5rem; /* Jarak antar baris */
         }
@@ -80,14 +80,14 @@
         .attendee-group:nth-child(1),
         .attendee-group:nth-child(2),
         .attendee-group:nth-child(3) {
-            margin-top: 0; 
+            margin-top: 0;
         }
         .attendee-group ul {
             list-style-type: disc;
-            padding-left: 15px; 
+            padding-left: 15px;
             margin: 0;
         }
-        
+
     </style>
 </head>
 <body class="bg-white">
@@ -95,24 +95,24 @@
     @php
         use Carbon\Carbon;
         $meetingDate = Carbon::parse($mom->meeting_date);
-        
+
         // --- DECODING DAN EKSTRAKSI DATA PESERTA DARI JSON/ARRAY ---
 
         // Data mentah Internal (nama_peserta)
-        $internalDataContainers = is_array($mom->nama_peserta ?? null) 
-                                        ? $mom->nama_peserta 
+        $internalDataContainers = is_array($mom->nama_peserta ?? null)
+                                        ? $mom->nama_peserta
                                         : json_decode($mom->nama_peserta ?? '[]', true);
-        
+
         // Data mentah Mitra (nama_mitra)
-        $partnerDataContainers = is_array($mom->nama_mitra ?? null) 
-                                        ? $mom->nama_mitra 
+        $partnerDataContainers = is_array($mom->nama_mitra ?? null)
+                                        ? $mom->nama_mitra
                                         : json_decode($mom->nama_mitra ?? '[]', true);
 
-        
+
         // --- LOGIC PESERTA INTERNAL (UNTUK TAMPILAN PER UNIT) ---
-        $internalAttendeeGroups = []; 
+        $internalAttendeeGroups = [];
         $allAttendeesRaw = []; // List flat untuk total hitungan
-        
+
         if (is_array($internalDataContainers)) {
             foreach ($internalDataContainers as $unit) {
                 if (is_array($unit['attendees'] ?? null) && !empty($unit['attendees'])) {
@@ -124,15 +124,15 @@
                 }
             }
         }
-        
+
         // --- LOGIC PESERTA MITRA & TANDA TANGAN ---
         $signatoryGroups = [];
-        
+
         if (is_array($partnerDataContainers)) {
             foreach ($partnerDataContainers as $mitra) {
                 if (is_array($mitra['attendees'] ?? null) && !empty($mitra['attendees'])) {
                     $allAttendeesRaw = array_merge($allAttendeesRaw, $mitra['attendees']);
-                    
+
                     // Siapkan Grup Tanda Tangan (Mitra)
                     $signatoryGroups[] = [
                         'name' => $mitra['name'] ?? 'Pihak Mitra',
@@ -141,14 +141,14 @@
                 }
             }
         }
-        
+
         // Finalisasi Hitungan Total Peserta (Internal + Mitra)
-        $allAttendees = array_unique($allAttendeesRaw); 
+        $allAttendees = array_unique($allAttendeesRaw);
         $totalAttendeesCount = count($allAttendees);
-        
+
         // Finalisasi Grup Tanda Tangan
         $totalSignatoryGroups = count($signatoryGroups);
-        
+
     @endphp
 
     <div id="pdf-preview" class="p-6 md:p-8 min-w-[800px] bg-white text-gray-900 font-sans">
@@ -157,8 +157,8 @@
                 <tr>
                     {{-- Judul dan Logo --}}
                     <td class="align-middle text-center border border-black p-2 w-1/4">
-                        
-                        <img src="{{ asset('img/logo.png') }}" alt="Company Logo" class="h-32 mx-auto">
+
+                        <img src="{{ asset('img/telkom.png') }}" alt="Company Logo" class="h-32 mx-auto">
                     </td>
                     <td colspan="3" class="text-center align-middle border border-black">
                         <p class="font-bold text-2xl italic">MINUTE OF MEETING</p>
@@ -169,9 +169,9 @@
                 {{-- Pimpinan & Notulen --}}
                 <tr>
                     <td class="border border-black p-2 font-semibold">Pimpinan Rapat</td>
-                    <td class="border border-black p-2">{{ $mom->pimpinan_rapat }}</td> 
+                    <td class="border border-black p-2">{{ $mom->pimpinan_rapat }}</td>
                     <td class="border border-black p-2 font-semibold">Notulen</td>
-                    <td class="border border-black p-2">{{ $mom->notulen }}</td> 
+                    <td class="border border-black p-2">{{ $mom->notulen }}</td>
                 </tr>
 
                 {{-- Daftar Peserta --}}
@@ -197,7 +197,7 @@
                         @endif
                     </td>
                 </tr>
-                
+
                 {{-- Waktu --}}
                 <tr>
                     <td class="border border-black p-2 font-semibold">Waktu</td>
@@ -237,7 +237,7 @@
                 {{-- Hasil Pembahasan --}}
                 <tr>
                     <td colspan="4" class="border border-black p-4">
-                        
+
                         <div class="font-sans whitespace-pre-wrap text-sm leading-relaxed content-quill">
                             {!! $mom->pembahasan !!}
                         </div>
@@ -271,7 +271,7 @@
                         <table class="w-full text-center border-collapse">
                             <thead>
                                 <tr class="border-b border-black">
-                                    
+
                                     @foreach($signatoryGroups as $group)
                                         {{-- Gunakan total kelompok untuk membagi lebar --}}
                                         <th class="p-2 font-semibold w-1/{{ $totalSignatoryGroups }}">{{ $group['name'] }}</th>
@@ -321,8 +321,8 @@
             {{-- KASUS 1: Hanya 1 gambar, center --}}
             <div class="flex justify-center">
                 <div class="text-center w-full max-w-xl">
-                    <img src="{{ asset('storage/' . $imageAttachments[0]->file_path) }}" 
-                             alt="Lampiran Rapat" 
+                    <img src="{{ asset('storage/' . $imageAttachments[0]->file_path) }}"
+                             alt="Lampiran Rapat"
                              class="w-full h-auto mx-auto border object-contain">
                     <p class="mt-2 text-sm">File: {{ $imageAttachments[0]->file_name }}</p>
                 </div>
@@ -333,34 +333,34 @@
                 @foreach($imageAttachments as $index => $attachment)
                     @if ($imageCount % 2 !== 0 && $index === $imageCount - 1)
                         </div> {{-- Tutup grid-cols-2 sebelum gambar terakhir --}}
-                        <div class="flex justify-center w-full mt-4"> 
+                        <div class="flex justify-center w-full mt-4">
                             <div class="text-center w-1/2">
-                                <img src="{{ asset('storage/' . $attachment->file_path) }}" 
-                                         alt="Lampiran Rapat" 
+                                <img src="{{ asset('storage/' . $attachment->file_path) }}"
+                                         alt="Lampiran Rapat"
                                          class="w-full h-auto mx-auto border object-contain">
                                 <p class="mt-2 text-sm">File: {{ $attachment->file_name }}</p>
                             </div>
                         </div>
                         {{-- Break loop karena gambar terakhir sudah diurus. --}}
-                        @break 
+                        @break
                     @else
                         {{-- Untuk semua gambar lain (atau jika total genap), tampilkan di grid --}}
                         <div class="text-center">
-                            <img src="{{ asset('storage/' . $attachment->file_path) }}" 
-                                 alt="Lampiran Rapat" 
+                            <img src="{{ asset('storage/' . $attachment->file_path) }}"
+                                 alt="Lampiran Rapat"
                                  class="w-full h-auto mx-auto border object-contain">
                             <p class="mt-2 text-sm">File: {{ $attachment->file_name }}</p>
                         </div>
                     @endif
                 @endforeach
-            </div> 
+            </div>
         @endif
 
     @else
         {{-- Tidak ada lampiran sama sekali --}}
         <p class="text-sm text-center text-gray-500">Tidak ada lampiran gambar yang dapat ditampilkan.</p>
     @endif
-</td> 
+</td>
                 </tr>
 
                 {{-- Footer --}}

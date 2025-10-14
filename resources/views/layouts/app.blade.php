@@ -133,6 +133,22 @@
                     transform: translateY(0);
                 }
             }
+
+            .btn-neon-red {
+            background-color: #EF4444;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+            transition: all 0.3s ease-in-out;
+            }
+            .btn-neon-red:hover {
+                background-color: #DC2626;
+                box-shadow: 0 0 12px rgba(239, 68, 68, 0.8), 0 0 20px rgba(239, 68, 68, 0.5);
+            }
+
+            .ql-toolbar { border-top-left-radius: 0.5rem; border-top-right-radius: 0.5rem; background-color: #1F2937; border-color: #374151 !important; }
+            .ql-container { border-bottom-left-radius: 0.5rem; border-bottom-right-radius: 0.5rem; background-color: #374151; border-color: #374151 !important; color: #D1D5DB; }
+            .ql-editor.ql-blank::before { color: #9CA3AF !important; font-style: normal !important; }
+            .ql-snow .ql-stroke { stroke: #9CA3AF; }
+            .ql-snow .ql-picker-label { color: #9CA3AF; }
         </style>
 
         @stack('styles')
@@ -154,6 +170,8 @@
 
         <script
             src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
+            {{-- Di dalam file layouts/app.blade.php --}}
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         @stack('scripts')
 
         {{-- PERUBAHAN: Script notifikasi disesuaikan dengan styling tema baru --}}
@@ -223,5 +241,42 @@
             window.fetchNotifications = fetchNotifications;
             document.addEventListener('DOMContentLoaded', fetchNotifications);
         </script>
+        <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const logoutButton = document.getElementById('logout-button');
+        const logoutForm = document.getElementById('logout-form');
+
+        if (logoutButton) {
+            logoutButton.addEventListener('click', function (event) {
+                // Mencegah form dari submit langsung
+                event.preventDefault();
+
+                // Tampilkan SweetAlert2 dengan tema kustom
+                Swal.fire({
+                    title: 'Anda yakin ingin keluar?',
+                    text: "Anda akan diarahkan kembali ke halaman login.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Keluar!',
+                    cancelButtonText: 'Batal',
+                    customClass: {
+                        popup: 'bg-gray-800 rounded-2xl border border-gray-700',
+                        title: 'text-white font-orbitron',
+                        htmlContainer: 'text-gray-400',
+                        confirmButton: 'btn-neon-red text-white font-semibold px-6 py-2 mr-3 rounded-lg',
+                        cancelButton: 'bg-gray-700 text-gray-300 font-semibold px-6 py-2 rounded-lg hover:bg-gray-600 border border-gray-600'
+                    },
+                    buttonsStyling: false // Penting untuk menggunakan kelas kustom
+                }).then((result) => {
+                    // Jika pengguna menekan tombol "Ya, Keluar!"
+                    if (result.isConfirmed) {
+                        // Submit form logout
+                        logoutForm.submit();
+                    }
+                });
+            });
+        }
+    });
+</script>
     </body>
 </html>
