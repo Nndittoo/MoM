@@ -194,6 +194,8 @@
                             })
                             .catch(() => showToast('Gagal menyetujui MoM.', true));
                     }
+                }).then(() =>{
+                    location.reload();
                 });
             });
         });
@@ -206,34 +208,67 @@
             });
         });
 
-        rejectionForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const url = rejectionForm.getAttribute('data-url');
-            const momId = modal.querySelector('#modal-mom-id').value;
-            const comment = document.getElementById('rejection-comment').value;
+        rejectionForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const url = rejectionForm.getAttribute('data-url');
+    const momId = modal.querySelector('#modal-mom-id').value;
+    const comment = document.getElementById('rejection-comment').value.trim();
 
-            if (!comment.trim()) return showToast('Komentar revisi tidak boleh kosong.', true);
-
-            handleAjaxAction(url, 'POST', { comment })
-                .then(response => {
-                    showToast(response.message || 'MoM berhasil ditolak.');
-
-                    // Tutup modal + hilangkan overlay
-                    modal.classList.add('hidden');
-                    clearBodyLock();
-
-                    // Hapus kartu MoM
-                    const card = document.getElementById(`mom-card-${momId}`);
-                    if (card) {
-                        card.classList.add('fade-out');
-                        setTimeout(() => card.remove(), 500);
-                    }
-
-                    // Bersihkan field
-                    document.getElementById('rejection-comment').value = '';
-                })
-                .catch(() => showToast('Gagal menolak MoM.', true));
+    if (!comment) {
+        return Swal.fire({
+            icon: 'warning',
+            title: 'Komentar Kosong!',
+            text: 'Harap isi komentar revisi sebelum menolak MoM.',
+            confirmButtonColor: '#facc15', // kuning
         });
+    }
+
+    try {
+        const response = await handleAjaxAction(url, 'POST', { comment });
+
+        await Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: response.message || 'MoM berhasil ditolak.',
+            showConfirmButton: false,
+            timer: 3000,
+            background: '#1f2937', // bg dark gray
+            color: '#f3f4f6', // teks abu muda
+            iconColor: '#facc15', // kuning sesuai tema
+        });
+
+        // Tutup modal dan hilangkan overlay
+        modal.classList.add('hidden');
+        clearBodyLock();
+
+        // Hapus kartu MoM
+        const card = document.getElementById(`mom-card-${momId}`);
+        if (card) {
+            card.classList.add('fade-out');
+            setTimeout(() => card.remove(), 400);
+        }
+
+        // Reset textarea
+        document.getElementById('rejection-comment').value = '';
+
+        // Refresh halaman (tetap di posisi yang sama)
+        const scrollY = window.scrollY;
+        location.reload();
+        window.scrollTo(0, scrollY);
+
+    } catch (error) {
+        console.error('Gagal menolak MoM:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal!',
+            text: 'Terjadi kesalahan saat menolak MoM. Silakan coba lagi.',
+            confirmButtonColor: '#ef4444', // merah
+            background: '#1f2937',
+            color: '#f3f4f6',
+        });
+    }
+});
+
     });
 </script>
 @endpush
