@@ -30,6 +30,7 @@ class AdminNotification extends Model
             'mom_pending' => 'fa-solid fa-file-signature',
             'task_urgent' => 'fa-solid fa-triangle-exclamation',
             'user_new'    => 'fa-solid fa-user-plus',
+            'task_overdue' => 'fa-solid fa-exclamation-triangle',
             default       => 'fa-solid fa-bell'
         };
     }
@@ -43,6 +44,7 @@ class AdminNotification extends Model
             'mom_pending' => 'blue',
             'task_urgent' => 'yellow',
             'user_new'    => 'green',
+            'task_overdue' => 'red',
             default       => 'gray'
         };
     }

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('admin_notifications', function (Blueprint $table) {
             $table->id();
-            $table->enum('type', ['mom_pending', 'task_urgent', 'user_new']);
+            $table->enum('type', ['mom_pending', 'task_urgent', 'user_new', 'task_overdue']);
             $table->string('title');
             $table->text('message');
             $table->foreignId('related_id')->nullable(); // mom_id, action_id, atau user_id

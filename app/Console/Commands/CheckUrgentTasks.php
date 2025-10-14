@@ -17,36 +17,57 @@ class CheckUrgentTasks extends Command
     {
         $this->info('Checking for urgent tasks...');
 
-        // Tentukan batas waktu "mendesak" (misal: 3 hari dari sekarang)
-        $thresholdDate = Carbon::now()->addDays(3);
+        // Tentukan batas waktu "mendesak" (3 hari dari sekarang)
+        $today = Carbon::now()->startOfDay();
+        $thresholdDate = Carbon::now()->addDays(3)->endOfDay();
 
+        // Ambil task yang akan jatuh tempo dalam 3 hari (belum lewat deadline)
         $urgentTasks = ActionItem::with('mom')
-            ->where('status', 'mendatang') // Hanya periksa tugas yang masih pending
-            ->where('due', '<=', $thresholdDate)
-            ->where('due', '>', Carbon::now()) // Pastikan belum lewat deadline
+            ->where('status', 'mendatang')
+            ->where('due', '>=', $today) // Belum lewat deadline
+            ->where('due', '<=', $thresholdDate) // Dalam 3 hari ke depan
             ->get();
 
+        $urgentCount = 0;
+
         foreach ($urgentTasks as $task) {
-            // Cek apakah notifikasi untuk tugas ini sudah pernah dibuat
+            // Cek apakah notifikasi untuk tugas ini sudah pernah dibuat hari ini
             $existingNotification = AdminNotification::where('type', 'task_urgent')
-                                                      ->where('related_id', $task->id)
-                                                      ->exists();
+                ->where('related_id', $task->action_id)
+                ->whereDate('created_at', Carbon::today())
+                ->exists();
 
             if (!$existingNotification) {
-                $daysRemaining = Carbon::now()->diffInDays($task->due, false); // false agar tidak absolut
-                $deadlineText = $daysRemaining <= 0 ? "hari ini" : "dalam {$daysRemaining} hari";
+                // Hitung sisa hari dengan pembulatan ke atas (ceil)
+                $dueDate = Carbon::parse($task->due)->startOfDay();
+                $daysRemaining = (int) ceil($today->diffInDays($dueDate, false));
+
+                // Format text deadline
+                $deadlineText = match(true) {
+                    $daysRemaining == 0 => "hari ini",
+                    $daysRemaining == 1 => "besok (1 hari lagi)",
+                    $daysRemaining > 1  => "dalam {$daysRemaining} hari",
+                    default => "segera"
+                };
 
                 AdminNotificationController::createNotification(
                     type: 'task_urgent',
                     title: 'Tugas Mendekati Deadline',
                     message: "Tugas '{$task->item}' dari MoM '{$task->mom->title}' akan jatuh tempo {$deadlineText}.",
-                    relatedId: $task->id
+                    relatedId: $task->action_id
                 );
-                $this->info("Notification created for task ID: {$task->id}");
+
+                $urgentCount++;
+                $this->info("Notification created for task ID: {$task->action_id}");
             }
         }
 
-        $this->info('Urgent task check completed.');
+        if ($urgentCount > 0) {
+            $this->info("Total {$urgentCount} urgent task notifications created.");
+        } else {
+            $this->info('No urgent tasks found or all notifications already sent.');
+        }
+
         return 0;
     }
 }

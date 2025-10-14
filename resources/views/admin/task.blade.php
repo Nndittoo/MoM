@@ -112,6 +112,7 @@
                             <select class="status-select bg-gray-700 border border-gray-600 text-white text-xs rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2">
                                 <option value="mendatang" {{ $task->status == 'mendatang' ? 'selected' : '' }}>On Going</option>
                                 <option value="selesai" {{ $task->status == 'selesai' ? 'selected' : '' }}>Done</option>
+                                <option value="terlambat" {{ $task->status == 'terlambat' ? 'selected' : '' }}>Overdue</option>
                             </select>
                             <button type="submit" class="save-button px-3 py-2 text-xs font-medium text-center text-white bg-blue-600 rounded-lg hover:bg-blue-700"><i class="fa-solid fa-check"></i></button>
                             <button type="button" class="cancel-button px-3 py-2 text-xs font-medium text-center text-gray-300 bg-gray-600 rounded-lg hover:bg-gray-500"><i class="fa-solid fa-times"></i></button>
@@ -191,21 +192,36 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Update badge
-                    statusBadge.classList.remove('bg-yellow-100', 'text-yellow-700', 'bg-green-100', 'text-green-700',
-                                               'dark:bg-yellow-900', 'dark:text-yellow-300', 'dark:bg-green-900', 'dark:text-green-300');
+                    // Update badge - remove all status classes
+                    statusBadge.classList.remove(
+                        'bg-yellow-100', 'text-yellow-700', 'dark:bg-yellow-900', 'dark:text-yellow-300',
+                        'bg-green-100', 'text-green-700', 'dark:bg-green-900', 'dark:text-green-300',
+                        'bg-red-100', 'text-red-700', 'dark:bg-red-900', 'dark:text-red-300'
+                    );
 
+                    // Update badge based on new status
                     if (newStatus === 'selesai') {
                         statusBadge.innerHTML = `<i class="fa-solid fa-circle-check"></i> Done`;
                         statusBadge.classList.add('bg-green-100', 'text-green-700', 'dark:bg-green-900', 'dark:text-green-300');
+                    } else if (newStatus === 'terlambat') {
+                        statusBadge.innerHTML = `<i class="fa-solid fa-exclamation-triangle"></i> Overdue`;
+                        statusBadge.classList.add('bg-red-100', 'text-red-700', 'dark:bg-red-900', 'dark:text-red-300');
                     } else {
                         statusBadge.innerHTML = `<i class="fa-solid fa-spinner animate-spin-slow"></i> On Going`;
                         statusBadge.classList.add('bg-yellow-100', 'text-yellow-700', 'dark:bg-yellow-900', 'dark:text-yellow-300');
                     }
 
-                    // Update card data attribute
+                    // Update card data attribute and border
                     const card = form.closest('.task-card');
                     card.dataset.status = newStatus;
+
+                    // Update border color
+                    card.classList.remove('border-red-500', 'border-yellow-500', 'border-transparent');
+                    if (newStatus === 'terlambat') {
+                        card.classList.add('border-red-500');
+                    } else {
+                        card.classList.add('border-transparent');
+                    }
 
                     // Show success message
                     showNotification('Status berhasil diupdate!', 'success');
@@ -215,15 +231,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     form.classList.remove('flex');
                     statusDisplay.classList.remove('hidden');
 
-                    // Reload stats
+                    // Reload stats after short delay
                     setTimeout(() => location.reload(), 1000);
                 } else {
-                    showNotification('Gagal mengupdate status', 'error');
+                    showNotification(data.message || 'Gagal mengupdate status', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showNotification('Terjadi kesalahan', 'error');
+                showNotification('Terjadi kesalahan saat mengupdate status', 'error');
             })
             .finally(() => {
                 submitBtn.innerHTML = originalBtnText;

@@ -12,11 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('action_items', function (Blueprint $table) {
-            $table->id('action_id'); 
+            $table->id('action_id');
             $table->foreignId('mom_id')->constrained('moms', 'version_id')->onDelete('cascade');
-            $table->string('item'); 
+            $table->string('item');
             $table->date('due');
-            $table->enum('status', ['mendatang', 'selesai'])->default('mendatang');
+            $table->enum('status', ['mendatang', 'selesai', 'terlambat'])->default('mendatang');
             $table->timestamps();
         });
     }
