@@ -47,7 +47,7 @@
     <div class="space-y-8">
 
         {{-- PERUBAHAN BESAR: Welcome Banner dibuat lebih seimbang dan informatif --}}
-        <div class="flex flex-col md:flex-row items-center justify-between p-6 md:p-8 rounded-xl shadow-lg shimmer-bg bg-gray-800 border-l-4 border-red-500">
+        <div class="flex flex-col md:flex-row items-center justify-between p-6 md:p-8 rounded-xl shadow-lg bg-gray-800 border-l-4 border-red-500">
             <div class="flex items-center w-full">
                 {{-- Teks dipindahkan ke kiri untuk keseimbangan --}}
                 <div class="flex-grow">

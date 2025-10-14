@@ -58,9 +58,9 @@
             </li>
         </ul>
         <div class="border-t border-gray-700 pt-4">
-            <form action="{{ route('logout') }}" method="POST">
+            <form id="logout-form" action="{{ route('logout') }}" method="POST">
                 @csrf
-                <button type="submit"
+                <button type="button" id="logout-button"
                         class="w-full flex items-center p-3 rounded-lg text-red-400 hover:bg-red-500/20 group transition font-medium">
                     <i class="fa-solid fa-arrow-right-from-bracket w-5 h-5"></i>
                     <span class="ms-3">Log Out</span>

@@ -115,15 +115,6 @@
                   Profile
                 </a>
               </li>
-              <li>
-                <form method="POST" action="{{ route('logout') }}">
-                  @csrf
-                  <button type="submit"
-                     class="w-full text-left block px-4 py-2 text-sm text-red-400 hover:bg-red-500/20 hover:text-red-300">
-                    <i class="fa-solid fa-arrow-right-from-bracket mr-2"></i>Sign out
-                  </button>
-                </form>
-              </li>
             </ul>
           </div>
         </div>
@@ -132,35 +123,3 @@
     </div>
   </div>
 </nav>
-
-{{-- ===== JS: Search dropdown (PERUBAHAN Styling) ===== --}}
-<script>
-// ... (Bagian logika JS Anda tetap sama)
-// PERUBAHAN hanya di dalam render hasil pencarian untuk menyesuaikan styling ikon
-// Ganti bagian `item.innerHTML` di dalam `forEach` dengan kode di bawah ini:
-
-/*
-  ...
-  data.forEach(mom => {
-    // ... (logika tanggal Anda)
-
-    const item = document.createElement('div');
-    item.className = 'block px-4 py-3 hover:bg-gray-700 transition cursor-pointer';
-    item.innerHTML = `
-      <a href="/moms/${mom.version_id}" class="flex items-center space-x-3">
-        <div class="flex-shrink-0">
-          {{-- Ikon search result disesuaikan dengan tema merah --}}
-          <div class="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
-            <i class="fa-solid fa-file-alt text-red-500 text-lg"></i>
-          </div>
-        </div>
-        <div class="flex-1 min-w-0">
-          <p class="text-sm font-medium text-white truncate">${mom.title}</p>
-          <p class="text-xs text-gray-400">${createdDate}, ${createdTime}</p>
-        </div>
-      </a>`;
-    resultsContainer.appendChild(item);
-  });
-  ...
-*/
-</script>
