@@ -11,23 +11,30 @@
         animation: fadeInScaleUp 0.5s ease-out forwards;
     }
     @keyframes fadeInScaleUp { to { opacity: 1; transform: scale(1); } }
+
+    /* Animasi keluar kartu */
+    .fade-out {
+        opacity: 0 !important;
+        transform: scale(0.95) !important;
+        transition: opacity 0.5s ease, transform 0.5s ease;
+    }
 </style>
 @endpush
 
 @section('content')
 <div class="pt-2">
     {{-- Toast Notification --}}
-    <div id="toast" class="hidden fixed top-24 right-5 z-50 items-center gap-3 px-4 py-3 rounded-xl shadow-lg bg-gray-700 border border-gray-600 text-white transition-all duration-500 opacity-0">
-        {{-- Konten diisi oleh JS --}}
+    <div id="toast" class="hidden fixed top-24 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg bg-gray-700 border border-gray-600 text-white transition-all duration-500 opacity-0">
+        <i></i><span class="text-sm"></span>
     </div>
 
-    {{-- Header Halaman --}}
+    {{-- Header --}}
     <div class="p-6 md:p-8 rounded-xl shadow-lg bg-gray-800 border-l-4 border-red-500 mb-6">
         <h1 class="text-3xl font-bold font-orbitron text-neon-red">Persetujuan MoM</h1>
         <p class="mt-1 text-gray-400">Review dan kelola MoM yang menunggu persetujuan dari para pengguna.</p>
     </div>
 
-    {{-- Daftar MoM yang Menunggu Persetujuan --}}
+    {{-- Daftar MoM --}}
     <div class="space-y-4">
         @forelse ($pendingMoms as $index => $mom)
             @php
@@ -81,7 +88,7 @@
         <div class="relative bg-gray-800 rounded-lg shadow border border-gray-700">
             <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t border-gray-600">
                 <h3 class="text-lg font-semibold text-white font-orbitron">Alasan Penolakan</h3>
-                <button type="button" data-modal-hide="rejection-modal" class="text-gray-400 bg-transparent hover:bg-gray-600 hover:text-white rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center">
+                <button type="button" data-modal-hide="rejection-modal" class="close-modal text-gray-400 bg-transparent hover:bg-gray-600 hover:text-white rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center">
                     <i class="fa-solid fa-times"></i>
                 </button>
             </div>
@@ -107,17 +114,10 @@
 
 @push('scripts')
 <script>
-    /* FUNGSI-FUNGSI UTILITY */
     const showToast = (message, isError = false) => {
         const toast = document.getElementById("toast");
-        if (!toast) return;
-        let iconEl = toast.querySelector('i');
-        if (!iconEl) {
-            iconEl = document.createElement('i');
-            toast.prepend(iconEl);
-        }
-        const msgEl = toast.querySelector('.text-sm');
-
+        const iconEl = toast.querySelector('i');
+        const msgEl = toast.querySelector('span');
         iconEl.className = isError ? 'fa-solid fa-circle-xmark text-red-500 text-lg' : 'fa-solid fa-circle-check text-green-500 text-lg';
         msgEl.textContent = message;
         toast.classList.remove("hidden", "opacity-0");
@@ -126,34 +126,40 @@
             toast.classList.remove("opacity-100");
             toast.classList.add("opacity-0");
             setTimeout(() => toast.classList.add("hidden"), 500);
-        }, 3000);
+        }, 2500);
     };
 
     const handleAjaxAction = async (url, method, data = null) => {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-        try {
-            const response = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
-                body: data ? JSON.stringify(data) : null,
-            });
-            const result = await response.json();
-            if (!response.ok) throw result;
-            return result;
-        } catch (err) {
-            console.error('AJAX Error:', err);
-            throw err;
-        }
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: data ? JSON.stringify(data) : null,
+        });
+        const result = await response.json();
+        if (!response.ok) throw result;
+        return result;
     };
 
-    /* EVENT LISTENERS */
     document.addEventListener('DOMContentLoaded', () => {
         const modal = document.getElementById('rejection-modal');
         const rejectionForm = document.getElementById('rejection-form');
         const approveButtons = document.querySelectorAll('.approve-btn');
         const rejectButtons = document.querySelectorAll('.reject-btn');
+        const closeButtons = document.querySelectorAll('.close-modal');
 
-        // Handler untuk tombol Approve
+        // Memastikan hilangkan overlay hitam setelah modal ditutup manual
+        const clearBodyLock = () => document.body.classList.remove('overflow-hidden');
+
+        closeButtons.forEach(btn => {
+            btn.addEventListener('click', clearBodyLock);
+        });
+
         approveButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 const url = btn.dataset.approveUrl;
@@ -182,23 +188,16 @@
                                 showToast(response.message || 'MoM berhasil disetujui.');
                                 const card = document.getElementById(`mom-card-${momId}`);
                                 if (card) {
-                                    card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-                                    card.style.opacity = '0';
-                                    card.style.transform = 'scale(0.95)';
+                                    card.classList.add('fade-out');
                                     setTimeout(() => card.remove(), 500);
                                 }
                             })
-                            .catch(error => {
-                                showToast(error.message || 'Gagal menyetujui MoM.', true);
-                            });
+                            .catch(() => showToast('Gagal menyetujui MoM.', true));
                     }
-                }).then(() => {
-    location.reload();
-});
+                });
             });
         });
 
-        // Handler untuk tombol Reject (membuka modal)
         rejectButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 modal.querySelector('#modal-mom-id').value = btn.dataset.momId;
@@ -207,26 +206,33 @@
             });
         });
 
-        // Handler untuk submit form penolakan
         rejectionForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const url = e.target.getAttribute('data-url');
-            const comment = e.target.querySelector('#rejection-comment').value;
+            const url = rejectionForm.getAttribute('data-url');
+            const momId = modal.querySelector('#modal-mom-id').value;
+            const comment = document.getElementById('rejection-comment').value;
 
-            if (!comment.trim()) {
-                showToast('Komentar revisi tidak boleh kosong.', true);
-                return;
-            }
+            if (!comment.trim()) return showToast('Komentar revisi tidak boleh kosong.', true);
 
             handleAjaxAction(url, 'POST', { comment })
                 .then(response => {
                     showToast(response.message || 'MoM berhasil ditolak.');
-                    // Muat ulang halaman untuk refresh daftar
-                    setTimeout(() => window.location.reload(), 1500);
+
+                    // Tutup modal + hilangkan overlay
+                    modal.classList.add('hidden');
+                    clearBodyLock();
+
+                    // Hapus kartu MoM
+                    const card = document.getElementById(`mom-card-${momId}`);
+                    if (card) {
+                        card.classList.add('fade-out');
+                        setTimeout(() => card.remove(), 500);
+                    }
+
+                    // Bersihkan field
+                    document.getElementById('rejection-comment').value = '';
                 })
-                .catch(error => {
-                    showToast(error.message || 'Gagal menolak MoM.', true);
-                });
+                .catch(() => showToast('Gagal menolak MoM.', true));
         });
     });
 </script>

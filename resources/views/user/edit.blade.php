@@ -4,13 +4,27 @@
 
 @push('styles')
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
     <style>
+        /* Penyesuaian tema Quill agar sesuai dengan dark mode form */
         .ql-toolbar { border-top-left-radius: 0.5rem; border-top-right-radius: 0.5rem; background-color: #1F2937; border-color: #374151 !important; }
         .ql-container { border-bottom-left-radius: 0.5rem; border-bottom-right-radius: 0.5rem; background-color: #374151; border-color: #374151 !important; color: #D1D5DB; }
         .ql-editor.ql-blank::before { color: #9CA3AF !important; font-style: normal !important; }
         .ql-snow .ql-stroke { stroke: #9CA3AF; }
         .ql-snow .ql-picker-label { color: #9CA3AF; }
+
+        /* Style Card untuk Unit/Mitra */
+        .unit-card { 
+            background-color: #1f2937; /* bg-gray-700 */
+            border-color: #4b5563; /* border-gray-600 */
+        }
+        /* Style Neon Red sesuai tema Anda sebelumnya */
+        .btn-neon-red {
+            background-color: #ff3366; /* Contoh warna merah neon */
+            box-shadow: 0 0 5px #ff3366, 0 0 10px #ff3366;
+            color: white;
+        }
     </style>
 @endpush
 
@@ -18,22 +32,62 @@
 
 {{-- Inisialisasi Data dari PHP ke JavaScript --}}
 @php
-    // Data JSON untuk Peserta dan Agenda (diambil dari Model dengan Casting)
-    $manualAttendeesJs = json_encode($mom->nama_peserta ?? []);
-    $partnerAttendeesJs = json_encode($mom->nama_mitra ?? []);
-    $agendasJs = json_encode($mom->agendas->pluck('item')->toArray() ?? []);
+    
+    // Menggunakan $mom->nama_peserta dan mengkonversinya
+    $internalAttendeesData = $mom->nama_peserta ?? []; 
 
-    // Data Attachment Lama
+    // Konversi array string lama (jika ada) ke struktur Unit Dinamis baru
+    if (is_array($internalAttendeesData) && count($internalAttendeesData) > 0 && 
+        (!isset($internalAttendeesData[0]['unit']) || !is_string($internalAttendeesData[0]['unit']))
+    ) {
+        $convertedData = [
+            [
+                'unit' => 'Peserta Internal (Data Sebelumnya)', // Default Unit Name
+                'attendees' => $internalAttendeesData
+            ]
+        ];
+        $internalAttendeesJs = json_encode($convertedData);
+    } else {
+        // Jika data sudah dalam format baru (array of objects), gunakan langsung
+        $internalAttendeesJs = json_encode($internalAttendeesData);
+    }
+    // -------------------------------------
+
+    // --- Partner Attendees (Memastikan struktur 'name' dan 'attendees' terisi) ---
+    $partnerAttendeesData = $mom->nama_mitra ?? [];
+
+    $validatedPartnerAttendees = [];
+    if (is_array($partnerAttendeesData)) {
+        $validatedPartnerAttendees = array_map(function($mitra) {
+            if (is_string($mitra)) {
+                return ['name' => $mitra, 'attendees' => []];
+            }
+            if (is_array($mitra) && isset($mitra['name'])) {
+                $mitra['attendees'] = isset($mitra['attendees']) && is_array($mitra['attendees']) 
+                                     ? $mitra['attendees'] 
+                                     : [];
+                return $mitra;
+            }
+            return null;
+        }, $partnerAttendeesData);
+        
+        $validatedPartnerAttendees = array_filter($validatedPartnerAttendees);
+    }
+    // -----------------------------------------------
+
+    $partnerAttendeesJs = json_encode($validatedPartnerAttendees);
+    $agendasJs = json_encode($mom->agendas->pluck('item')->toArray() ?? []);
     $oldAttachmentsJs = json_encode($mom->attachments ?? []);
 @endphp
 
 <div class="pt-2">
     {{-- Toast Notification --}}
     <div id="toast" class="hidden fixed top-24 right-5 z-50 items-center gap-3 px-4 py-3 rounded-xl shadow-lg bg-gray-700 border border-gray-600 text-white transition-all duration-500 opacity-0">
-        {{-- Konten diisi oleh JS --}}
+         <div class="flex-shrink-0"><i id="toast-icon" class="fa-solid text-lg"></i></div>
+         <div id="toast-message" class="text-sm font-medium"></div>
     </div>
 
-    {{-- Header --}}
+    {{-- Header (Konten Header tetap) --}}
     <div class="p-6 md:p-8 rounded-xl shadow-lg bg-gray-800 border-l-4 border-red-500 mb-6">
         <div>
             <h1 class="text-3xl font-bold font-orbitron text-neon-red">Edit MoM</h1>
@@ -55,7 +109,7 @@
             @csrf
             @method('PATCH')
 
-            {{-- Informasi Rapat --}}
+            {{-- Informasi Rapat (Konten tetap) --}}
             <div class="space-y-6">
                 <h2 class="text-lg font-semibold text-white font-orbitron border-b border-gray-700 pb-3">Informasi Rapat</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -71,19 +125,26 @@
                 </div>
             </div>
 
-            {{-- Peserta & Agenda --}}
+            {{-- Peserta Internal & Agenda (Disesuaikan ke mode Unit Dinamis) --}}
             <div class="space-y-6">
                 <h2 class="text-lg font-semibold text-white font-orbitron border-b border-gray-700 pb-3">Peserta & Agenda</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="grid grid-cols-1 gap-6">
                     <div>
-                        <label class="block mb-2 text-sm font-medium text-gray-300">Peserta Rapat</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="input-peserta-manual" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5" placeholder="Nama Peserta">
-                            <button type="button" id="btn-add-peserta-manual" class="px-5 py-2.5 text-sm font-medium text-white btn-neon-red rounded-lg">Add</button>
+                        <label class="block mb-2 text-sm font-medium text-gray-300">Peserta Rapat (Per Unit/Bagian)</label>
+                        <div class="flex flex-col md:flex-row gap-3 items-end">
+                            <div class="w-full">
+                                <input type="text" id="input-internal-unit" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5" placeholder="Nama Unit/Bagian (Contoh: Unit HC)">
+                            </div>
+                            <button type="button" id="btn-add-internal-unit" class="px-5 py-2.5 text-sm font-medium text-white btn-neon-red rounded-lg w-full md:w-auto flex-shrink-0">Tambah Unit</button>
                         </div>
-                        <div id="list-peserta-manual" class="flex flex-wrap gap-2 mt-3"></div>
-                        <p class="mt-1 text-xs text-gray-500">Ketik nama peserta satu per satu.</p>
+                        
+                        {{-- CONTAINER INI AKAN DIISI OLEH JAVASCRIPT (renderInternalList) --}}
+                        <div id="list-internal-attendees-container" class="space-y-4 mt-4"></div>
+                        
+                        <p class="mt-1 text-xs text-gray-500">Tambah Unit, lalu masukkan nama-nama peserta dari Unit tersebut.</p>
                     </div>
+                </div>
+                <div class="grid grid-cols-1 gap-6 pt-6 border-t border-gray-700">
                     <div>
                         <label class="block mb-2 text-sm font-medium text-gray-300">Agenda</label>
                         <div class="flex gap-2">
@@ -96,7 +157,7 @@
                 </div>
             </div>
 
-            {{-- Peserta dari Mitra --}}
+            {{-- Peserta dari Mitra (Konten tetap) --}}
             <div class="space-y-6">
                 <h2 class="text-lg font-semibold text-white font-orbitron border-b border-gray-700 pb-3">Pihak Luar (Mitra)</h2>
                 <div class="flex flex-col md:flex-row gap-4 items-end">
@@ -110,14 +171,14 @@
                 <p class="mt-1 text-xs text-gray-500">Tambah Mitra dan masukkan nama-nama orang yang hadir di bawahnya.</p>
             </div>
 
-            {{-- Pembahasan --}}
+            {{-- Pembahasan (Konten tetap) --}}
             <div>
                 <h2 class="text-lg font-semibold text-white font-orbitron border-b border-gray-700 pb-3 mb-6">Pembahasan</h2>
                 <div id="pembahasan-editor">{!! $mom->pembahasan ?? '' !!}</div>
                 <input type="hidden" name="pembahasan" id="pembahasan-hidden">
             </div>
 
-            {{-- Lampiran --}}
+            {{-- Lampiran (Konten tetap) --}}
             <div>
                 <h2 class="text-lg font-semibold text-white font-orbitron border-b border-gray-700 pb-3 mb-6">Lampiran</h2>
                 <input class="block w-full text-sm text-gray-400 border border-gray-600 rounded-lg cursor-pointer bg-gray-700 focus:outline-none file:bg-gray-600 file:border-0 file:text-gray-300 file:px-4 file:py-2.5" id="lampiran-input" name="attachments[]" type="file" multiple>
@@ -125,7 +186,7 @@
                 <div id="file-list" class="mt-3 space-y-2"></div>
             </div>
 
-            {{-- Tombol Submit --}}
+            {{-- Tombol Submit (Konten tetap) --}}
             <div class="flex justify-end gap-4 pt-6 border-t border-gray-700">
                 <button type="button" id="btn-submit" class="text-white btn-neon-red btn-pulse font-semibold rounded-lg text-base px-10 py-3 text-center">
                     <i class="fa-solid fa-save mr-2"></i>Update MoM
@@ -144,7 +205,7 @@
     // FUNGSI UTILITY: Tampilkan Toast
     const showToast = (message, isError = false) => {
         const toast = document.getElementById("toast");
-        const icon = toast.querySelector('i');
+        const icon = document.getElementById("toast-icon");
         const messageContainer = document.getElementById("toast-message");
 
         icon.className = isError
@@ -167,20 +228,25 @@
         const btnSubmit = document.getElementById('btn-submit');
         const fileInput = document.getElementById('lampiran-input');
 
+        // Ambil CSRF token
+        const csrfTokenElement = document.querySelector('meta[name="csrf-token"]');
+        const csrfToken = csrfTokenElement ? csrfTokenElement.getAttribute('content') : '';
+
         // URL UPDATE (menggunakan ID MoM saat ini)
         const momId = '{{ $mom->version_id }}';
-        const updateUrl = `/moms/${momId}`;
+        const updateUrl = `{{ route('moms.update', $mom->version_id) }}`;
 
         // --- SETUP DATA GLOBAL DENGAN DATA LAMA ---
         const dataStorage = {
-            manualAttendees: JSON.parse('{!! $manualAttendeesJs !!}'),
+            // Menggunakan data yang sudah dikonversi di PHP
+            internalAttendees: JSON.parse('{!! $internalAttendeesJs !!}'), 
             agendas: JSON.parse('{!! $agendasJs !!}'),
-            partnerAttendees: JSON.parse('{!! $partnerAttendeesJs !!}'),
+            partnerAttendees: JSON.parse('{!! $partnerAttendeesJs !!}'), 
             filesToUpload: [],
             oldFiles: JSON.parse('{!! $oldAttachmentsJs !!}'),
             filesToDelete: []
         };
-
+        
         // --- Setup Quill JS ---
         const pembahasanQuill = new Quill('#pembahasan-editor', { theme: 'snow', placeholder: "Tuliskan hasil pembahasan, keputusan, dan poin penting lainnya...", modules: { toolbar: [[{ 'header': [1, 2, false] }], ['bold', 'italic', 'underline'], [{ 'list': 'ordered' }, { 'list': 'bullet' }], ['link'], ['clean']] } });
 
@@ -189,41 +255,30 @@
             const fileListContainer = document.getElementById('file-list');
             fileListContainer.innerHTML = '';
 
-            // Filter file lama: hanya tampilkan yang TIDAK ada di filesToDelete
             const oldFilesToDisplay = dataStorage.oldFiles.filter(
                 f => !dataStorage.filesToDelete.includes(f.attachment_id)
             );
 
             const allFiles = [
-                ...oldFilesToDisplay.map(f => ({
-                    name: f.file_name,
-                    size: f.file_size,
-                    type: 'old',
-                    id: f.attachment_id
-                })),
-                ...dataStorage.filesToUpload.map(f => ({
-                    name: f.name,
-                    size: f.size,
-                    type: 'new',
-                    fileObj: f
-                }))
+                ...oldFilesToDisplay.map(f => ({ name: f.file_name, size: f.file_size, type: 'old', id: f.attachment_id })),
+                ...dataStorage.filesToUpload.map(f => ({ name: f.name, size: f.size, type: 'new', fileObj: f }))
             ];
 
             if (allFiles.length > 0) {
                 const ul = document.createElement('ul');
                 ul.className = 'list-none space-y-2';
 
-                allFiles.forEach((file, index) => {
+                allFiles.forEach((file) => {
                     const li = document.createElement('li');
 
-                    li.className = `flex items-center justify-between p-2 rounded-lg ${file.type === 'old' ? 'bg-yellow-50 dark:bg-gray-800' : 'bg-gray-100 dark:bg-gray-700'}`;
+                    li.className = `flex items-center justify-between p-2 rounded-lg ${file.type === 'old' ? 'bg-gray-700' : 'bg-gray-600'}`; // Menyesuaikan warna dark mode
 
                     const fileInfo = document.createElement('span');
-                    fileInfo.className = 'flex items-center text-sm font-medium truncate';
-                    const iconColor = file.type === 'old' ? 'text-yellow-600' : 'text-primary';
+                    fileInfo.className = 'flex items-center text-sm font-medium truncate text-gray-300';
+                    const iconColor = file.type === 'old' ? 'text-red-400' : 'text-red-500'; 
                     const statusText = file.type === 'old' ? '(Lama)' : '(Baru)';
 
-                    fileInfo.innerHTML = `<i class="fa-solid fa-file mr-2 ${iconColor}"></i> <span>${file.name}</span> <span class="ml-2 text-xs text-text-secondary dark:text-dark-text-secondary">(${(file.size / 1024 / 1024).toFixed(2)} MB) ${statusText}</span>`;
+                    fileInfo.innerHTML = `<i class="fa-solid fa-file mr-2 ${iconColor}"></i> <span>${file.name}</span> <span class="ml-2 text-xs text-gray-500">(${(file.size / 1024 / 1024).toFixed(2)} MB) ${statusText}</span>`;
 
                     const removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
@@ -272,61 +327,138 @@
             renderFileList();
         });
 
-        // --- SETUP PESERTA INTERNAL (RENDER AWAL) ---
-        function setupManualParticipantPills() {
-            const input = document.getElementById('input-peserta-manual');
-            const addButton = document.getElementById('btn-add-peserta-manual');
-            const listContainer = document.getElementById('list-peserta-manual');
 
-            const renderList = () => {
-                listContainer.innerHTML = '';
-                dataStorage.manualAttendees.forEach((name, index) => {
-                    const pill = document.createElement('span');
-                    pill.className = 'inline-flex items-center gap-x-2 bg-primary/20 text-primary text-sm font-medium px-3 py-1.5 rounded-full dark:bg-primary/30 dark:text-primary';
+        // --- Setup Peserta Internal (Dynamic Unit Input) ---
+        function setupInternalAttendees() {
+            const inputUnit = document.getElementById('input-internal-unit');
+            const btnAddUnit = document.getElementById('btn-add-internal-unit');
+            const listInternalContainer = document.getElementById('list-internal-attendees-container');
 
-                    pill.textContent = name;
+            const renderInternalList = () => {
+                listInternalContainer.innerHTML = '';
 
-                    const removeBtn = document.createElement('button');
-                    removeBtn.type = 'button';
-                    removeBtn.innerHTML = '<i class="fa-solid fa-times w-3 h-3"></i>';
-                    removeBtn.onclick = () => {
-                        dataStorage.manualAttendees.splice(index, 1);
-                        renderList();
+                dataStorage.internalAttendees.forEach((unitData, unitIndex) => {
+                    const unitDiv = document.createElement('div');
+                    // Menggunakan style yang mirip dengan card Mitra
+                    unitDiv.className = 'p-4 border border-gray-700 rounded-lg bg-gray-900 shadow-sm space-y-3 unit-card';
+
+                    // Header Unit
+                    const header = document.createElement('div');
+                    header.className = 'flex items-center justify-between border-b border-gray-700 pb-2';
+                    // Menggunakan text-red-400 (neon-red) seperti Mitra
+                    header.innerHTML = `<h3 class="text-base font-semibold text-red-400">${unitData.unit}</h3>`;
+
+                    const removeUnitBtn = document.createElement('button');
+                    removeUnitBtn.type = 'button';
+                    removeUnitBtn.innerHTML = '<i class="fa-solid fa-trash text-red-500 hover:text-red-700 fa-sm"></i>';
+                    removeUnitBtn.title = 'Hapus Unit ini beserta pesertanya';
+                    removeUnitBtn.onclick = () => {
+                        dataStorage.internalAttendees.splice(unitIndex, 1);
+                        renderInternalList();
+                    };
+                    header.appendChild(removeUnitBtn);
+                    unitDiv.appendChild(header);
+
+                    // Form Input Peserta untuk Unit ini
+                    const attendeeForm = document.createElement('div');
+                    attendeeForm.className = 'flex gap-2';
+                    attendeeForm.innerHTML = `
+                        <input type="text" id="input-peserta-internal-${unitIndex}" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5" placeholder="Nama orang yang hadir">
+                        <button type="button" id="btn-add-peserta-internal-${unitIndex}" class="px-4 py-2 text-xs font-medium text-white btn-neon-red rounded-lg flex-shrink-0">Tambah</button>
+                    `;
+                    unitDiv.appendChild(attendeeForm);
+
+                    // List Peserta Unit
+                    const attendeeList = document.createElement('ul');
+                    // Ganti list-disc menjadi list-none agar tampilan lebih rapi seperti Mitra
+                    attendeeList.className = 'mt-2 space-y-1 list-none text-sm text-gray-300';
+                    unitData.attendees.forEach((person, personIndex) => {
+                        const li = document.createElement('li');
+                        // Menyesuaikan ukuran teks seperti Mitra
+                        li.className = 'flex items-center justify-between text-xs md:text-sm';
+                        li.textContent = person;
+
+                        const removePersonBtn = document.createElement('button');
+                        removePersonBtn.type = 'button';
+                        removePersonBtn.innerHTML = '<i class="fa-solid fa-times text-red-400 hover:text-red-600 fa-xs"></i>';
+                        removePersonBtn.className = 'ml-4';
+                        removePersonBtn.onclick = () => {
+                            dataStorage.internalAttendees[unitIndex].attendees.splice(personIndex, 1);
+                            renderInternalList();
+                        };
+
+                        li.appendChild(removePersonBtn);
+                        attendeeList.appendChild(li);
+                    });
+                    unitDiv.appendChild(attendeeList);
+                    listInternalContainer.appendChild(unitDiv);
+
+                    // Tambahkan Listener untuk tombol Tambah Peserta
+                    const personInput = document.getElementById(`input-peserta-internal-${unitIndex}`);
+                    const personAddBtn = document.getElementById(`btn-add-peserta-internal-${unitIndex}`);
+
+                    const addPerson = () => {
+                        const personName = personInput.value.trim();
+                        if (personName === '') return;
+
+                        if (unitData.attendees.some(n => n.toLowerCase() === personName.toLowerCase())) {
+                            showToast('Peserta ini sudah ditambahkan di unit ini!', true);
+                            return;
+                        }
+
+                        dataStorage.internalAttendees[unitIndex].attendees.push(personName);
+                        personInput.value = '';
+                        renderInternalList();
                     };
 
-                    pill.appendChild(removeBtn);
-                    listContainer.appendChild(pill);
+                    personAddBtn.addEventListener('click', addPerson);
+                    personInput.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            addPerson();
+                        }
+                    });
                 });
+
+                // Tampilkan pesan jika belum ada unit
+                if (dataStorage.internalAttendees.length === 0) {
+                    listInternalContainer.innerHTML = '<p class="text-sm text-gray-500">Silakan tambahkan Unit/Bagian yang hadir.</p>';
+                }
             };
 
-            const addItem = () => {
-                const name = input.value.trim();
-                if (!name) return;
-
-                if (dataStorage.manualAttendees.some(n => n.toLowerCase() === name.toLowerCase())) {
-                    showToast('Peserta ini sudah ditambahkan!', true);
+            // Tambahkan Unit Baru
+            const addUnit = () => {
+                const unitName = inputUnit.value.trim();
+                if (unitName === '') {
+                    showToast('Nama Unit/Bagian wajib diisi!', true);
                     return;
                 }
 
-                dataStorage.manualAttendees.push(name);
-                input.value = '';
-                input.focus();
-                renderList();
+                if (dataStorage.internalAttendees.some(u => u.unit.toLowerCase() === unitName.toLowerCase())) {
+                    showToast('Nama Unit/Bagian ini sudah ada!', true);
+                    return;
+                }
+
+                dataStorage.internalAttendees.push({ unit: unitName, attendees: [] });
+                inputUnit.value = '';
+                inputUnit.focus();
+                renderInternalList();
             };
 
-            if (addButton) {
-                addButton.addEventListener('click', addItem);
-                input.addEventListener('keydown', (e) => {
+            if (btnAddUnit) {
+                btnAddUnit.addEventListener('click', addUnit);
+                inputUnit.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter') {
                         e.preventDefault();
-                        addItem();
+                        addUnit();
                     }
                 });
             }
-            renderList();
-        }
-        setupManualParticipantPills();
 
+            // Panggil saat inisialisasi: Ini yang memastikan data lama dirender
+            renderInternalList();
+        }
+        setupInternalAttendees();
 
         // --- SETUP AGENDA (RENDER AWAL) ---
         function setupAgendaList() {
@@ -338,7 +470,7 @@
                 listContainer.innerHTML = '';
                 dataStorage.agendas.forEach((item, index) => {
                     const listItem = document.createElement('li');
-                    listItem.className = 'flex items-center justify-between text-text-secondary dark:text-dark-text-secondary';
+                    listItem.className = 'flex items-center justify-between text-gray-300';
                     listItem.textContent = item;
 
                     const removeBtn = document.createElement('button');
@@ -383,11 +515,11 @@
 
                 dataStorage.partnerAttendees.forEach((mitra, mitraIndex) => {
                     const mitraDiv = document.createElement('div');
-                    mitraDiv.className = 'p-4 border border-border-light dark:border-border-dark rounded-lg bg-body-bg dark:bg-dark-component-bg shadow-sm space-y-3';
+                    mitraDiv.className = 'p-4 border border-gray-700 rounded-lg bg-gray-900 shadow-sm space-y-3 unit-card';
 
                     const header = document.createElement('div');
-                    header.className = 'flex items-center justify-between border-b border-border-light dark:border-border-dark pb-2';
-                    header.innerHTML = `<h3 class="text-base font-semibold text-primary">${mitra.name}</h3>`;
+                    header.className = 'flex items-center justify-between border-b border-gray-700 pb-2';
+                    header.innerHTML = `<h3 class="text-base font-semibold text-red-400">${mitra.name}</h3>`;
 
                     const removeMitraBtn = document.createElement('button');
                     removeMitraBtn.type = 'button';
@@ -402,16 +534,20 @@
                     const attendeeForm = document.createElement('div');
                     attendeeForm.className = 'flex gap-2';
                     attendeeForm.innerHTML = `
-                        <input type="text" id="input-peserta-mitra-${mitraIndex}" class="bg-white border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-body-bg dark:border-border-dark" placeholder="Nama orang yang hadir">
-                        <button type="button" id="btn-add-peserta-mitra-${mitraIndex}" class="px-4 py-2 text-xs font-medium text-white bg-primary rounded-lg hover:opacity-90 flex-shrink-0">Tambah</button>
+                        <input type="text" id="input-peserta-mitra-${mitraIndex}" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5" placeholder="Nama orang yang hadir">
+                        <button type="button" id="btn-add-peserta-mitra-${mitraIndex}" class="px-4 py-2 text-xs font-medium text-white btn-neon-red rounded-lg flex-shrink-0">Tambah</button>
                     `;
                     mitraDiv.appendChild(attendeeForm);
 
                     const attendeeList = document.createElement('ul');
-                    attendeeList.className = 'mt-2 space-y-1 list-disc list-inside text-sm text-text-secondary dark:text-dark-text-secondary';
-                    mitra.attendees.forEach((person, personIndex) => {
+                    // Menggunakan list-none seperti yang terlihat pada gambar Mitra
+                    attendeeList.className = 'mt-2 space-y-1 list-none text-sm text-gray-300';
+                    
+                    const attendeesArray = Array.isArray(mitra.attendees) ? mitra.attendees : [];
+
+                    attendeesArray.forEach((person, personIndex) => {
                         const li = document.createElement('li');
-                        li.className = 'flex items-center justify-between';
+                        li.className = 'flex items-center justify-between text-xs md:text-sm';
                         li.textContent = person;
 
                         const removePersonBtn = document.createElement('button');
@@ -435,6 +571,12 @@
                     const addPerson = () => {
                         const personName = personInput.value.trim();
                         if (personName === '') return;
+
+                        if (mitra.attendees.some(n => n.toLowerCase() === personName.toLowerCase())) {
+                            showToast('Peserta ini sudah ditambahkan di mitra ini!', true);
+                            return;
+                        }
+
                         dataStorage.partnerAttendees[mitraIndex].attendees.push(personName);
                         personInput.value = '';
                         renderMitraList();
@@ -448,6 +590,11 @@
                         }
                     });
                 });
+                
+                // Tampilkan pesan jika belum ada mitra
+                if (dataStorage.partnerAttendees.length === 0) {
+                    listMitraContainer.innerHTML = '<p class="text-sm text-gray-500">Silakan tambahkan Pihak Luar (Mitra) jika ada.</p>';
+                }
             };
 
             const addMitra = () => {
@@ -488,7 +635,7 @@
 
             // Tambahkan field method PATCH secara manual
             formData.append('_method', 'PATCH');
-            formData.append('_token', '{{ csrf_token() }}');
+            formData.append('_token', csrfToken);
 
             const simpleFields = ['title', 'location', 'meeting_date', 'start_time', 'end_time', 'pimpinan_rapat', 'notulen'];
             simpleFields.forEach(name => {
@@ -499,21 +646,26 @@
             });
 
             // --- VALIDASI DAN PEMBENTUKAN DATA ---
-
             const pembahasanContent = pembahasanQuill.root.innerHTML.trim();
             if (pembahasanContent.length === 0 || pembahasanContent === '<p><br></p>') {
                 showToast('Pembahasan wajib diisi!', true);
                 return;
             }
             formData.append('pembahasan', pembahasanContent);
-
-            if (dataStorage.manualAttendees.length === 0) {
-                 showToast('Peserta Rapat Internal wajib diisi (minimal 1 peserta)!', true);
-                 return;
-            }
-            dataStorage.manualAttendees.forEach(name => {
-                formData.append('attendees_manual[]', name);
+            
+            // Cek Peserta Internal & Tambahkan Array JSON dari dataStorage
+            let totalInternalAttendees = 0;
+            dataStorage.internalAttendees.forEach(unitData => {
+                totalInternalAttendees += unitData.attendees.length;
             });
+
+            if (totalInternalAttendees === 0) {
+                showToast('Peserta Rapat Internal wajib diisi (minimal 1 Unit/Bagian dengan minimal 1 peserta)!', true);
+                return;
+            }
+            
+            // Tambahkan Peserta Internal (Internal Attendees) sebagai JSON string
+            formData.append('internal_attendees_json', JSON.stringify(dataStorage.internalAttendees));
 
             if (dataStorage.agendas.length === 0) {
                  showToast('Agenda Rapat wajib diisi (minimal 1 item)!', true);
@@ -523,6 +675,7 @@
                 formData.append('agendas[]', item);
             });
 
+            // Tambahkan Array Peserta Mitra (Partner Attendees) sebagai JSON string
             formData.append('partner_attendees_json', JSON.stringify(dataStorage.partnerAttendees));
 
             // Tambahkan ID file lama yang ditandai untuk dihapus
@@ -541,11 +694,11 @@
 
             // KIRIM DATA
             try {
-                // FIX SINTAKSIS: Pastikan fetch() dan await terstruktur dengan benar
                 const response = await fetch(updateUrl, {
                     method: 'POST', // Spoofing PATCH
                     headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: formData,
                 });
@@ -556,7 +709,7 @@
                 if (response.ok) {
                     showToast(data.message || 'MoM berhasil diupdate!', false);
                     setTimeout(() => {
-                        window.location.href = `/moms/${momId}/edit`; // Refresh halaman edit setelah update
+                        window.location.href = `{{ route('draft.index', $mom->version_id) }}`; 
                     }, 1000);
                 } else {
                     let errorMessage = 'Gagal menyimpan MoM.';
