@@ -143,6 +143,12 @@
                 background-color: #DC2626;
                 box-shadow: 0 0 12px rgba(239, 68, 68, 0.8), 0 0 20px rgba(239, 68, 68, 0.5);
             }
+
+            .ql-toolbar { border-top-left-radius: 0.5rem; border-top-right-radius: 0.5rem; background-color: #1F2937; border-color: #374151 !important; }
+            .ql-container { border-bottom-left-radius: 0.5rem; border-bottom-right-radius: 0.5rem; background-color: #374151; border-color: #374151 !important; color: #D1D5DB; }
+            .ql-editor.ql-blank::before { color: #9CA3AF !important; font-style: normal !important; }
+            .ql-snow .ql-stroke { stroke: #9CA3AF; }
+            .ql-snow .ql-picker-label { color: #9CA3AF; }
         </style>
 
         @stack('styles')

@@ -1,13 +1,30 @@
 @extends('layouts.app')
 
-@section('title', 'Calendar | TR1 MoMatic')
+@section('title', 'Calendar | MoM Telkom')
+
+@push('styles')
+<style>
+    /* Animasi fade-in untuk daftar event */
+    .event-item {
+        opacity: 0;
+        transform: translateY(10px);
+        animation: fadeInSlideUp 0.5s ease-out forwards;
+    }
+    @keyframes fadeInSlideUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+@endpush
 
 @section('content')
 <div class="pt-2">
-    {{-- Header Halaman dengan Animasi Shimmer --}}
-    <div class="p-6 md:p-8 rounded-xl shadow-lg bg-gray-800 border-l-4 border-red-500 mb-6 relative overflow-hidden shimmer-bg">
-        <h1 class="text-3xl font-bold font-orbitron text-neon-red relative z-10">Task Calendar</h1>
-        <p class="mt-1 text-gray-400 relative z-10">Lihat semua deadline tugas dari setiap MoM dalam format kalender.</p>
+    {{-- Header Halaman --}}
+    <div class="p-6 md:p-8 rounded-xl shadow-lg bg-gray-800 border-l-4 border-red-500 mb-6">
+        <h1 class="text-3xl font-bold font-orbitron text-neon-red">Task Calendar</h1>
+        <p class="mt-1 text-gray-400">Lihat semua deadline tugas dari setiap MoM dalam format kalender.</p>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -39,17 +56,17 @@
         <div class="lg:col-span-2">
             <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
                 <h3 id="eventListTitle" class="text-lg font-semibold text-white font-orbitron"></h3>
-                {{-- Tombol Filter Status
-                <div id="status-filters" class="flex items-center space-x-1 p-1 bg-gray-900 rounded-lg">
+                {{-- Tombol Filter Status --}}
+                <div id="statusFilters" class="flex items-center space-x-1 p-1 bg-gray-900 rounded-lg">
                     <button data-status="all" class="filter-btn px-3 py-1 text-sm rounded-md bg-red-600 text-white">All</button>
                     <button data-status="ongoing" class="filter-btn px-3 py-1 text-sm rounded-md text-gray-400 hover:bg-gray-700">On Going</button>
                     <button data-status="today" class="filter-btn px-3 py-1 text-sm rounded-md text-gray-400 hover:bg-gray-700">Due Today</button>
                     <button data-status="overdue" class="filter-btn px-3 py-1 text-sm rounded-md text-gray-400 hover:bg-gray-700">Overdue</button>
-                </div> --}}
+                </div>
             </div>
             <div id="eventListContainer" class="space-y-4">
                 <div id="noEventPlaceholder" class="text-center py-10 bg-gray-800/50 rounded-2xl border border-dashed border-gray-700">
-                    <img src="{{ asset("img/LOGO.png") }}" alt="No Events" class="w-16 h-16 mx-auto opacity-30">
+                    <img src="{{ asset("img/LOGO.png") }}" alt="No Events" class="h-28 mx-auto opacity-30">
                     <p class="mt-4 text-sm text-gray-500">Tidak ada jadwal untuk bulan ini.</p>
                 </div>
                 <ul id="eventList" class="space-y-4"></ul>
@@ -61,162 +78,198 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        let events = @json($events);
+document.addEventListener('DOMContentLoaded', () => {
+    // Data dari backend
+    let events = @json($events);
+    let currentFilter = 'all';
 
-        const calendarTitle = document.getElementById("calendarTitle");
-        const calendarGrid = document.getElementById("calendarGrid");
-        const eventList = document.getElementById("eventList");
-        const eventListTitle = document.getElementById("eventListTitle");
-        const noEventPlaceholder = document.getElementById("noEventPlaceholder");
+    const calendarTitle = document.getElementById("calendarTitle");
+    const calendarGrid = document.getElementById("calendarGrid");
+    const eventList = document.getElementById("eventList");
+    const eventListTitle = document.getElementById("eventListTitle");
+    const noEventPlaceholder = document.getElementById("noEventPlaceholder");
+    const statusFilters = document.getElementById("statusFilters");
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Normalisasi tanggal hari ini
-        let currentMonth = today.getMonth();
-        let currentYear = today.getFullYear();
-        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const today = new Date();
+    let currentMonth = today.getMonth();
+    let currentYear = today.getFullYear();
 
-        async function fetchEvents(month, year) {
-            try {
-                // Tampilkan loading state sederhana
-                eventListTitle.textContent = `Loading jadwal untuk ${monthNames[month]}...`;
-                eventList.innerHTML = '';
-                noEventPlaceholder.style.display = 'none';
+    const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
 
-                const response = await fetch(`{{ route('calendar.events') }}?month=${month + 1}&year=${year}`, {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
-                });
+    // Ambil data event dari backend
+    async function fetchEvents(month, year) {
+        try {
+            const response = await fetch(`{{ route('calendar.events') }}?month=${month + 1}&year=${year}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
 
-                if (!response.ok) throw new Error('Failed to fetch events');
+            if (!response.ok) throw new Error('Failed to fetch events');
 
-                events = await response.json();
-                renderCalendar(month, year);
-            } catch (error) {
-                console.error('Error fetching events:', error);
-                events = {};
-                renderCalendar(month, year); // Render kalender kosong jika error
-            }
+            events = await response.json();
+            renderCalendar(month, year);
+        } catch (error) {
+            console.error('Error fetching events:', error);
+            events = {};
+            renderCalendar(month, year);
+        }
+    }
+
+    // Render kalender
+    function renderCalendar(month, year) {
+        calendarGrid.innerHTML = "";
+        const firstDay = new Date(year, month).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        calendarTitle.textContent = `${monthNames[month]} ${year}`;
+
+        // Kosongkan sel sebelum tanggal 1
+        for (let i = 0; i < firstDay; i++) {
+            calendarGrid.innerHTML += `<div></div>`;
         }
 
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const isToday = d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+            const hasEvent = events[dateStr] && events[dateStr].length > 0;
 
-        function renderCalendar(month, year) {
-            calendarGrid.innerHTML = "";
-            const firstDay = new Date(year, month).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const dayCell = document.createElement('div');
+            dayCell.className = 'relative flex items-center justify-center p-2 rounded-full transition-colors aspect-square text-gray-300 cursor-pointer hover:bg-gray-700';
+            const dayNumber = document.createElement('span');
+            dayNumber.textContent = d;
 
-            calendarTitle.textContent = `${monthNames[month]} ${year}`;
-
-            for (let i = 0; i < firstDay; i++) {
-                calendarGrid.innerHTML += `<div></div>`;
+            if (isToday) {
+                dayNumber.className = 'flex items-center justify-center h-8 w-8 rounded-full bg-red-600 text-white font-semibold animate-pulse';
             }
 
-            for (let d = 1; d <= daysInMonth; d++) {
-                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                const isToday = d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
-                const hasEvent = events[dateStr] && events[dateStr].length > 0;
+            if (hasEvent) {
+                const eventDot = document.createElement('div');
+                eventDot.className = `absolute bottom-1.5 h-1.5 w-1.5 rounded-full ${isToday ? 'bg-white' : 'bg-red-500'} animate-bounce`;
+                dayCell.appendChild(eventDot);
+                dayCell.title = `${events[dateStr].length} task(s) on this day`;
+                dayCell.addEventListener('click', () => {
+                    document.getElementById('eventListTitle').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+            }
 
-                const dayCell = document.createElement('div');
-                dayCell.className = 'relative flex items-center justify-center p-2 rounded-full transition-colors aspect-square text-gray-300 cursor-pointer hover:bg-gray-700';
+            dayCell.appendChild(dayNumber);
+            calendarGrid.appendChild(dayCell);
+        }
 
-                const dayNumber = document.createElement('span');
-                dayNumber.textContent = d;
+        renderMonthlyEvents(month, year);
+    }
 
-                if (isToday) {
-                    dayNumber.className = 'flex items-center justify-center h-8 w-8 rounded-full bg-red-600 text-white font-semibold';
+    // Render daftar event bulanan
+    function renderMonthlyEvents(month, year) {
+        eventListTitle.textContent = `Jadwal Bulan ${monthNames[month]}`;
+        eventList.innerHTML = "";
+
+        let monthlyEvents = Object.keys(events)
+            .sort((a, b) => new Date(a) - new Date(b))
+            .flatMap(date => events[date].map(event => ({ ...event, date })));
+
+        // Terapkan filter
+        if (currentFilter !== 'all') {
+            monthlyEvents = monthlyEvents.filter(event => {
+                const deadlineDate = new Date(event.deadline + 'T00:00:00');
+                const todayStart = new Date(today.toDateString()); // normalize
+                if (currentFilter === 'overdue') return deadlineDate < todayStart;
+                if (currentFilter === 'today') return deadlineDate.getTime() === todayStart.getTime();
+                if (currentFilter === 'ongoing') return deadlineDate > todayStart;
+                return false;
+            });
+        }
+
+        if (monthlyEvents.length > 0) {
+            noEventPlaceholder.style.display = 'none';
+            eventList.style.display = 'block';
+            monthlyEvents.forEach((event, index) => {
+                const day = new Date(event.date + 'T00:00:00').getDate();
+                const deadlineDate = new Date(event.deadline + 'T00:00:00');
+
+                let deadlineClass = 'text-red-400'; // Default On Going
+                if (deadlineDate < today) deadlineClass = 'text-gray-500 line-through'; // Overdue
+                else if (deadlineDate.getDate() === today.getDate() &&
+                         deadlineDate.getMonth() === today.getMonth() &&
+                         deadlineDate.getFullYear() === today.getFullYear()) {
+                    deadlineClass = 'text-yellow-400 font-bold animate-pulse'; // Today
                 }
 
-                if (hasEvent) {
-                    const eventCount = events[dateStr].length;
-                    const eventDot = document.createElement('div');
-                    eventDot.className = `absolute bottom-1.5 h-1.5 w-1.5 rounded-full ${isToday ? 'bg-white' : 'bg-red-500'}`;
-                    dayCell.appendChild(eventDot);
-                    dayCell.title = `${eventCount} task${eventCount > 1 ? 's' : ''} on this day`;
-
-                    dayCell.addEventListener('click', () => {
-                        const eventSection = document.getElementById('eventListTitle');
-                        eventSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    });
-                }
-
-                dayCell.appendChild(dayNumber);
-                calendarGrid.appendChild(dayCell);
-            }
-            renderMonthlyEvents(month, year);
-        }
-
-        function renderMonthlyEvents(month, year) {
-            eventListTitle.textContent = `Jadwal Bulan ${monthNames[month]}`;
-            eventList.innerHTML = "";
-
-            const monthlyEvents = Object.keys(events)
-                .sort((a, b) => new Date(a) - new Date(b))
-                .flatMap(date => events[date].map(event => ({ ...event, date })));
-
-            if (monthlyEvents.length > 0) {
-                noEventPlaceholder.style.display = 'none';
-                eventList.style.display = 'block';
-
-                monthlyEvents.forEach(event => {
-                    const eventDate = new Date(event.date + 'T00:00:00');
-                    const day = eventDate.getDate();
-                    const deadlineDate = new Date(event.deadline + 'T00:00:00');
-
-                    let deadlineClass = 'text-red-400';
-                    if (deadlineDate < today) {
-                        deadlineClass = 'text-gray-500 line-through'; // Overdue
-                    } else if (deadlineDate.getTime() === today.getTime()) {
-                        deadlineClass = 'text-yellow-400 font-bold animate-pulse'; // Today
-                    }
-
-                    const listItem = document.createElement('li');
-                    listItem.className = "flex items-start gap-4 p-4 bg-gray-800 rounded-lg shadow-sm hover:shadow-md hover:bg-gray-700/50 transition-all";
-                    listItem.innerHTML = `
-                        <div class="flex-shrink-0 h-12 w-12 flex flex-col items-center justify-center bg-red-500/10 rounded-lg">
-                            <span class="text-xl font-bold text-red-400">${String(day).padStart(2, '0')}</span>
+                const listItem = document.createElement('li');
+                listItem.className = "event-item flex items-start gap-4 p-4 bg-gray-800 rounded-lg shadow-sm hover:bg-gray-700/50 transition-all";
+                listItem.style.animationDelay = `${index * 50}ms`;
+                listItem.innerHTML = `
+                    <div class="flex-shrink-0 h-12 w-12 flex flex-col items-center justify-center bg-red-500/10 rounded-lg">
+                        <span class="text-xl font-bold text-red-400">${String(day).padStart(2, '0')}</span>
+                    </div>
+                    <div class="flex-grow">
+                        <p class="font-semibold text-white">${event.task}</p>
+                        <a href="/moms/${event.mom_id}" class="text-sm text-gray-400 hover:text-red-400 hover:underline">${event.momTitle}</a>
+                        <div class="flex items-center text-xs text-gray-500 mt-1.5">
+                            <i class="fa-solid fa-calendar-plus fa-xs mr-1.5"></i>
+                            <span>Dibuat: ${event.createdDate.split('-').reverse().join('/')}</span>
                         </div>
-                        <div class="flex-grow">
-                            <p class="font-semibold text-white">${event.task}</p>
-                            <p class="text-sm text-gray-400">${event.momTitle}</p>
-                            <div class="flex items-center text-xs text-gray-500 mt-1.5">
-                                <i class="fa-solid fa-calendar-plus fa-xs mr-1.5"></i>
-                                <span>Dibuat: ${event.createdDate.split('-').reverse().join('/')}</span>
-                            </div>
-                        </div>
-                        <div class="text-right text-sm flex-shrink-0">
-                            <p class="font-medium text-gray-500">Deadline</p>
-                            <p class="${deadlineClass} font-semibold">${event.deadline.split('-').reverse().join('/')}</p>
-                        </div>
-                    `;
-                    eventList.appendChild(listItem);
-                });
-            } else {
-                noEventPlaceholder.style.display = 'block';
-                eventList.style.display = 'none';
-            }
+                    </div>
+                    <div class="text-right text-sm flex-shrink-0">
+                        <p class="font-medium text-gray-500">Deadline</p>
+                        <p class="${deadlineClass} font-semibold">${event.deadline.split('-').reverse().join('/')}</p>
+                    </div>
+                `;
+                eventList.appendChild(listItem);
+            });
+        } else {
+            noEventPlaceholder.style.display = 'block';
+            eventList.style.display = 'none';
+            noEventPlaceholder.querySelector('p').textContent =
+                currentFilter !== 'all'
+                    ? `Tidak ada tugas dengan status "${currentFilter}".`
+                    : `Tidak ada jadwal untuk bulan ini.`;
         }
+    }
 
-        function navigate(offset) {
-            currentMonth += offset;
-            if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
-            } else if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
-            }
-            fetchEvents(currentMonth, currentYear);
+    // Navigasi bulan
+    function navigate(offset) {
+        currentMonth += offset;
+        if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
+        } else if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
         }
+        fetchEvents(currentMonth, currentYear);
+    }
 
-        document.getElementById("prevMonth").addEventListener("click", () => navigate(-1));
-        document.getElementById("nextMonth").addEventListener("click", () => navigate(1));
-        document.getElementById("goToday").addEventListener("click", () => {
-            currentMonth = new Date().getMonth();
-            currentYear = new Date().getFullYear();
-            fetchEvents(currentMonth, currentYear);
-        });
-
-        // Render awal
-        renderCalendar(currentMonth, currentYear);
+    // Event listener tombol filter
+    statusFilters.addEventListener('click', (e) => {
+        if (e.target.classList.contains('filter-btn')) {
+            currentFilter = e.target.dataset.status;
+            statusFilters.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-red-600', 'text-white');
+                btn.classList.add('text-gray-400', 'hover:bg-gray-700');
+            });
+            e.target.classList.add('bg-red-600', 'text-white');
+            e.target.classList.remove('text-gray-400', 'hover:bg-gray-700');
+            renderMonthlyEvents(currentMonth, currentYear);
+        }
     });
+
+    // Tombol navigasi
+    document.getElementById("prevMonth").addEventListener("click", () => navigate(-1));
+    document.getElementById("nextMonth").addEventListener("click", () => navigate(1));
+    document.getElementById("goToday").addEventListener("click", () => {
+        currentMonth = today.getMonth();
+        currentYear = today.getFullYear();
+        fetchEvents(currentMonth, currentYear);
+    });
+
+    // Render pertama
+    renderCalendar(currentMonth, currentYear);
+});
 </script>
 @endpush

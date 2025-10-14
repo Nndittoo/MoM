@@ -35,7 +35,7 @@
                         ? 'bg-red-500/10 text-white font-semibold border-l-4 border-red-500'
                         : 'text-gray-400 hover:bg-gray-700 hover:text-white' }}">
                     <i class="fa-solid fa-box-archive w-5 h-5 {{ request()->routeIs('admin.repository*') ? 'text-red-400' : '' }}"></i>
-                    <span class="ms-3">MoM Repository</span>
+                    <span class="ms-3">MoM</span>
                 </a>
             </li>
 
