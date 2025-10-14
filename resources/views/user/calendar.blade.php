@@ -27,6 +27,57 @@
         <p class="mt-1 text-gray-400">Lihat semua deadline tugas dari setiap MoM dalam format kalender.</p>
     </div>
 
+    <div class="mb-6">
+    <div class="bg-gray-800 rounded-xl shadow-md p-4 border border-gray-700">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="h-10 w-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                    <i class="fab fa-google text-blue-400 text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-white font-semibold" id="connectionStatus">
+                        @if(Auth::user()->google_access_token)
+                            Terhubung dengan Google Calendar
+                        @else
+                            Belum terhubung dengan Google Calendar
+                        @endif
+                    </h3>
+                    <p class="text-xs text-gray-400" id="connectionDetails">
+                        @if(Auth::user()->google_access_token)
+                            Sinkronisasi otomatis aktif
+                        @else
+                            Hubungkan untuk otomatis sync ke Google Calendar
+                        @endif
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                @if(Auth::user()->google_access_token)
+                    <form action="{{ route('google.calendar.sync') }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                            <i class="fa-solid fa-sync"></i>
+                            <span>Sync Sekarang</span>
+                        </button>
+                    </form>
+                    <form action="{{ route('google.calendar.disconnect') }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors">
+                            Putus Koneksi
+                        </button>
+                    </form>
+                @else
+                    <a href="{{ route('google.calendar.connect') }}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                        <i class="fab fa-google"></i>
+                        <span>Hubungkan Google Calendar</span>
+                    </a>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {{-- Kartu Kalender --}}
         <div class="lg:col-span-1 bg-gray-800 rounded-2xl shadow-md p-6 h-fit border border-gray-700">

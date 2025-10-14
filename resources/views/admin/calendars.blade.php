@@ -21,10 +21,77 @@
 
 @section('content')
 <div class="pt-2">
+    {{-- Flash Messages --}}
+    @if(session('success'))
+    <div class="mb-6 bg-green-500/10 border border-green-500 text-green-400 px-4 py-3 rounded-lg flex items-center gap-3" role="alert">
+        <i class="fas fa-check-circle"></i>
+        <span>{{ session('success') }}</span>
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="mb-6 bg-red-500/10 border border-red-500 text-red-400 px-4 py-3 rounded-lg flex items-center gap-3" role="alert">
+        <i class="fas fa-exclamation-circle"></i>
+        <span>{{ session('error') }}</span>
+    </div>
+    @endif
+
     {{-- Header Halaman --}}
     <div class="p-6 md:p-8 rounded-xl shadow-lg bg-gray-800 border-l-4 border-red-500 mb-6">
         <h1 class="text-3xl font-bold font-orbitron text-neon-red">Task Calendar</h1>
         <p class="mt-1 text-gray-400">Lihat semua deadline tugas dari setiap MoM dalam format kalender.</p>
+    </div>
+
+    {{-- Google Calendar Sync Section --}}
+    <div class="mb-6">
+        <div class="bg-gray-800 rounded-xl shadow-md p-4 border border-gray-700">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="h-10 w-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                        <i class="fab fa-google text-blue-400 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-white font-semibold" id="connectionStatus">
+                            @if(Auth::user()->google_access_token)
+                                Terhubung dengan Google Calendar
+                            @else
+                                Belum terhubung dengan Google Calendar
+                            @endif
+                        </h3>
+                        <p class="text-xs text-gray-400" id="connectionDetails">
+                            @if(Auth::user()->google_access_token)
+                                Sinkronisasi otomatis aktif untuk semua MoM approved
+                            @else
+                                Hubungkan untuk otomatis sync semua task approved ke Google Calendar
+                            @endif
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    @if(Auth::user()->google_access_token)
+                        <form action="{{ route('admin.google.calendar.sync') }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                                <i class="fa-solid fa-sync"></i>
+                                <span>Sync Sekarang</span>
+                            </button>
+                        </form>
+                        <form action="{{ route('admin.google.calendar.disconnect') }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors">
+                                Putus Koneksi
+                            </button>
+                        </form>
+                    @else
+                        <a href="{{ route('admin.google.calendar.connect') }}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                            <i class="fab fa-google"></i>
+                            <span>Hubungkan Google Calendar</span>
+                        </a>
+                    @endif
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -177,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentFilter !== 'all') {
             monthlyEvents = monthlyEvents.filter(event => {
                 const deadlineDate = new Date(event.deadline + 'T00:00:00');
-                const todayStart = new Date(today.toDateString()); // normalize
+                const todayStart = new Date(today.toDateString());
                 if (currentFilter === 'overdue') return deadlineDate < todayStart;
                 if (currentFilter === 'today') return deadlineDate.getTime() === todayStart.getTime();
                 if (currentFilter === 'ongoing') return deadlineDate > todayStart;
@@ -192,12 +259,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const day = new Date(event.date + 'T00:00:00').getDate();
                 const deadlineDate = new Date(event.deadline + 'T00:00:00');
 
-                let deadlineClass = 'text-red-400'; // Default On Going
-                if (deadlineDate < today) deadlineClass = 'text-gray-500 line-through'; // Overdue
+                let deadlineClass = 'text-red-400';
+                if (deadlineDate < today) deadlineClass = 'text-gray-500 line-through';
                 else if (deadlineDate.getDate() === today.getDate() &&
                          deadlineDate.getMonth() === today.getMonth() &&
                          deadlineDate.getFullYear() === today.getFullYear()) {
-                    deadlineClass = 'text-yellow-400 font-bold animate-pulse'; // Today
+                    deadlineClass = 'text-yellow-400 font-bold animate-pulse';
                 }
 
                 const listItem = document.createElement('li');
@@ -267,6 +334,27 @@ document.addEventListener('DOMContentLoaded', () => {
         currentYear = today.getFullYear();
         fetchEvents(currentMonth, currentYear);
     });
+
+    // Auto-refresh status koneksi
+    async function checkGoogleStatus() {
+        try {
+            const response = await fetch('{{ route("admin.google.calendar.status") }}');
+            const data = await response.json();
+
+            const statusEl = document.getElementById('connectionStatus');
+            const detailsEl = document.getElementById('connectionDetails');
+
+            if (data.connected) {
+                statusEl.textContent = 'Terhubung dengan Google Calendar';
+                detailsEl.textContent = `Token berlaku hingga ${data.expires_at}`;
+            }
+        } catch (error) {
+            console.error('Error checking Google Calendar status:', error);
+        }
+    }
+
+    // Check status setiap 5 menit
+    setInterval(checkGoogleStatus, 5 * 60 * 1000);
 
     // Render pertama
     renderCalendar(currentMonth, currentYear);

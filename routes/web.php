@@ -20,6 +20,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use Illuminate\Http\Request;
+use App\Http\Controllers\GoogleCalendarController;
 
 Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -107,6 +108,19 @@ Route::prefix('admin')->middleware(['auth','role:admin'])->group(function () {
     Route::get('/moms/create', [MomController::class, 'create'])->name('admin.moms.create');
     Route::get('/moms/{mom}', [MomController::class, 'show_admin'])->name('admin.moms.show');
 
+    Route::prefix('google')->name('admin.google.calendar.')->group(function () {
+        Route::get('connect', [\App\Http\Controllers\Admin\AdminGoogleCalendarController::class, 'connect'])
+            ->name('connect');
+        Route::get('callback', [\App\Http\Controllers\Admin\AdminGoogleCalendarController::class, 'callback'])
+            ->name('callback');
+        Route::post('disconnect', [\App\Http\Controllers\Admin\AdminGoogleCalendarController::class, 'disconnect'])
+            ->name('disconnect');
+        Route::post('sync', [\App\Http\Controllers\Admin\AdminGoogleCalendarController::class, 'sync'])
+            ->name('sync');
+        Route::get('status', [\App\Http\Controllers\Admin\AdminGoogleCalendarController::class, 'status'])
+            ->name('status');
+    });
+
 });
 
 Route::get('/draft', [DraftController::class, 'index'])->name('draft.index')->middleware('auth');
@@ -136,6 +150,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo.update');
     Route::delete('/profile/photo', [ProfileController::class, 'deletePhoto'])->name('profile.photo.delete');
+});
+
+Route::middleware('auth')->prefix('google')->name('google.calendar.')->group(function () {
+    Route::get('connect', [GoogleCalendarController::class, 'connect'])->name('connect');
+    Route::get('callback', [GoogleCalendarController::class, 'callback'])->name('callback');
+    Route::post('disconnect', [GoogleCalendarController::class, 'disconnect'])->name('disconnect');
+    Route::post('sync', [GoogleCalendarController::class, 'sync'])->name('sync');
+    Route::get('status', [GoogleCalendarController::class, 'status'])->name('status');
 });
 
 // Form minta email (Forgot Password)
