@@ -194,15 +194,15 @@ document.addEventListener('DOMContentLoaded', function () {
     window.deleteActionItem = async function (id) {
         const result = await Swal.fire({
             title: 'Hapus Tindak Lanjut?',
-            text: 'Tindakan ini tidak dapat dibatalkan!',
+            text: 'Event Google Calendar juga akan dihapus!',
             icon: 'warning',
             customClass: {
-            popup: 'bg-gray-800 rounded-2xl border border-gray-700',
-            title: 'text-white font-orbitron',
-            htmlContainer: 'text-gray-400',
-            confirmButton: 'btn-neon-red text-white font-semibold px-6 py-2 mr-4 rounded-lg',
-            cancelButton: 'bg-gray-700 text-gray-300 font-semibold px-6 py-2 rounded-lg hover:bg-gray-600 border border-gray-600'
-        },
+                popup: 'bg-gray-800 rounded-2xl border border-gray-700',
+                title: 'text-white font-orbitron',
+                htmlContainer: 'text-gray-400',
+                confirmButton: 'btn-neon-red text-white font-semibold px-6 py-2 mr-4 rounded-lg',
+                cancelButton: 'bg-gray-700 text-gray-300 font-semibold px-6 py-2 rounded-lg hover:bg-gray-600 border border-gray-600'
+            },
             showCancelButton: true,
             confirmButtonText: 'Ya, hapus!',
             cancelButtonText: 'Batal',
@@ -212,6 +212,22 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!result.isConfirmed) return;
 
         const url = deleteUrl.replace(':id', id);
+
+        // Tampilkan loading
+        Swal.fire({
+            title: 'Menghapus...',
+            text: 'Menghapus tindak lanjut dan event Google Calendar',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            },
+            customClass: {
+                popup: 'bg-gray-800 rounded-2xl border border-gray-700',
+                title: 'text-white font-orbitron',
+                htmlContainer: 'text-gray-400'
+            }
+        });
+
         try {
             const response = await fetch(url, {
                 method: 'DELETE',
@@ -224,35 +240,58 @@ document.addEventListener('DOMContentLoaded', function () {
             const data = await response.json();
 
             if (response.ok) {
+                // Animasi hapus
                 const itemEl = document.getElementById(`action-item-${id}`);
                 if (itemEl) {
                     itemEl.classList.add('opacity-0', 'translate-x-4', 'transition-all', 'duration-300');
                     setTimeout(() => itemEl.remove(), 300);
                 }
 
-                if (!listContainer.querySelector('.p-3')) {
-                    listContainer.innerHTML = '<p class="text-sm text-text-secondary italic">Tidak ada tindak lanjut.</p>';
-                }
+                // Cek apakah masih ada item
+                setTimeout(() => {
+                    if (!listContainer.querySelector('.p-3')) {
+                        listContainer.innerHTML = '<p class="text-sm text-gray-500 italic">Tidak ada tindak lanjut.</p>';
+                    }
+                }, 350);
 
                 Swal.fire({
                     icon: 'success',
                     title: 'Berhasil!',
-                    text: data.message || 'Tindak lanjut dihapus.',
+                    text: data.message || 'Tindak lanjut dan event Google Calendar berhasil dihapus.',
                     timer: 2000,
                     showConfirmButton: false,
                     customClass: {
                         popup: 'bg-gray-800 rounded-2xl border border-gray-700',
                         title: 'text-white font-orbitron',
-                        htmlContainer: 'text-gray-400',
-                        confirmButton: 'btn-neon-red text-white font-semibold px-6 py-2 mr-4 rounded-lg',
-                        cancelButton: 'bg-gray-700 text-gray-300 font-semibold px-6 py-2 rounded-lg hover:bg-gray-600 border border-gray-600'
+                        htmlContainer: 'text-gray-400'
                     }
                 });
             } else {
-                Swal.fire('Gagal', data.message || 'Gagal menghapus.', 'error');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: data.message || 'Gagal menghapus tindak lanjut.',
+                    customClass: {
+                        popup: 'bg-gray-800 rounded-2xl border border-gray-700',
+                        title: 'text-white font-orbitron',
+                        htmlContainer: 'text-gray-400',
+                        confirmButton: 'btn-neon-red text-white font-semibold px-6 py-2 rounded-lg'
+                    }
+                });
             }
         } catch (err) {
-            Swal.fire('Error', 'Terjadi kesalahan koneksi.', 'error');
+            console.error('Delete error:', err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: 'Terjadi kesalahan koneksi.',
+                customClass: {
+                    popup: 'bg-gray-800 rounded-2xl border border-gray-700',
+                    title: 'text-white font-orbitron',
+                    htmlContainer: 'text-gray-400',
+                    confirmButton: 'btn-neon-red text-white font-semibold px-6 py-2 rounded-lg'
+                }
+            });
         }
     };
 

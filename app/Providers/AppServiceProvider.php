@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\View; 
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
-use App\Models\Mom; 
+use App\Models\Mom;
+use App\Models\ActionItem;
+use App\Observers\ActionItemObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,26 +25,28 @@ class AppServiceProvider extends ServiceProvider
     {
         // View Composer untuk Admin Sidebar
         View::composer([
-            
+
             'admin.dashboard',
             'admin.approvals',
-            'admin.mom',          
+            'admin.mom',
             'admin.users',
             'admin.task',
             'admin.notification',
             'admin.shows',
-            'admin.create', 
+            'admin.create',
             'admin.calendars',
             'admin.moms.edit',
             'admin.details',
             'admin.edit',
-           
+
         ], function ($view) {
-            // Hitung MoM yang berstatus "Menunggu" 
+            // Hitung MoM yang berstatus "Menunggu"
             $pendingApprovalsCount = Mom::where('status_id', 1)->count();
 
             // Bagikan variabel ini ke view yang didaftarkan
             $view->with('pendingApprovalsCount', $pendingApprovalsCount);
         });
+
+        ActionItem::observe(ActionItemObserver::class);
     }
 }
