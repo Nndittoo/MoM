@@ -12,44 +12,41 @@
 {{-- Inisialisasi Data dari PHP ke JavaScript --}}
 @php
     // Data JSON untuk Peserta dan Agenda (diambil dari Model dengan Casting)
-    $internalAttendeesJs = json_encode($mom->nama_peserta ?? []); 
-    $partnerAttendeesJs = json_encode($mom->nama_mitra ?? []); 
+    $internalAttendeesJs = json_encode($mom->nama_peserta ?? []);
+    $partnerAttendeesJs = json_encode($mom->nama_mitra ?? []);
     $agendasJs = json_encode($mom->agendas->pluck('item')->toArray() ?? []);
-    
+
     // Data Attachment Lama
     $oldAttachmentsJs = json_encode($mom->attachments ?? []);
-    
+
     $detailRoute = route('admin.details', ['mom' => 'MOM_ID']);
 @endphp
 
-<div class="pt-16">
+<div class="pt-2">
     {{-- Toast Notification --}}
-    <div id="toast" class="hidden fixed top-24 right-5 z-50 items-center gap-3 px-4 py-3 rounded-xl shadow-lg bg-white dark:bg-dark-component-bg border border-border-light dark:border-border-dark text-text-primary dark:text-dark-text-primary transition-all duration-500 opacity-0">
+    <div id="toast" class="hidden fixed top-24 right-5 z-50 items-center gap-3 px-4 py-3 rounded-xl shadow-lg bg-[#4B5563] dark:bg-dark-component-bg border border-border-light dark:border-border-dark text-white dark:text-dark-text-white transition-all duration-500 opacity-0">
         <div class="flex-shrink-0"><i class="fa-solid fa-circle-check text-green-500 text-lg"></i></div>
         <div class="text-sm font-medium" id="toast-message">Notifikasi</div>
     </div>
 
     {{-- Header --}}
-    <div class="flex flex-col md:flex-row items-center justify-between p-6 md:p-8 overflow-hidden rounded-lg shadow-md bg-component-bg dark:bg-dark-component-bg border-l-4 border-primary mb-6">
-        <div class="flex items-center space-x-4">
-            <div>
-                <h1 class="text-3xl font-bold text-text-primary dark:text-dark-text-primary">[ADMIN] Edit MoM: {{ $mom->title }}</h1>
-                <p class="mt-1 text-text-secondary dark:text-dark-text-secondary">
-                    Ubah dan perbarui notulensi rapat ini. Status saat ini: {{ $mom->status->status ?? 'N/A' }}
-                    @if($mom->status_id == 3 && $mom->rejection_comment)
-                        <span class="text-red-500 font-medium block mt-1">
-                            Alasan revisi: {{ $mom->rejection_comment }}
-                        </span>
-                    @endif
-                </p>
+    <div class="p-6 md:p-8 rounded-xl shadow-lg bg-gray-800 border-l-4 border-red-500 mb-6">
+        <h1 class="text-3xl font-bold font-orbitron text-neon-red">Edit MoM</h1>
+        <p class="mt-1 text-gray-400">
+            Mengubah: <strong class="text-white">{{ $mom->title }}</strong>
+        </p>
+        @if($mom->status_id == 3 && $mom->rejection_comment)
+            <div class="mt-2 text-sm text-red-400 bg-red-900/30 border border-red-500/50 rounded-lg p-3">
+                <strong class="font-semibold block"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Alasan Revisi dari Admin:</strong>
+                <span>{{ $mom->rejection_comment }}</span>
             </div>
-        </div>
+        @endif
     </div>
 
     {{-- Form Container --}}
-    <div class="bg-component-bg dark:bg-dark-component-bg p-6 md:p-8 rounded-2xl shadow-lg">
-        <form id="mom-form" class="space-y-10">
-            @csrf 
+    <div class="bg-gray-800 p-6 md:p-8 rounded-2xl shadow-lg border border-gray-700">
+        <form id="mom-form">
+            @csrf
             {{-- Method field diperlukan untuk Laravel meniru PATCH --}}
             @method('PATCH')
 
@@ -58,81 +55,81 @@
 
             {{-- Informasi Rapat --}}
             <div class="space-y-6">
-                <h2 class="text-base font-semibold text-text-primary dark:text-dark-text-primary border-b border-border-light dark:border-border-dark pb-3">Informasi Rapat</h2>
+                <h2 class="text-base font-semibold font-orbitron text-white border-b border-gray-700 pb-3">Informasi Rapat</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div><label for="judul" class="block mb-2 text-sm font-medium">Judul Rapat</label><input type="text" name="title" id="judul" value="{{ $mom->title ?? '' }}" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Contoh: Rapat Progres Proyek Q3" required></div>
-                    <div><label for="tempat" class="block mb-2 text-sm font-medium">Tempat</label><input type="text" name="location" id="tempat" value="{{ $mom->location ?? '' }}" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Contoh: Ruang Rapat Lt. 5 / Online" required></div>
+                    <div><label for="judul" class="block mb-2 text-sm font-medium text-gray-300">Judul Rapat</label><input type="text" name="title" id="judul" value="{{ $mom->title ?? '' }}" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5" placeholder="Contoh: Rapat Progres Proyek Q3" required></div>
+                    <div><label for="tempat" class="block mb-2 text-sm font-medium text-gray-300">Tempat</label><input type="text" name="location" id="tempat" value="{{ $mom->location ?? '' }}" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5" placeholder="Contoh: Ruang Rapat Lt. 5 / Online" required></div>
 
                     <div>
-                        <label for="pimpinan_rapat" class="block mb-2 text-sm font-medium">Pimpinan Rapat</label>
-                        <input type="text" name="pimpinan_rapat" id="pimpinan_rapat" value="{{ $mom->pimpinan_rapat ?? '' }}" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Nama Pimpinan" required>
+                        <label for="pimpinan_rapat" class="block mb-2 text-sm font-medium text-gray-300">Pimpinan Rapat</label>
+                        <input type="text" name="pimpinan_rapat" id="pimpinan_rapat" value="{{ $mom->pimpinan_rapat ?? '' }}" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5" placeholder="Nama Pimpinan" required>
                     </div>
 
                     <div>
-                        <label for="notulen" class="block mb-2 text-sm font-medium">Notulen</label>
-                        <input type="text" name="notulen" id="notulen" value="{{ $mom->notulen ?? '' }}" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Nama Notulen" required>
+                        <label for="notulen" class="block mb-2 text-sm font-medium text-gray-300">Notulen</label>
+                        <input type="text" name="notulen" id="notulen" value="{{ $mom->notulen ?? '' }}" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5" placeholder="Nama Notulen" required>
                     </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div><label for="tanggal" class="block mb-2 text-sm font-medium">Tanggal</label><input type="date" name="meeting_date" id="tanggal" value="{{ $mom->meeting_date->format('Y-m-d') ?? '' }}" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" required></div>
-                    <div><label for="waktu_mulai" class="block mb-2 text-sm font-medium">Waktu Mulai</label><input type="time" name="start_time" id="waktu_mulai" value="{{ $mom->start_time ?? '' }}" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" required></div>
-                    <div><label for="waktu_selesai" class="block mb-2 text-sm font-medium">Waktu Selesai</label><input type="time" name="end_time" id="waktu_selesai" value="{{ $mom->end_time ?? '' }}" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" required></div>
+                    <div><label for="tanggal" class="block mb-2 text-sm font-medium text-gray-300">Tanggal</label><input type="date" name="meeting_date" id="tanggal" value="{{ $mom->meeting_date->format('Y-m-d') ?? '' }}" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5" required></div>
+                    <div><label for="waktu_mulai" class="block mb-2 text-sm font-medium text-gray-300">Waktu Mulai</label><input type="time" name="start_time" id="waktu_mulai" value="{{ $mom->start_time ?? '' }}" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5" required></div>
+                    <div><label for="waktu_selesai" class="block mb-2 text-sm font-medium text-gray-300">Waktu Selesai</label><input type="time" name="end_time" id="waktu_selesai" value="{{ $mom->end_time ?? '' }}" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5" required></div>
                 </div>
             </div>
 
             {{-- Peserta & Agenda --}}
-            <div class="space-y-6">
-                <h2 class="text-base font-semibold text-text-primary dark:text-dark-text-primary border-b border-border-light dark:border-border-dark pb-3">Peserta & Agenda</h2>
-                
+            <div class="mt-10">
+                <h2 class="text-base font-semibold font-orbitron text-white border-b border-gray-700 pb-3">Peserta & Agenda</h2>
+
                 {{-- PESERTA INTERNAL (Dynamic Unit Input) --}}
                 <div class="grid grid-cols-1 gap-8">
                     <div>
-                        <label class="block mb-2 text-sm font-medium">Peserta Internal (Per Unit/Bagian)</label>
+                        <label class="block mb-2 text-sm font-medium text-gray-300">Peserta Internal (Per Unit/Bagian)</label>
                         <div class="flex flex-col md:flex-row gap-4 items-end">
                             <div class="w-full">
-                                <input type="text" id="input-internal-unit" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Nama Unit/Bagian (Contoh: Unit HC)">
+                                <input type="text" id="input-internal-unit" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5" placeholder="Nama Unit/Bagian (Contoh: Unit HC)">
                             </div>
-                            <button type="button" id="btn-add-internal-unit" class="px-4 py-3 text-sm font-medium text-white bg-gradient-primary rounded-lg hover:opacity-90 w-full md:w-auto flex-shrink-0">Tambah Unit</button>
+                            <button type="button" id="btn-add-internal-unit" class="px-4 py-3 text-sm font-medium text-white btn-neon-red rounded-lg hover:opacity-90 w-full md:w-auto flex-shrink-0">Tambah Unit</button>
                         </div>
                         <div id="list-internal-attendees-container" class="space-y-4 mt-4">
                         </div>
-                        <p class="mt-1 text-xs text-text-secondary">Tambah Unit, lalu masukkan nama-nama peserta dari Unit tersebut.</p>
+                        <p class="mt-4 text-xs text-gray-500">Tambah Unit, lalu masukkan nama-nama peserta dari Unit tersebut.</p>
                     </div>
                 </div>
 
                 {{-- AGENDA (Add Button + JS List) - DIPISAH OLEH BORDER-T --}}
-                <div class="grid grid-cols-1 gap-8 pt-6 border-t border-border-light dark:border-border-dark">
+                <div class="grid grid-cols-1 gap-8 pt-6 border-t border-gray-700">
                     <div>
-                        <label class="block mb-2 text-sm font-medium">Agenda</label>
+                        <label class="block mb-2 text-sm font-medium text-gray-300">Agenda</label>
                         <div class="flex gap-2">
-                            <input type="text" id="input-agenda" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Ketik agenda lalu Enter...">
-                            <button type="button" id="btn-add-agenda" class="px-4 py-2 text-sm font-medium text-white bg-gradient-primary rounded-lg hover:opacity-90">Add</button>
+                            <input type="text" id="input-agenda" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5" placeholder="Ketik agenda lalu Enter...">
+                            <button type="button" id="btn-add-agenda" class="px-4 py-2 text-sm font-medium text-white btn-neon-red rounded-lg hover:opacity-90">Add</button>
                         </div>
-                        <ol id="list-agenda" class="mt-3 space-y-2 list-decimal list-inside text-sm"></ol>
-                        <p class="mt-1 text-xs text-text-secondary">Minimal 1 item Agenda (Wajib).</p>
+                        <ol id="list-agenda" class="mt-3 space-y-2 list-decimal list-inside text-sm text-gray-300"></ol>
+                        <p class="mt-1 text-xs text-gray-500">Minimal 1 item Agenda (Wajib).</p>
                     </div>
                 </div>
             </div>
 
             {{-- Pihak Luar (Mitra) --}}
-            <div class="space-y-6">
-                <h2 class="text-base font-semibold text-text-primary dark:text-dark-text-primary border-b border-border-light dark:border-border-dark pb-3">Pihak Luar (Yang Akan Menandatangani MoM)</h2>
+            <div class="mt-10">
+                <h2 class="text-base font-semibold font-orbitron text-white border-b border-gray-700 pb-3">Pihak Luar (Yang Akan Menandatangani MoM)</h2>
 
                 <div class="flex flex-col md:flex-row gap-4 items-end">
                     <div class="w-full">
-                        <label for="input-mitra-nama" class="block mb-2 text-sm font-medium">Nama Mitra/Instansi (Contoh: PT TIF)</label>
-                        <input type="text" id="input-mitra-nama" class="bg-body-bg border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-component-bg dark:border-border-dark" placeholder="Ketik nama Mitra">
+                        <label for="input-mitra-nama" class="block mt-2 mb-2 text-sm font-medium text-gray-300">Nama Mitra/Instansi (Contoh: PT TIF)</label>
+                        <input type="text" id="input-mitra-nama" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5" placeholder="Ketik nama Mitra">
                     </div>
-                    <button type="button" id="btn-add-mitra" class="px-4 py-3 text-sm font-medium text-white bg-gradient-primary rounded-lg hover:opacity-90 w-full md:w-auto flex-shrink-0">Tambah Pihak Luar</button>
+                    <button type="button" id="btn-add-mitra" class="px-4 py-3 text-sm font-medium text-white btn-neon-red rounded-lg hover:opacity-90 w-full md:w-auto flex-shrink-0">Tambah Pihak Luar</button>
                 </div>
 
                 <div id="list-mitra-container" class="space-y-4"></div>
-                <p class="mt-1 text-xs text-text-secondary">Tambah Mitra dan masukkan nama-nama orang yang hadir di bawahnya.</p>
+                <p class="mt-4 text-xs text-gray-500">Tambah Mitra dan masukkan nama-nama orang yang hadir di bawahnya.</p>
             </div>
 
             {{-- Pembahasan --}}
-            <div>
-                <h2 class="text-base font-semibold text-text-primary dark:text-dark-text-primary border-b border-border-light dark:border-border-dark pb-3 mb-6">Pembahasan</h2>
+            <div class="mt-10">
+                <h2 class="text-base font-semibold font-orbitron text-white border-b border-gray-700 pb-3 mb-6">Pembahasan</h2>
                 <div id="pembahasan-editor">
                     {!! $mom->pembahasan ?? '' !!}
                 </div>
@@ -140,18 +137,18 @@
             </div>
 
             {{-- Lampiran --}}
-            <div>
-                <h2 class="text-base font-semibold text-text-primary dark:text-dark-text-primary border-b border-border-light dark:border-border-dark pb-3 mb-6">Lampiran</h2>
-                <input class="block w-full text-sm text-text-primary border border-border-light rounded-lg cursor-pointer bg-body-bg dark:text-dark-text-secondary focus:outline-none dark:bg-dark-component-bg dark:border-border-dark" id="lampiran-input" name="attachments[]" type="file" multiple>
-                <p class="mt-1 text-xs text-text-secondary">PNG, JPG, PDF, DOCX (MAX. 10MB). File lama yang dihapus di bawah ini akan dihapus permanen saat update.</p>
+            <div class="mt-10">
+                <h2 class="text-base font-semibold font-orbitron text-white border-b border-gray-700 pb-3 mb-6">Lampiran</h2>
+                <input class="block w-full text-sm text-gray-400 border border-gray-600 rounded-lg cursor-pointer bg-gray-700 focus:outline-none file:bg-gray-600 file:border-0 file:text-gray-300 file:px-4 file:py-2.5" id="lampiran-input" name="attachments[]" type="file" multiple>
+                <p class="mt-1 text-xs text-gray-500">PNG, JPG, PDF, DOCX (MAX. 10MB). File lama yang dihapus di bawah ini akan dihapus permanen saat update.</p>
 
                 {{-- LIST FILE LAMA DAN BARU --}}
-                <div id="file-list" class="mt-3 space-y-1 text-sm text-text-secondary dark:text-dark-text-secondary"></div>
+                <div id="file-list" class="mt-3 space-y-1 text-sm text-gray-400"></div>
             </div>
 
             {{-- Submit Button (Diubah menjadi Update MoM) --}}
-            <div class="flex justify-end gap-4 pt-6 border-t border-border-light dark:border-border-dark">
-                <button type="button" id="btn-submit" class="text-white bg-gradient-primary hover:opacity-90 font-medium rounded-lg text-sm px-8 py-2.5 text-center">Update MoM</button>
+            <div class="flex justify-end gap-4 pt-6 border-t border-gray-700">
+                <button type="button" id="btn-submit" class="text-white btn-neon-red btn-pulse font-medium rounded-lg text-sm px-8 py-2.5 text-center">Update MoM</button>
             </div>
         </form>
     </div>
@@ -167,7 +164,7 @@
     const showToast = (message, isError = false) => {
         const toast = document.getElementById("toast");
         const icon = toast.querySelector('i');
-        const messageContainer = document.getElementById("toast-message"); 
+        const messageContainer = document.getElementById("toast-message");
 
         icon.className = isError
             ? 'fa-solid fa-circle-xmark text-red-500 text-lg'
@@ -191,62 +188,62 @@
 
         // URL UPDATE (menggunakan ID MoM saat ini)
         const momId = '{{ $mom->version_id }}';
-        const updateUrl = `/moms/${momId}`; 
-        
+        const updateUrl = `/moms/${momId}`;
+
         const detailRouteTemplate = '{!! $detailRoute !!}';
 
         // SETUP DATA GLOBAL DENGAN DATA LAMA
         const dataStorage = {
-            internalAttendees: JSON.parse('{!! $internalAttendeesJs !!}'), 
-            agendas: JSON.parse('{!! $agendasJs !!}'), 
-            partnerAttendees: JSON.parse('{!! $partnerAttendeesJs !!}'), 
+            internalAttendees: JSON.parse('{!! $internalAttendeesJs !!}'),
+            agendas: JSON.parse('{!! $agendasJs !!}'),
+            partnerAttendees: JSON.parse('{!! $partnerAttendeesJs !!}'),
             filesToUpload: [],
             oldFiles: JSON.parse('{!! $oldAttachmentsJs !!}'),
-            filesToDelete: [] 
+            filesToDelete: []
         };
 
         // Setup Quill JS
         const pembahasanQuill = new Quill('#pembahasan-editor', { theme: 'snow', placeholder: "Tuliskan hasil pembahasan, keputusan, dan poin penting lainnya...", modules: { toolbar: [[{ 'header': [1, 2, false] }], ['bold', 'italic', 'underline'], [{ 'list': 'ordered' }, { 'list': 'bullet' }], ['link'], ['clean']] } });
-        
+
         // FUNGSI MERENDER DAFTAR FILE (Memasukkan file lama dan baru)
         const renderFileList = () => {
             const fileListContainer = document.getElementById('file-list');
             fileListContainer.innerHTML = '';
-            
+
             // Filter file lama: hanya tampilkan yang TIDAK ada di filesToDelete
             const oldFilesToDisplay = dataStorage.oldFiles.filter(
                 f => !dataStorage.filesToDelete.includes(f.attachment_id)
             );
-            
+
             const allFiles = [
-                ...oldFilesToDisplay.map(f => ({ 
-                    name: f.file_name, 
-                    size: f.file_size, 
-                    type: 'old', 
-                    id: f.attachment_id 
+                ...oldFilesToDisplay.map(f => ({
+                    name: f.file_name,
+                    size: f.file_size,
+                    type: 'old',
+                    id: f.attachment_id
                 })),
-                ...dataStorage.filesToUpload.map(f => ({ 
-                    name: f.name, 
-                    size: f.size, 
-                    type: 'new', 
-                    fileObj: f 
+                ...dataStorage.filesToUpload.map(f => ({
+                    name: f.name,
+                    size: f.size,
+                    type: 'new',
+                    fileObj: f
                 }))
             ];
-            
+
             if (allFiles.length > 0) {
                 const ul = document.createElement('ul');
                 ul.className = 'list-none space-y-2';
 
                 allFiles.forEach((file, index) => {
                     const li = document.createElement('li');
-                    
+
                     li.className = `flex items-center justify-between p-2 rounded-lg ${file.type === 'old' ? 'bg-yellow-50 dark:bg-gray-800' : 'bg-gray-100 dark:bg-gray-700'}`;
 
                     const fileInfo = document.createElement('span');
-                    const iconColor = file.type === 'old' ? 'text-yellow-600' : 'text-primary';
+                    const iconColor = file.type === 'old' ? 'text-yellow-600' : 'text-white';
                     const statusText = file.type === 'old' ? '(Lama)' : '(Baru)';
 
-                    fileInfo.innerHTML = `<i class="fa-solid fa-file mr-2 ${iconColor}"></i> <span>${file.name}</span> <span class="ml-2 text-xs text-text-secondary dark:text-dark-text-secondary">(${(file.size / 1024 / 1024).toFixed(2)} MB) ${statusText}</span>`;
+                    fileInfo.innerHTML = `<i class="fa-solid fa-file mr-2 ${iconColor}"></i> <span>${file.name}</span> <span class="ml-2 text-xs text-[#efefef] dark:text-dark-text-secondary">(${(file.size / 1024 / 1024).toFixed(2)} MB) ${statusText}</span>`;
 
                     const removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
@@ -262,7 +259,7 @@
                             }
                         }
                         renderFileList();
-                        fileInput.value = null; 
+                        fileInput.value = null;
                     };
 
                     li.appendChild(fileInfo);
@@ -282,7 +279,7 @@
             if (newFiles.length > 0) {
                 newFiles.forEach(file => {
                     const isDuplicate = [...dataStorage.filesToUpload, ...dataStorage.oldFiles].some(existingFile => existingFile.name === file.name && existingFile.size === file.size);
-                    
+
                     if (!isDuplicate) {
                         dataStorage.filesToUpload.push(file);
                     } else {
@@ -304,16 +301,16 @@
 
             const renderInternalList = () => {
                 listInternalContainer.innerHTML = '';
-                
+
                 dataStorage.internalAttendees.forEach((unitData, unitIndex) => {
                     const unitDiv = document.createElement('div');
                     unitDiv.className = 'p-4 border border-border-light dark:border-border-dark rounded-lg bg-body-bg dark:bg-dark-component-bg shadow-sm space-y-3';
-                    
+
                     // Header Unit
                     const header = document.createElement('div');
                     header.className = 'flex items-center justify-between border-b border-border-light dark:border-border-dark pb-2';
-                    header.innerHTML = `<h3 class="text-base font-semibold text-primary">${unitData.unit}</h3>`;
-                    
+                    header.innerHTML = `<h3 class="text-base font-semibold text-white">${unitData.unit}</h3>`;
+
                     const removeUnitBtn = document.createElement('button');
                     removeUnitBtn.type = 'button';
                     removeUnitBtn.innerHTML = '<i class="fa-solid fa-trash text-red-500 hover:text-red-700 fa-sm"></i>';
@@ -327,21 +324,21 @@
 
                     // Form Input Peserta untuk Unit ini
                     const attendeeForm = document.createElement('div');
-                    attendeeForm.className = 'flex gap-2';
+                    attendeeForm.className = 'flex gap-2 mt-4';
                     attendeeForm.innerHTML = `
-                        <input type="text" id="input-peserta-internal-${unitIndex}" class="bg-white border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-body-bg dark:border-border-dark" placeholder="Nama orang yang hadir">
-                        <button type="button" id="btn-add-peserta-internal-${unitIndex}" class="px-4 py-2 text-xs font-medium text-primary border border-primary rounded-lg hover:bg-primary/10 flex-shrink-0">Tambah</button>
+                        <input type="text" id="input-peserta-internal-${unitIndex}" class="bg-white border border-border-light text-[#4B5563] text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-body-bg dark:border-border-dark" placeholder="Nama orang yang hadir">
+                        <button type="button" id="btn-add-peserta-internal-${unitIndex}" class="px-4 py-2 text-xs font-medium text-red-400 border border-red-400 rounded-lg hover:bg-red-400/10 flex-shrink-0">Tambah</button>
                     `;
                     unitDiv.appendChild(attendeeForm);
-                    
+
                     // List Peserta Unit
                     const attendeeList = document.createElement('ul');
-                    attendeeList.className = 'mt-2 space-y-1 list-disc list-inside text-sm text-text-secondary dark:text-dark-text-secondary';
+                    attendeeList.className = 'mt-2 space-y-2 list-disc list-inside text-sm text-[#efefef] dark:text-dark-text-secondary';
                     unitData.attendees.forEach((person, personIndex) => {
                         const li = document.createElement('li');
-                        li.className = 'flex items-center justify-between';
+                        li.className = 'flex items-center border border-primary py-2 px-4 mt-2 rounded-lg justify-between';
                         li.textContent = person;
-                        
+
                         const removePersonBtn = document.createElement('button');
                         removePersonBtn.type = 'button';
                         removePersonBtn.innerHTML = '<i class="fa-solid fa-times text-red-400 hover:text-red-600 fa-xs"></i>';
@@ -356,15 +353,15 @@
                     });
                     unitDiv.appendChild(attendeeList);
                     listInternalContainer.appendChild(unitDiv);
-                    
+
                     // Tambahkan Listener untuk tombol Tambah Peserta
                     const personInput = document.getElementById(`input-peserta-internal-${unitIndex}`);
                     const personAddBtn = document.getElementById(`btn-add-peserta-internal-${unitIndex}`);
-                    
+
                     const addPerson = () => {
                         const personName = personInput.value.trim();
                         if (personName === '') return;
-                        
+
                         // Cek duplikasi di unit yang sama
                         if (unitData.attendees.some(n => n.toLowerCase() === personName.toLowerCase())) {
                             showToast('Peserta ini sudah ditambahkan di unit ini!', true);
@@ -377,16 +374,16 @@
                     };
 
                     if (personAddBtn) personAddBtn.addEventListener('click', addPerson);
-                    if (personInput) personInput.addEventListener('keydown', (e) => { 
-                        if (e.key === 'Enter') { 
-                            e.preventDefault(); 
-                            addPerson(); 
-                        } 
+                    if (personInput) personInput.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            addPerson();
+                        }
                     });
                 });
 
                 if (dataStorage.internalAttendees.length === 0) {
-                    listInternalContainer.innerHTML = '<p class="text-sm text-text-secondary dark:text-dark-text-secondary">Silakan tambahkan Unit/Bagian yang hadir.</p>';
+                    listInternalContainer.innerHTML = '<p class="text-sm text-[#efefef] dark:text-dark-text-secondary">Silakan tambahkan Unit/Bagian yang hadir.</p>';
                 }
             };
 
@@ -397,7 +394,7 @@
                     showToast('Nama Unit/Bagian wajib diisi!', true);
                     return;
                 }
-                
+
                 if (dataStorage.internalAttendees.some(u => u.unit.toLowerCase() === unitName.toLowerCase())) {
                     showToast('Nama Unit/Bagian ini sudah ada!', true);
                     return;
@@ -411,14 +408,14 @@
 
             if (btnAddUnit) {
                 btnAddUnit.addEventListener('click', addUnit);
-                inputUnit.addEventListener('keydown', (e) => { 
-                    if (e.key === 'Enter') { 
-                        e.preventDefault(); 
-                        addUnit(); 
-                    } 
+                inputUnit.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addUnit();
+                    }
                 });
             }
-            
+
             renderInternalList();
         }
         setupInternalAttendees();
@@ -434,7 +431,7 @@
                 listContainer.innerHTML = '';
                 dataStorage.agendas.forEach((item, index) => {
                     const listItem = document.createElement('li');
-                    listItem.className = 'flex items-center justify-between text-text-secondary dark:text-dark-text-secondary';
+                    listItem.className = 'flex items-center justify-between text-[#efefef] dark:text-dark-text-secondary';
                     listItem.textContent = item;
 
                     const removeBtn = document.createElement('button');
@@ -479,11 +476,11 @@
 
                 dataStorage.partnerAttendees.forEach((mitra, mitraIndex) => {
                     const mitraDiv = document.createElement('div');
-                    mitraDiv.className = 'p-4 border border-border-light dark:border-border-dark rounded-lg bg-body-bg dark:bg-dark-component-bg shadow-sm space-y-3';
+                    mitraDiv.className = 'p-4 mt-4 border border-border-light dark:border-border-dark rounded-lg bg-red dark:bg-dark-component-bg shadow-sm space-y-3';
 
                     const header = document.createElement('div');
-                    header.className = 'flex items-center justify-between border-b border-border-light dark:border-border-dark pb-2';
-                    header.innerHTML = `<h3 class="text-base font-semibold text-primary">${mitra.name}</h3>`;
+                    header.className = 'flex items-center justify-between border-b border-border-light pb-2';
+                    header.innerHTML = `<h3 class="text-base font-semibold text-white">${mitra.name}</h3>`;
 
                     const removeMitraBtn = document.createElement('button');
                     removeMitraBtn.type = 'button';
@@ -498,16 +495,16 @@
                     const attendeeForm = document.createElement('div');
                     attendeeForm.className = 'flex gap-2';
                     attendeeForm.innerHTML = `
-                        <input type="text" id="input-peserta-mitra-${mitraIndex}" class="bg-white border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-body-bg dark:border-border-dark" placeholder="Nama orang yang hadir">
-                        <button type="button" id="btn-add-peserta-mitra-${mitraIndex}" class="px-4 py-2 text-xs font-medium text-primary border border-primary rounded-lg hover:bg-primary/10 flex-shrink-0">Tambah</button>
+                        <input type="text" id="input-peserta-mitra-${mitraIndex}" class="bg-white border border-border-light text-[#4B5563] text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-body-bg dark:border-border-dark" placeholder="Nama orang yang hadir">
+                        <button type="button" id="btn-add-peserta-mitra-${mitraIndex}" class="px-4 py-2 text-xs font-medium text-red-400 border border-red-400 rounded-lg hover:bg-red-400/10 flex-shrink-0">Tambah</button>
                     `;
                     mitraDiv.appendChild(attendeeForm);
 
                     const attendeeList = document.createElement('ul');
-                    attendeeList.className = 'mt-2 space-y-1 list-disc list-inside text-sm text-text-secondary dark:text-dark-text-secondary';
+                    attendeeList.className = 'mt-2 space-y-1 list-disc list-inside text-sm text-[#efefef] dark:text-dark-text-secondary';
                     mitra.attendees.forEach((person, personIndex) => {
                         const li = document.createElement('li');
-                        li.className = 'flex items-center justify-between';
+                        li.className = 'flex items-center justify-between border border-light dark:border-border-dark py-2 px-4 mt-2 rounded-lg';
                         li.textContent = person;
 
                         const removePersonBtn = document.createElement('button');
@@ -550,9 +547,9 @@
                         }
                     });
                 });
-                
+
                 if (dataStorage.partnerAttendees.length === 0) {
-                    listMitraContainer.innerHTML = '<p class="text-sm text-text-secondary dark:text-dark-text-secondary">Silakan tambahkan Pihak Luar (Mitra) jika ada.</p>';
+                    listMitraContainer.innerHTML = '<p class="text-sm text-[#efefef] dark:text-dark-text-secondary">Silakan tambahkan Pihak Luar (Mitra) jika ada.</p>';
                 }
             };
 
@@ -590,20 +587,20 @@
 
         // FUNGSI SUBMIT UTAMA (AJAX PATCH)
         const submitForm = async () => {
-            const formData = new FormData(); 
-            
+            const formData = new FormData();
+
             // Tambahkan field method PATCH secara manual
             formData.append('_method', 'PATCH');
             formData.append('_token', '{{ csrf_token() }}');
-            
-            const simpleFields = ['title', 'location', 'meeting_date', 'start_time', 'end_time', 'pimpinan_rapat', 'notulen', 'status_id']; 
+
+            const simpleFields = ['title', 'location', 'meeting_date', 'start_time', 'end_time', 'pimpinan_rapat', 'notulen', 'status_id'];
             simpleFields.forEach(name => {
                 const element = document.querySelector(`[name="${name}"]`);
                 if (element) {
                     formData.append(name, element.value);
                 }
             });
-            
+
             // VALIDASI DAN PEMBENTUKAN DATA
 
             const pembahasanContent = pembahasanQuill.root.innerHTML.trim();
@@ -623,7 +620,7 @@
                  showToast('Peserta Rapat Internal wajib diisi (minimal 1 Unit/Bagian dengan minimal 1 peserta)!', true);
                  return;
             }
-            
+
             // Tambahkan Peserta Internal (Internal Attendees) sebagai JSON string
             formData.append('internal_attendees_json', JSON.stringify(dataStorage.internalAttendees));
 
@@ -641,7 +638,7 @@
             // Tambahkan ID file lama yang ditandai untuk dihapus
             if (dataStorage.filesToDelete.length > 0) {
                 dataStorage.filesToDelete.forEach(id => {
-                    formData.append('files_to_delete[]', id); 
+                    formData.append('files_to_delete[]', id);
                 });
             }
 
@@ -651,7 +648,7 @@
                     formData.append('attachments[]', file, file.name);
                 });
             }
-            
+
             // KIRIM DATA
             try {
                 const response = await fetch(updateUrl, {
@@ -667,11 +664,11 @@
 
                 if (response.ok) {
                     showToast(data.message || 'MoM berhasil diupdate dan disetujui!', false);
-                    
+
                     const finalRedirectUrl = detailRouteTemplate.replace('MOM_ID', momId);
 
                     setTimeout(() => {
-                        window.location.href = finalRedirectUrl; 
+                        window.location.href = finalRedirectUrl;
                     }, 1000);
                 } else {
                     let errorMessage = 'Gagal menyimpan MoM.';

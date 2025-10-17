@@ -23,11 +23,11 @@
 
         {{-- PERUBAHAN: Semua gaya kustom disatukan di sini --}}
         <style>
-            .ql-toolbar { border-top-left-radius: 0.5rem; border-top-right-radius: 0.5rem; background-color: #1F2937; border-color: #374151 !important; }
-            .ql-container { border-bottom-left-radius: 0.5rem; border-bottom-right-radius: 0.5rem; background-color: #374151; border-color: #374151 !important; color: #D1D5DB; }
-            .ql-editor.ql-blank::before { color: #9CA3AF !important; font-style: normal !important; }
-            .ql-snow .ql-stroke { stroke: #9CA3AF; }
-            .ql-snow .ql-picker-label { color: #9CA3AF; }
+            .ql-toolbar { border-top-left-radius: 0.5rem; border-top-right-radius: 0.5rem; background-color: #efefef; border-color: #374151 !important; }
+            .ql-container { border-bottom-left-radius: 0.5rem; border-bottom-right-radius: 0.5rem; background-color: #374151; border-color: #374151 !important; color: #ffffff; }
+            .ql-editor.ql-blank::before { color: white !important; font-style: normal !important; }
+            .ql-snow .ql-stroke { stroke: white; }
+            .ql-snow .ql-picker-label { color: #efefef; }
             /* Import Font Futuristik */
             @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;500;600;700&display=swap');
 

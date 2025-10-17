@@ -198,7 +198,7 @@
 
                     const fileInfo = document.createElement('span');
                     fileInfo.className = 'flex items-center text-sm font-medium truncate';
-                    fileInfo.innerHTML = `<i class="fa-solid fa-file mr-2 text-primary"></i> <span>${file.name}</span> <span class="ml-2 text-xs text-text-secondary dark:text-dark-text-secondary">(${(file.size / 1024 / 1024).toFixed(2)} MB)</span>`;
+                    fileInfo.innerHTML = `<i class="fa-solid fa-file mr-2 text-white"></i> <span>${file.name}</span> <span class="ml-2 text-xs text-[#efefef] dark:text-dark-text-gray-500">(${(file.size / 1024 / 1024).toFixed(2)} MB)</span>`;
 
                     // Tombol Hapus
                     const removeBtn = document.createElement('button');
@@ -258,7 +258,7 @@
                     // Header Unit
                     const header = document.createElement('div');
                     header.className = 'flex items-center justify-between border-b border-border-light dark:border-border-dark pb-2';
-                    header.innerHTML = `<h3 class="text-base font-semibold text-primary">${unitData.unit}</h3>`;
+                    header.innerHTML = `<h3 class="text-base font-semibold text-white">${unitData.unit}</h3>`;
 
                     const removeUnitBtn = document.createElement('button');
                     removeUnitBtn.type = 'button';
@@ -275,8 +275,8 @@
                     const attendeeForm = document.createElement('div');
                     attendeeForm.className = 'flex gap-2';
                     attendeeForm.innerHTML = `
-                        <input type="text" id="input-peserta-internal-${unitIndex}" class="bg-white border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-body-bg dark:border-border-dark" placeholder="Nama orang yang hadir">
-                        <button type="button" id="btn-add-peserta-internal-${unitIndex}" class="px-4 py-2 text-xs font-medium text-primary border border-primary rounded-lg hover:bg-primary/10 flex-shrink-0">Tambah</button>
+                        <input type="text" id="input-peserta-internal-${unitIndex}" class="bg-white border border-border-light text-text-primary text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5 dark:bg-dark-body-bg dark:border-border-dark" placeholder="Nama orang yang hadir">
+                        <button type="button" id="btn-add-peserta-internal-${unitIndex}" class="px-4 py-2 text-xs font-medium text-white border border-primary rounded-lg hover:bg-primary/10 focus:ring-red-500 focus:border-red-500 flex-shrink-0">Tambah</button>
                     `;
                     unitDiv.appendChild(attendeeForm);
 
@@ -285,7 +285,7 @@
                     attendeeList.className = 'mt-2 space-y-1 list-disc list-inside text-sm text-wh';
                     unitData.attendees.forEach((person, personIndex) => {
                         const li = document.createElement('li');
-                        li.className = 'flex items-center justify-between';
+                        li.className = 'flex items-center justify-between text-white border border-light py-2 px-4 rounded-lg';
                         li.textContent = person;
 
                         const removePersonBtn = document.createElement('button');
@@ -333,7 +333,7 @@
 
                 // Tampilkan pesan jika belum ada unit
                 if (dataStorage.internalAttendees.length === 0) {
-                    listInternalContainer.innerHTML = '<p class="text-sm text-text-secondary dark:text-dark-text-secondary">Silakan tambahkan Unit/Bagian yang hadir.</p>';
+                    listInternalContainer.innerHTML = '<p class="text-sm text-[#efefef] dark:text-dark-text-gray-500">Silakan tambahkan Unit/Bagian yang hadir.</p>';
                 }
             };
 
@@ -382,7 +382,7 @@
                 listContainer.innerHTML = '';
                 dataStorage.agendas.forEach((item, index) => {
                     const listItem = document.createElement('li');
-                    listItem.className = 'flex items-center justify-between text-text-secondary dark:text-dark-text-secondary';
+                    listItem.className = 'flex items-center border border-light px-4 py-2 rounded-lg justify-between text-[#efefef] dark:text-dark-text-gray-500';
                     listItem.textContent = item;
 
                     const removeBtn = document.createElement('button');
@@ -431,7 +431,7 @@
                     // Header Mitra
                     const header = document.createElement('div');
                     header.className = 'flex items-center justify-between border-b border-border-light dark:border-border-dark pb-2';
-                    header.innerHTML = `<h3 class="text-base font-semibold text-primary">${mitra.name}</h3>`;
+                    header.innerHTML = `<h3 class="text-base font-semibold text-white">${mitra.name}</h3>`;
 
                     const removeMitraBtn = document.createElement('button');
                     removeMitraBtn.type = 'button';
@@ -447,17 +447,17 @@
                     const attendeeForm = document.createElement('div');
                     attendeeForm.className = 'flex gap-2';
                     attendeeForm.innerHTML = `
-                        <input type="text" id="input-peserta-mitra-${mitraIndex}" class="bg-white border border-border-light text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-dark-body-bg dark:border-border-dark" placeholder="Nama orang yang hadir">
-                        <button type="button" id="btn-add-peserta-mitra-${mitraIndex}" class="px-4 py-2 text-xs font-medium text-primary border border-primary rounded-lg hover:bg-primary/10 flex-shrink-0">Tambah</button>
+                        <input type="text" id="input-peserta-mitra-${mitraIndex}" class="bg-white border border-border-light text-text-primary text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5 dark:bg-dark-body-bg dark:border-border-dark" placeholder="Nama orang yang hadir">
+                        <button type="button" id="btn-add-peserta-mitra-${mitraIndex}" class="px-4 py-2 text-xs font-medium text-white border border-primary focus:ring-red-500 focus:border-red-500 rounded-lg hover:bg-primary/10 flex-shrink-0">Tambah</button>
                     `;
                     mitraDiv.appendChild(attendeeForm);
 
                     // List Peserta Mitra
                     const attendeeList = document.createElement('ul');
-                    attendeeList.className = 'mt-2 space-y-1 list-disc list-inside text-sm text-text-secondary dark:text-dark-text-secondary';
+                    attendeeList.className = 'mt-2 space-y-1 list-disc list-inside text-sm text-[#efefef] dark:text-dark-text-gray-500';
                     mitra.attendees.forEach((person, personIndex) => {
                         const li = document.createElement('li');
-                        li.className = 'flex items-center justify-between';
+                        li.className = 'flex items-center justify-between border border-light px-4 py-2 text-white rounded-lg';
                         li.textContent = person;
 
                         const removePersonBtn = document.createElement('button');
@@ -505,7 +505,7 @@
 
                 // Tampilkan pesan jika belum ada mitra
                 if (dataStorage.partnerAttendees.length === 0) {
-                    listMitraContainer.innerHTML = '<p class="text-sm text-text-secondary dark:text-dark-text-secondary">Silakan tambahkan Pihak Luar (Mitra) jika ada.</p>';
+                    listMitraContainer.innerHTML = '<p class="text-sm text-[#efefef] dark:text-dark-text-gray-500">Silakan tambahkan Pihak Luar (Mitra) jika ada.</p>';
                 }
             };
 

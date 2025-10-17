@@ -266,38 +266,49 @@
 
                 {{-- TANDA TANGAN PESERTA DENGAN MULTI-NAMA DINAMIS --}}
                 @if($totalSignatoryGroups > 0)
-                <tr>
-                    <td colspan="4" class="pt-10">
-                        <table class="w-full text-center border-collapse">
-                            <thead>
-                                <tr class="border-b border-black">
+    @php
+        // Bagi grup tanda tangan menjadi beberapa baris, masing-masing maksimal 3 kolom
+        $chunks = array_chunk($signatoryGroups, 3);
+    @endphp
 
-                                    @foreach($signatoryGroups as $group)
-                                        {{-- Gunakan total kelompok untuk membagi lebar --}}
-                                        <th class="p-2 font-semibold w-1/{{ $totalSignatoryGroups }}">{{ $group['name'] }}</th>
-                                    @endforeach
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="align-top">
-                                    {{-- ITERASI SEMUA DAFTAR PESERTA BERDASARKAN GRUP --}}
-                                    @foreach($signatoryGroups as $group)
-                                        <td class="p-2">
-                                            <div class="flex flex-col">
-                                                @forelse($group['attendees'] as $name)
-                                                    <p class="pt-16 underline">{{ $name }}</p>
-                                                @empty
-                                                    <p class="pt-16 italic text-gray-500">N/A</p>
-                                                @endforelse
-                                            </div>
-                                        </td>
-                                    @endforeach
-                                </tr>
-                            </tbody>
-                        </table>
-                    </td>
-                </tr>
-                @endif
+    <tr>
+        <td colspan="4" class="pt-10">
+            <table class="w-full text-center border-collapse">
+                <thead>
+                    <tr class="border-b border-black">
+                        <th colspan="3" class="p-2 font-semibold">Tanda Tangan</th>
+                    </tr>
+                </thead>
+                <tbody class="space-y-10"> {{-- Tambahkan jarak antar baris di sini --}}
+                    @foreach($chunks as $index => $row)
+                        <tr class="align-top {{ $index > 0 ? 'pt-10' : '' }}"> {{-- Tambahkan jarak di baris ke-2, dst --}}
+                            @foreach($row as $group)
+                                <td class="p-2 w-1/3">
+                                    <div class="flex flex-col">
+                                        <p class="font-semibold">{{ $group['name'] }}</p>
+
+                                        @forelse($group['attendees'] as $name)
+                                            <p class="pt-16 underline">{{ $name }}</p>
+                                        @empty
+                                            <p class="pt-16 italic text-gray-500">N/A</p>
+                                        @endforelse
+                                    </div>
+                                </td>
+                            @endforeach
+
+                            {{-- Tambahkan kolom kosong jika kurang dari 3 kolom --}}
+                            @for($i = count($row); $i < 3; $i++)
+                                <td class="p-2 w-1/3"></td>
+                            @endfor
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </td>
+    </tr>
+@endif
+
+
 
                 {{-- Lampiran Header --}}
                 <tr><td colspan="4" class="text-center font-bold text-2xl pt-10 pb-4">LAMPIRAN</td></tr>
@@ -364,7 +375,7 @@
                 </tr>
 
                 {{-- Footer --}}
-                <tr><td colspan="4" class="text-center font-normal italic bg-red-600 text-white p-3 border border-black text-xs">All rights reserved by MoM Telkom.</td></tr>
+                <tr><td colspan="4" class="text-center font-normal italic bg-red-600 text-white p-3 border border-black text-xs"><div><p>All rights reserved by MoMatic.</p>Engginering & Deployment - Telkom Regional 1 Sumatera<p></p><p>2025</p></div></td></tr>
             </tbody>
         </table>
     </div>
