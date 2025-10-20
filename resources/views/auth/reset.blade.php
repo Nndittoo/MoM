@@ -1,134 +1,141 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Reset Password - Telkom Indonesia</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Reset Password | TR1 MoMatic</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    {{-- Style untuk font dan animasi --}}
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;500;600&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
+        .text-neon-red {
+            color: #EF4444;
+            text-shadow: 0 0 5px rgba(239, 68, 68, 0.7);
+        }
+        .btn-neon-red {
+            background-color: #EF4444;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+            transition: all 0.3s ease-in-out;
+        }
+        .btn-neon-red:hover {
+            background-color: #DC2626;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.8), 0 0 20px rgba(239, 68, 68, 0.5);
+        }
+        .btn-pulse {
+            animation: pulse-animation 2s infinite;
+        }
+        @keyframes pulse-animation {
+            0% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); }
+            50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.9); }
+            100% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); }
+        }
+    </style>
 </head>
-<body class="bg-gray-50 text-gray-900">
+<body class="bg-gray-900 text-gray-100">
 
 @php
-  // Ambil token & email dari berbagai kemungkinan sumber
-  $resolvedToken = $token ?? request()->route('token') ?? request('token');
-  $resolvedEmail = old('email', $email ?? request('email'));
+    // Ambil token & email dari berbagai kemungkinan sumber
+    $resolvedToken = $token ?? request()->route('token') ?? request('token');
+    $resolvedEmail = old('email', $email ?? request('email'));
 @endphp
 
 <div class="min-h-screen flex justify-center items-center p-4">
-  <div class="max-w-4xl w-full bg-white shadow-xl rounded-2xl flex flex-col md:flex-row h-auto md:h-[560px] overflow-hidden border border-gray-200">
+    <div class="max-w-4xl w-full bg-gray-800 shadow-2xl rounded-2xl flex flex-col md:flex-row h-auto overflow-hidden border border-gray-700">
 
-    {{-- Left: Form --}}
-    <div class="w-full md:w-1/2 p-6 sm:p-10 flex flex-col justify-center">
-      <div class="flex justify-center md:justify-start">
-        <img src="{{ asset('img/logo.png') }}" class="w-24" alt="Telkom Logo"/>
-      </div>
+        {{-- Left: Form --}}
+        <div class="w-full md:w-1/2 p-6 sm:p-10 flex flex-col justify-center">
+            <div class="flex justify-center">
+                <img src="{{ asset('img/LOGO.png') }}" class="w-48" alt="TR1 MoMatic Logo"/>
+            </div>
 
-      <h1 class="text-2xl xl:text-3xl font-extrabold text-gray-800 mt-6">Buat Password Baru</h1>
-      <p class="text-sm text-gray-600 mt-2">Masukkan password baru untuk akun Anda.</p>
+            <h1 class="text-2xl xl:text-3xl font-bold font-orbitron text-neon-red mt-6">Buat Password Baru</h1>
+            <p class="text-sm text-gray-400 mt-2">Masukkan password baru untuk akun Anda.</p>
 
-      {{-- Alerts --}}
-      @if (session('status'))
-        <div class="mt-4 p-3 rounded bg-green-100 text-green-700">{{ session('status') }}</div>
-      @endif
+            {{-- Alerts --}}
+            @if (session('status'))
+                <div class="mt-4 p-3 rounded-lg bg-green-900/50 text-green-300 border border-green-700 text-sm">{{ session('status') }}</div>
+            @endif
+            @if (blank($resolvedToken))
+                <div class="mt-4 p-3 rounded-lg bg-yellow-900/50 text-yellow-300 border border-yellow-700 text-sm">
+                    Link reset tidak valid atau sudah kadaluarsa. Silakan
+                    <a href="{{ route('password.request') }}" class="underline font-semibold hover:text-yellow-200">minta link reset kembali</a>.
+                </div>
+            @endif
+            @if ($errors->any())
+                <div class="mt-4 p-3 rounded-lg bg-red-900/50 text-red-300 border border-red-700 text-sm">
+                    <ul class="list-disc ml-5">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
-      {{-- Token hilang? Tampilkan peringatan supaya user buka dari link email --}}
-      @if (blank($resolvedToken))
-        <div class="mt-4 p-3 rounded bg-yellow-100 text-yellow-800 text-sm">
-          Link reset tidak valid atau sudah kadaluarsa. Silakan
-          <a href="{{ route('password.request') }}" class="underline font-semibold">minta link reset kembali</a>
-          dan buka halaman ini dari email yang kami kirim.
-        </div>
-      @endif
+            {{-- Form --}}
+            <form method="POST" action="{{ route('password.store') }}" class="mt-6 space-y-4">
+                @csrf
+                <input type="hidden" name="token" value="{{ $resolvedToken }}">
+                <input type="hidden" name="email" value="{{ $resolvedEmail }}">
 
-      {{-- Error validasi --}}
-      @if ($errors->any())
-        <div class="mt-4 p-3 rounded bg-red-100 text-red-700 text-sm">
-          <ul class="list-disc ml-5">
-            @foreach ($errors->all() as $error)
-              <li>{{ $error }}</li>
-            @endforeach
-          </ul>
-        </div>
-      @endif
+                <input type="email" value="{{ $resolvedEmail }}" readonly class="w-full px-6 py-3 rounded-lg font-medium bg-gray-700 text-gray-400 text-sm border border-gray-600 cursor-not-allowed">
 
-      {{-- Form --}}
-      <form method="POST" action="{{ route('password.store') }}" class="mt-6 space-y-4">
-        @csrf
+                <div class="relative">
+                    <input id="password" type="password" name="password" required class="w-full px-6 py-3 rounded-lg font-medium bg-gray-700 border border-gray-600 text-white placeholder-gray-400 text-sm focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500" placeholder="Password Baru" autocomplete="new-password">
+                    <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
 
-        {{-- Hidden token & email yang akan diproses server --}}
-        <input type="hidden" name="token" value="{{ $resolvedToken }}">
-        <input type="hidden" name="email" value="{{ $resolvedEmail }}">
+                <div class="relative">
+                    <input id="password_confirmation" type="password" name="password_confirmation" required class="w-full px-6 py-3 rounded-lg font-medium bg-gray-700 border border-gray-600 text-white placeholder-gray-400 text-sm focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500" placeholder="Konfirmasi Password Baru" autocomplete="new-password">
+                    <button type="button" id="togglePasswordConfirm" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
 
-        {{-- Email tampilan (readonly) agar user tahu akun yang di-reset --}}
-        <input
-          type="email"
-          value="{{ $resolvedEmail }}"
-          readonly
-          class="w-full px-6 py-3 rounded-lg font-medium bg-gray-100 text-gray-700 text-sm border border-gray-200"
-          placeholder="Email">
-
-        {{-- Password --}}
-        <div class="relative">
-          <input id="password" type="password" name="password" required
-                 class="w-full px-6 py-3 rounded-lg font-medium bg-gray-100 placeholder-gray-500 text-sm focus:outline-none focus:bg-white border border-gray-200"
-                 placeholder="Password Baru" autocomplete="new-password">
-          <button type="button" id="togglePassword"
-                  class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500">
-            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-            </svg>
-          </button>
+                <button type="submit" class="mt-2 w-full py-3 rounded-lg btn-neon-red btn-pulse text-white font-semibold flex items-center justify-center">
+                    <i class="fa-solid fa-key mr-2"></i>
+                    Reset Password
+                </button>
+            </form>
         </div>
 
-        {{-- Konfirmasi Password --}}
-        <div class="relative">
-          <input id="password_confirmation" type="password" name="password_confirmation" required
-                 class="w-full px-6 py-3 rounded-lg font-medium bg-gray-100 placeholder-gray-500 text-sm focus:outline-none focus:bg-white border border-gray-200"
-                 placeholder="Konfirmasi Password Baru" autocomplete="new-password">
-          <button type="button" id="togglePasswordConfirm"
-                  class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500">
-            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-            </svg>
-          </button>
+        {{-- Right: Image --}}
+        <div class="w-full md:w-1/2 hidden md:flex items-center justify-center bg-gray-900 relative">
+            <div class="absolute inset-0 bg-cover bg-center opacity-10" style="background-image: url('{{ asset("img/LOGO.png") }}'); background-size: 80%; background-repeat: no-repeat;"></div>
+            <div class="relative z-10 p-8 text-center">
+                <h2 class="text-4xl font-extrabold text-white font-orbitron mb-4">Secure Your Access</h2>
+                <p class="text-lg text-gray-300">Buat password yang kuat untuk melindungi akun Anda.</p>
+            </div>
         </div>
-
-        <button type="submit"
-                class="mt-2 tracking-wide font-semibold bg-red-600 text-white w-full py-3 rounded-lg hover:bg-red-700 transition-all duration-300 flex items-center justify-center">
-          <svg class="w-5 h-5 -ml-1 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-          </svg>
-          Reset Password
-        </button>
-      </form>
     </div>
-
-    {{-- Right: Image --}}
-    <div class="w-full md:w-1/2 hidden md:flex items-center justify-center bg-red-100">
-      <div class="w-full bg-cover bg-center h-full"
-           style="background-image:url('https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=2070&auto=format&fit=crop');">
-      </div>
-    </div>
-  </div>
 </div>
 
 <script>
-  function toggle(id, btnId) {
-    const input = document.getElementById(id);
-    const btn = document.getElementById(btnId);
-    btn.addEventListener('click', () => {
-      input.type = input.type === 'password' ? 'text' : 'password';
-    });
-  }
-  toggle('password', 'togglePassword');
-  toggle('password_confirmation', 'togglePasswordConfirm');
+    function toggle(inputId, buttonId) {
+        const input = document.getElementById(inputId);
+        const button = document.getElementById(buttonId);
+        const icon = button.querySelector('i');
+
+        button.addEventListener('click', () => {
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    }
+    toggle('password', 'togglePassword');
+    toggle('password_confirmation', 'togglePasswordConfirm');
 </script>
+
 </body>
 </html>
