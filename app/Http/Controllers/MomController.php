@@ -418,6 +418,12 @@ class MomController extends Controller
             $allMomsQuery->whereDate('meeting_date', $date);
         }
 
+        if ($request->filled('status')) {
+            $allMomsQuery->whereHas('status', function($q) use ($request) {
+                $q->where('status', $request->status);
+            });
+        }
+
         // Query untuk "My MoM" dengan mengkloning dan menambahkan filter role admin
         $momsByAdminQuery = (clone $allMomsQuery)->whereHas('creator', function ($query) {
             $query->where('role', 'admin');
