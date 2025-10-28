@@ -19,6 +19,18 @@
             transform: scale(1);
         }
     }
+
+    /* Loading spinner untuk auto-search */
+    .search-spinner {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(239, 68, 68, 0.3);
+        border-top-color: #ef4444;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 @endpush
 
@@ -32,11 +44,10 @@
         </div>
 
         <div class="bg-gray-800 rounded-xl shadow p-4 border border-gray-700">
-            <div class="flex flex-col md:flex-row justify-between items-center border-b border-gray-700 pb-4">
+            <div class="flex flex-col md:flex-row justify-between items-center border-b border-gray-700 pb-4 gap-4">
                 {{-- Tabs --}}
                 <ul class="flex flex-wrap -mb-px text-sm font-medium text-center text-gray-400">
                     <li class="me-2">
-                        {{-- Menggunakan class 'active' untuk default My MoM --}}
                         <button onclick="switchTab('my-mom')" id="my-mom-tab" class="tab-button inline-flex items-center justify-center p-4 border-b-2 text-red-400 border-red-500 rounded-t-lg">
                             <i class="fa-solid fa-user me-2"></i>My MoM
                         </button>
@@ -48,33 +59,54 @@
                     </li>
                 </ul>
 
-                {{-- Search dan Filter --}}
-                <div class="flex flex-wrap items-center gap-3">
+                {{-- Search dan Filter Form --}}
+                <form id="filterForm" method="GET" action="{{ route('draft.index') }}" class="flex flex-wrap items-center gap-3">
+                    {{-- Hidden input untuk menyimpan tab aktif --}}
+                    <input type="hidden" name="tab" id="tabInput" value="{{ request('tab', 'my-mom') }}">
+
+                    {{-- Search Input --}}
                     <div class="relative">
-                        <input type="text" id="searchInput"
-                            placeholder="Cari MoM Disini . . ."
-                            class="pl-10 pr-3 py-2 rounded-lg bg-gray-900 border border-gray-700 text-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent w-60">
+                        <input type="text"
+                               id="searchInput"
+                               name="search"
+                               value="{{ request('search') }}"
+                               placeholder="Cari MoM Disini . . ."
+                               class="pl-10 pr-8 py-2 rounded-lg bg-gray-900 border border-gray-700 text-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent w-60">
                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-500"></i>
+                        <div id="searchSpinner" class="absolute right-3 top-1/2 -translate-y-1/2 hidden">
+                            <div class="search-spinner"></div>
+                        </div>
                     </div>
 
                     {{-- Filter Bulan --}}
                     <select id="filterMonth"
-                        class="bg-gray-900 border border-gray-700 text-gray-300 text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                            name="month"
+                            class="bg-gray-900 border border-gray-700 text-gray-300 text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent">
                         <option value="">Semua Bulan</option>
                         @foreach(range(1, 12) as $month)
-                            <option value="{{ $month }}">{{ \Carbon\Carbon::create()->month($month)->translatedFormat('F') }}</option>
+                            <option value="{{ str_pad($month, 2, '0', STR_PAD_LEFT) }}" {{ request('month') == str_pad($month, 2, '0', STR_PAD_LEFT) ? 'selected' : '' }}>
+                                {{ \Carbon\Carbon::create()->month($month)->translatedFormat('F') }}
+                            </option>
                         @endforeach
                     </select>
 
-                    {{-- Filter Status --}}
+                    {{-- Filter Status (hanya untuk My MoM) --}}
                     <select id="filterStatus"
-                        class="bg-gray-900 border border-gray-700 text-gray-300 text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                            name="status"
+                            class="bg-gray-900 border border-gray-700 text-gray-300 text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent">
                         <option value="">Semua Status</option>
-                        <option value="Menunggu">Pending</option>
-                        <option value="Disetujui">Approved</option>
-                        <option value="Ditolak">Rejected</option>
+                        <option value="Menunggu" {{ request('status') == 'Menunggu' ? 'selected' : '' }}>Pending</option>
+                        <option value="Disetujui" {{ request('status') == 'Disetujui' ? 'selected' : '' }}>Approved</option>
+                        <option value="Ditolak" {{ request('status') == 'Ditolak' ? 'selected' : '' }}>Rejected</option>
                     </select>
-                </div>
+
+                    {{-- Reset Button --}}
+                    <a href="{{ route('draft.index') }}"
+                       class="p-2.5 text-gray-400 hover:text-white bg-gray-700 hover:bg-gray-600 rounded-lg"
+                       title="Reset Filter">
+                        <i class="fa-solid fa-times"></i>
+                    </a>
+                </form>
             </div>
 
             <div class="pt-6">
@@ -278,7 +310,7 @@
                                 <p class="mt-4 text-lg text-gray-500">Tidak ada data MoM sama sekali.</p>
                             </div>
                         @endforelse
-                        
+
                         {{-- Jika $allMoms ada, tetapi tidak ada yang berstatus 'Disetujui' --}}
                         @if($allMoms->isNotEmpty() && $approvedCount === 0)
                             <div class="col-span-3 text-center py-16 bg-gray-800/50 rounded-xl border border-dashed border-gray-700">
@@ -293,10 +325,11 @@
 
         {{-- Paginasi --}}
         <div class="flex justify-center mt-8 mb-6" id="pagination-my-mom">
-            {{ $myMoms->links() }}
+            {{ $myMoms->appends(request()->query())->links() }}
         </div>
-        
+
         <div class="flex justify-center mt-8 mb-6 hidden" id="pagination-all-mom">
+            {{ $allMoms->appends(request()->query())->links() }}
         </div>
     </div>
 </div>
@@ -304,13 +337,21 @@
 
 @push('scripts')
 <script>
+let searchTimeout = null;
+let activeTab = '{{ request("tab", "my-mom") }}'; // Ambil dari request
+
 function switchTab(tabId) {
+    activeTab = tabId;
     const tabs = document.querySelectorAll('.tab-button');
     const myMomContent = document.getElementById('my-mom-content');
     const allMomContent = document.getElementById('all-mom-content');
     const filterStatus = document.getElementById('filterStatus');
     const paginationMyMom = document.getElementById('pagination-my-mom');
     const paginationAllMom = document.getElementById('pagination-all-mom');
+    const tabInput = document.getElementById('tabInput');
+
+    // Update hidden input untuk tab
+    tabInput.value = tabId;
 
     // Reset Tabs
     tabs.forEach(tab => {
@@ -321,22 +362,66 @@ function switchTab(tabId) {
     // Set Active Tab, Content, and Filters
     if (tabId === 'my-mom') {
         document.getElementById('my-mom-tab').classList.add('text-red-400', 'border-red-500');
+        document.getElementById('my-mom-tab').classList.remove('border-transparent', 'hover:text-gray-300', 'hover:border-gray-500');
         myMomContent.classList.remove('hidden');
         allMomContent.classList.add('hidden');
-        
+
         filterStatus.classList.remove('hidden'); // Tampilkan filter status
         paginationMyMom.classList.remove('hidden'); // Tampilkan paginasi My MoM
         paginationAllMom.classList.add('hidden');   // Sembunyikan paginasi All MoM
     } else {
         document.getElementById('all-mom-tab').classList.add('text-red-400', 'border-red-500');
+        document.getElementById('all-mom-tab').classList.remove('border-transparent', 'hover:text-gray-300', 'hover:border-gray-500');
         allMomContent.classList.remove('hidden');
         myMomContent.classList.add('hidden');
 
         filterStatus.classList.add('hidden'); // Sembunyikan filter status
-        
+
         paginationAllMom.classList.remove('hidden');
         paginationMyMom.classList.add('hidden');
     }
 }
+
+// Auto-search dan auto-filter
+function setupAutoFilter() {
+    const searchInput = document.getElementById('searchInput');
+    const filterMonth = document.getElementById('filterMonth');
+    const filterStatus = document.getElementById('filterStatus');
+    const searchSpinner = document.getElementById('searchSpinner');
+    const filterForm = document.getElementById('filterForm');
+
+    // Auto-search dengan delay 5 detik
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchSpinner.classList.remove('hidden');
+
+            searchTimeout = setTimeout(() => {
+                searchSpinner.classList.add('hidden');
+                filterForm.submit();
+            }, 2000);
+        });
+    }
+
+    // Auto-submit untuk filter bulan
+    if (filterMonth) {
+        filterMonth.addEventListener('change', function() {
+            filterForm.submit();
+        });
+    }
+
+    // Auto-submit untuk filter status
+    if (filterStatus) {
+        filterStatus.addEventListener('change', function() {
+            filterForm.submit();
+        });
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    setupAutoFilter();
+    switchTab(activeTab); // Set tab sesuai request
+});
 </script>
 @endpush

@@ -24,6 +24,7 @@ class DraftController extends Controller
         }
 
         // Get filter parameters
+        $search = $request->input('search');
         $month = $request->input('month'); // Format: YYYY-MM
         $status = $request->input('status'); // Format: Menunggu, Ditolak, Disetujui
 
@@ -32,40 +33,52 @@ class DraftController extends Controller
             ->whereHas('status', function (Builder $query) {
                 $query->whereIn('status', ['Menunggu', 'Ditolak']);
             })
-            ->with(['creator', 'status']);
+            ->with(['creator', 'status', 'attachments']);
+
+        // Apply search filter
+        if ($search) {
+            $myMomsQuery->where(function($q) use ($search) {
+                $q->where('title', 'like', '%' . $search . '%');
+            });
+        }
 
         // Apply month filter untuk My MoMs
         if ($month) {
             $currentYear = Carbon::now()->year;
-            $startDate = Carbon::createFromFormat('Y-m', $currentYear . '-' . $month)->startOfMonth();
-            $endDate = Carbon::createFromFormat('Y-m', $currentYear . '-' . $month)->endOfMonth();
-            $myMomsQuery->whereBetween('updated_at', [$startDate, $endDate]);
+            $myMomsQuery->whereMonth('created_at', $month)
+                        ->whereYear('created_at', $currentYear);
         }
 
-        // Apply status filter untuk My MoMs (hanya jika ada filter status yang dipilih)
+        // Apply status filter untuk My MoMs
         if ($status && in_array($status, ['Menunggu', 'Ditolak', 'Disetujui'])) {
             $myMomsQuery->whereHas('status', function (Builder $query) use ($status) {
                 $query->where('status', $status);
             });
         }
 
-        $myMoms = $myMomsQuery->latest()->paginate(9);
+        $myMoms = $myMomsQuery->latest('created_at')->paginate(9)->withQueryString();
 
         // Query untuk All MoMs (Disetujui only)
         $allMomsQuery = Mom::whereHas('status', function (Builder $query) {
                 $query->where('status', 'Disetujui');
             })
-            ->with(['creator', 'status']);
+            ->with(['creator', 'status', 'attachments']);
+
+            // Apply search filter
+        if ($search) {
+            $allMomsQuery->where(function($q) use ($search) {
+                $q->where('title', 'like', '%' . $search . '%');
+            });
+        }
 
         // Apply month filter untuk All MoMs
         if ($month) {
             $currentYear = Carbon::now()->year;
-            $startDate = Carbon::createFromFormat('Y-m', $currentYear . '-' . $month)->startOfMonth();
-            $endDate = Carbon::createFromFormat('Y-m', $currentYear . '-' . $month)->endOfMonth();
-            $allMomsQuery->whereBetween('updated_at', [$startDate, $endDate]);
+            $allMomsQuery->whereMonth('created_at', $month)
+                        ->whereYear('created_at', $currentYear);
         }
 
-        $allMoms = $allMomsQuery->latest()->paginate(9);
+        $allMoms = $allMomsQuery->latest('created_at')->paginate(9)->withQueryString();
 
         return view('user.draft', compact('myMoms', 'allMoms', 'month', 'status'));
     }
