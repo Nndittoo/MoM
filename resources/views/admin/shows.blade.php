@@ -1,9 +1,29 @@
-@extends('layouts.app')
+@extends('admin.layouts.app')
 
 @section('title', 'Review MoM | TR1 MoMatic')
 
 @php
-    // Asumsikan variabel $mom sudah di-pass dari controller
+    
+    $internalData = is_array($mom->nama_peserta ?? null) ? $mom->nama_peserta : json_decode($mom->nama_peserta ?? '[]', true);
+    $partnerData = isset($mom->partner_attendees) && is_array($mom->partner_attendees) ? $mom->partner_attendees : json_decode($mom->partner_attendees ?? '[]', true);
+
+    // Gabungkan semua container unit/mitra
+    $allAttendeeContainers = array_merge($internalData ?? [], $partnerData ?? []);
+
+    $allAttendeeNames = [];
+
+    // Ekstrak hanya nama-nama peserta ke dalam array flat
+    foreach ($allAttendeeContainers as $container) {
+        if (isset($container['attendees']) && is_array($container['attendees'])) {
+            // Filter untuk memastikan hanya string yang diambil
+            $validAttendees = array_filter($container['attendees'], fn($name) => is_string($name) && !empty($name));
+            $allAttendeeNames = array_merge($allAttendeeNames, $validAttendees);
+        }
+    }
+
+    // Hilangkan duplikasi
+    $allAttendeeNames = array_unique($allAttendeeNames);
+    
 @endphp
 
 @section('content')
@@ -23,7 +43,7 @@
 
     {{-- Banner Aksi Approve & Reject --}}
     <div class="bg-yellow-900/50 border-l-4 border-yellow-500 text-yellow-300 p-4 rounded-lg mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-        <p class="text-sm font-medium text-center sm:text-left">
+        <p class="text-sm font-medium font-bold text-center sm:text-left">
             <i class="fa-solid fa-info-circle mr-1"></i> MoM ini sedang menunggu persetujuan Anda.
         </p>
         <div class="flex items-center gap-2 w-full sm:w-auto flex-shrink-0">
@@ -75,11 +95,13 @@
 
         <div class="lg:col-span-1 space-y-6">
             <div class="bg-gray-800 rounded-xl shadow-md p-6 border border-gray-700">
-                <h3 class="text-xl font-bold text-white font-orbitron mb-4"><i class="fa-solid fa-users mr-2 text-red-400"></i>Peserta</h3>
+                <h3 class="text-xl font-bold text-white font-orbitron mb-4"><i class="fa-solid fa-users mr-2 text-red-400"></i>Peserta ({{ count($allAttendeeNames) }})</h3>
                 <ul class="space-y-2 text-sm text-gray-300 list-disc list-inside">
-                    {{-- Ganti dengan loop data asli peserta Anda --}}
-                    <li>Peserta 1</li>
-                    <li>Peserta 2</li>
+                    @forelse($allAttendeeNames as $attendeeName)
+                        <li>{{ $attendeeName }}</li>
+                    @empty
+                        <span class="italic text-gray-500">Tidak ada peserta tercatat.</span>
+                    @endforelse
                 </ul>
             </div>
             <div class="bg-gray-800 rounded-xl shadow-md p-6 border border-gray-700">
@@ -134,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const rejectionForm = document.getElementById('rejection-form');
 
     const approveUrl = "{{ isset($mom) ? route('admin.approvals.approve', $mom->version_id) : '#' }}";
-    const rejectUrl = "{{ isset($mom) ? route('admin.approvals.reject', $mom->version_id) : '#' }}";
+    const redirectUrl = "{{ route('admin.approvals.index') }}"; 
     const momTitle = "{{ $mom->title ?? 'Judul MoM' }}";
 
     // Handler untuk tombol Approve
@@ -163,6 +185,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 form.innerHTML = '@csrf';
                 document.body.appendChild(form);
                 form.submit();
+
             }
         });
     });
@@ -178,9 +201,33 @@ document.addEventListener('DOMContentLoaded', function () {
     // Handler untuk submit form penolakan
     rejectionForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        this.action = rejectUrl;
-        this.method = 'POST';
-        this.submit();
+        
+        const momId = rejectionForm.querySelector('#modal-mom-id').value;
+        const commentValue = rejectionForm.querySelector('#rejection-comment').value;
+
+        const dynamicRejectUrl = "{{ url('admin/approvals/reject') }}/" + momId; 
+        
+        // Buat form yang sebenarnya untuk mengirim POST dengan data modal
+        const tempForm = document.createElement('form');
+        tempForm.method = 'POST'; // Sesuai dengan route Anda
+        tempForm.action = dynamicRejectUrl; 
+        
+        // Copy CSRF token
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = '_token';
+        // Ambil token dari form modal
+        csrfToken.value = rejectionForm.querySelector('input[name="_token"]').value; 
+        tempForm.appendChild(csrfToken);
+        
+        const comment = document.createElement('input');
+        comment.type = 'hidden';
+        comment.name = 'comment';
+        comment.value = commentValue;
+        tempForm.appendChild(comment);
+        
+        document.body.appendChild(tempForm);
+        tempForm.submit();
     });
 });
 </script>

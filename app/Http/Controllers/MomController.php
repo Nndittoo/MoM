@@ -51,14 +51,14 @@ class MomController extends Controller
         DB::beginTransaction();
 
         try {
-            // 1. Tentukan status default (Menunggu)
+            // Tentukan status default (Menunggu)
             $defaultStatus = MomStatus::where('status', 'Menunggu')->firstOrFail();
             $statusToUse = $defaultStatus;
             $statusMessage = 'Menunggu';
 
             $isAdminSubmission = $request->has('is_admin_submission') && $request->is_admin_submission == '1';
 
-            // 2. LOGIKA ADMIN (Jika form Admin mengirim is_admin_submission=1)
+            // LOGIKA ADMIN (Jika form Admin mengirim is_admin_submission=1)
             if ($isAdminSubmission) {
                 try {
                     $approvedStatus = MomStatus::where('status', 'Disetujui')->firstOrFail();
@@ -213,7 +213,7 @@ class MomController extends Controller
     public function show_admin(Mom $mom)
     {
         $mom->load(['creator', 'agendas', 'attachments']);
-        return view('admin/details', compact('mom'));
+        return view('admin/shows', compact('mom'));
     }
 
     /**
@@ -339,7 +339,7 @@ class MomController extends Controller
 
             // === NOTIFIKASI SETELAH UPDATE ===
 
-            // 1. Jika user biasa update MoM (kirim ulang) -> notif ke admin
+            // Jika user biasa update MoM (kirim ulang) -> notif ke admin
             if (!$isAdmin && $newStatusId == 1) {
                 AdminNotificationController::createNotification(
                     type: 'mom_pending',
@@ -349,7 +349,7 @@ class MomController extends Controller
                 );
             }
 
-            // 2. Jika admin update status dari pending -> approved/rejected -> notif ke creator
+            // Jika admin update status dari pending -> approved/rejected -> notif ke creator
             if ($isAdmin && $oldStatusId != $newStatusId) {
                 if ($newStatusId == 2) { // Disetujui
                     NotificationController::createNotification(
