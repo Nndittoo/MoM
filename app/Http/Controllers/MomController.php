@@ -450,6 +450,27 @@ class MomController extends Controller
             $creatorId = $mom->creator_id;
             $momTitle = $mom->title;
 
+            // Hapus Google Calendar Events yang terkait dengan action items MoM ini
+            $actionItems = $mom->actionItems()->whereNotNull('google_event_id')->get();
+
+            if ($actionItems->isNotEmpty()) {
+                $creator = $mom->creator;
+
+                // Cek apakah creator masih memiliki token Google Calendar
+                if ($creator && $creator->google_access_token) {
+                    try {
+                        $googleCalendar = app(GoogleCalendarService::class);
+                        $eventIds = $actionItems->pluck('google_event_id')->toArray();
+                        $deletedCount = $googleCalendar->deleteMultipleEvents($creator, $eventIds);
+
+                        Log::info("Deleted {$deletedCount} Google Calendar events for MoM: {$mom->version_id}");
+                    } catch (\Exception $e) {
+                        Log::error("Failed to delete Google Calendar events: " . $e->getMessage());
+                        // Lanjutkan proses penghapusan MoM meskipun gagal menghapus dari Google Calendar
+                    }
+                }
+            }
+
             // Hapus Lampiran (Attachments) dari Storage
             if ($mom->attachments) {
                 foreach ($mom->attachments as $attachment) {
@@ -472,13 +493,19 @@ class MomController extends Controller
                 message: "MoM '{$momTitle}' telah dihapus oleh admin."
             );
 
-            return response()->json(['message' => "MoM '{$mom->title}' berhasil dihapus!"], 200);
+            return response()->json([
+                'message' => "MoM '{$mom->title}' berhasil dihapus!",
+                'calendar_events_deleted' => isset($deletedCount) ? $deletedCount : 0
+            ], 200);
 
         } catch (Throwable $e) {
             DB::rollBack();
             Log::error("MOM Deletion Failed: " . $e->getMessage());
 
-            return response()->json(['message' => 'Gagal menghapus Minutes of Meeting.', 'error_detail' => $e->getMessage()], 500);
+            return response()->json([
+                'message' => 'Gagal menghapus Minutes of Meeting.',
+                'error_detail' => $e->getMessage()
+            ], 500);
         }
     }
 }

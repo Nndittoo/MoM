@@ -18,6 +18,7 @@ class ActionItem extends Model
         'item',
         'due',
         'status',
+        'google_event_id',
     ];
 
     protected $casts = [

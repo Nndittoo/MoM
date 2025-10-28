@@ -21,10 +21,35 @@ class ActionItemObserver
      */
     public function created(ActionItem $actionItem)
     {
-        // Hanya sync jika MoM sudah disetujui (status_id = 2)
-        if ($actionItem->mom && $actionItem->mom->status_id == 2 && !$actionItem->google_event_id) {
-            $this->syncToGoogleCalendar($actionItem, 'created');
+        // Load relasi mom jika belum
+        if (!$actionItem->relationLoaded('mom')) {
+            $actionItem->load('mom');
         }
+
+        // Validasi: pastikan mom exists
+        if (!$actionItem->mom) {
+            Log::warning("Action item created without MoM", [
+                'action_id' => $actionItem->action_id
+            ]);
+            return;
+        }
+
+        // Hanya sync jika MoM sudah disetujui (status_id = 2)
+        if ($actionItem->mom->status_id != 2) {
+            Log::info("Action item not synced: MoM not approved yet", [
+                'action_id' => $actionItem->action_id,
+                'mom_id' => $actionItem->mom->version_id,
+                'status_id' => $actionItem->mom->status_id
+            ]);
+            return;
+        }
+
+        // Skip jika sudah punya google_event_id (avoid double sync)
+        if ($actionItem->google_event_id) {
+            return;
+        }
+
+        $this->syncToAllConnectedUsers($actionItem, 'created');
     }
 
     /**
@@ -33,13 +58,27 @@ class ActionItemObserver
      */
     public function updated(ActionItem $actionItem)
     {
-        // Jika sudah ada google_event_id, update event-nya
-        if ($actionItem->google_event_id && $actionItem->mom && $actionItem->mom->status_id == 2) {
-            $this->syncToGoogleCalendar($actionItem, 'updated');
+        // Skip jika update hanya untuk set google_event_id
+        if ($actionItem->wasChanged('google_event_id') && count($actionItem->getChanges()) === 1) {
+            return;
+        }
+
+        // Load relasi mom jika belum
+        if (!$actionItem->relationLoaded('mom')) {
+            $actionItem->load('mom');
+        }
+
+        if (!$actionItem->mom) {
+            return;
+        }
+
+        // Jika sudah ada google_event_id dan MoM masih disetujui, update event
+        if ($actionItem->google_event_id && $actionItem->mom->status_id == 2) {
+            $this->syncToAllConnectedUsers($actionItem, 'updated');
         }
         // Jika belum ada google_event_id tapi MoM sudah disetujui, buat event baru
-        elseif (!$actionItem->google_event_id && $actionItem->mom && $actionItem->mom->status_id == 2) {
-            $this->syncToGoogleCalendar($actionItem, 'created');
+        elseif (!$actionItem->google_event_id && $actionItem->mom->status_id == 2) {
+            $this->syncToAllConnectedUsers($actionItem, 'created');
         }
     }
 
@@ -49,88 +88,130 @@ class ActionItemObserver
      */
     public function deleted(ActionItem $actionItem)
     {
-        if ($actionItem->google_event_id) {
-            Log::info("Attempting to delete Google Calendar event", [
-                'action_item_id' => $actionItem->action_id,
-                'google_event_id' => $actionItem->google_event_id,
-                'item' => $actionItem->item
-            ]);
-
-            $this->syncToGoogleCalendar($actionItem, 'deleted');
-        } else {
+        if (!$actionItem->google_event_id) {
             Log::info("No Google Calendar event to delete", [
                 'action_item_id' => $actionItem->action_id,
                 'item' => $actionItem->item
             ]);
+            return;
         }
+
+        Log::info("Attempting to delete Google Calendar event", [
+            'action_item_id' => $actionItem->action_id,
+            'google_event_id' => $actionItem->google_event_id,
+            'item' => $actionItem->item
+        ]);
+
+        $this->syncToAllConnectedUsers($actionItem, 'deleted');
     }
 
     /**
-     * Sync action item ke Google Calendar
+     * Sync action item ke semua user yang connected ke Google Calendar
+     * (Creator MoM + Semua Admin yang connected)
      */
-    private function syncToGoogleCalendar(ActionItem $actionItem, string $action)
+    private function syncToAllConnectedUsers(ActionItem $actionItem, string $action)
     {
-        try {
-            // Ambil user creator dari MoM
-            $creator = $actionItem->mom->creator;
+        $usersToSync = collect();
+        $synced = 0;
+        $failed = 0;
 
-            // Cek apakah user memiliki token Google Calendar
-            if (!$creator || !$creator->google_access_token) {
-                Log::info("Skipping Google Calendar sync: User tidak memiliki token", [
-                    'action_item_id' => $actionItem->action_id,
-                    'action' => $action
-                ]);
-                return;
-            }
-
-            switch ($action) {
-                case 'created':
-                    $eventId = $this->googleCalendar->createEvent($actionItem, $creator);
-
-                    // Update action item dengan google_event_id tanpa trigger observer lagi
-                    $actionItem->withoutEvents(function () use ($actionItem, $eventId) {
-                        $actionItem->google_event_id = $eventId;
-                        $actionItem->save();
-                    });
-
-                    Log::info("Google Calendar event created automatically", [
-                        'action_item_id' => $actionItem->action_id,
-                        'event_id' => $eventId
-                    ]);
-                    break;
-
-                case 'updated':
-                    $this->googleCalendar->updateEvent(
-                        $actionItem->google_event_id,
-                        $actionItem,
-                        $creator
-                    );
-
-                    Log::info("Google Calendar event updated automatically", [
-                        'action_item_id' => $actionItem->action_id,
-                        'event_id' => $actionItem->google_event_id
-                    ]);
-                    break;
-
-                case 'deleted':
-                    $this->googleCalendar->deleteEvent(
-                        $actionItem->google_event_id,
-                        $creator
-                    );
-
-                    Log::info("Google Calendar event deleted automatically", [
-                        'action_item_id' => $actionItem->action_id,
-                        'event_id' => $actionItem->google_event_id
-                    ]);
-                    break;
-            }
-        } catch (\Exception $e) {
-            Log::error("Failed to sync action item to Google Calendar", [
-                'action_item_id' => $actionItem->action_id,
-                'action' => $action,
-                'error' => $e->getMessage()
-            ]);
-            // Jangan throw exception agar proses utama tidak terganggu
+        // 1. Tambahkan creator MoM jika connected
+        $creator = $actionItem->mom->creator;
+        if ($creator && $creator->google_access_token) {
+            $usersToSync->push($creator);
         }
+
+        // 2. Tambahkan semua admin yang connected
+        $admins = \App\Models\User::where('role', 'admin')
+            ->whereNotNull('google_access_token')
+            ->get();
+        
+        $usersToSync = $usersToSync->merge($admins)->unique('id');
+
+        // Jika tidak ada user yang connected, skip
+        if ($usersToSync->isEmpty()) {
+            Log::info("No connected users to sync", [
+                'action_id' => $actionItem->action_id,
+                'action' => $action,
+                'creator_connected' => $creator ? (bool)$creator->google_access_token : false,
+                'admins_connected' => $admins->count()
+            ]);
+            return;
+        }
+
+        // Sync ke semua user yang connected
+        foreach ($usersToSync as $user) {
+            try {
+                switch ($action) {
+                    case 'created':
+                        $eventId = $this->googleCalendar->createEvent($actionItem, $user);
+
+                        // Simpan google_event_id hanya sekali (dari user pertama)
+                        if ($synced === 0) {
+                            $actionItem->withoutEvents(function () use ($actionItem, $eventId) {
+                                $actionItem->google_event_id = $eventId;
+                                $actionItem->save();
+                            });
+                        }
+
+                        Log::info("Google Calendar event created", [
+                            'action_id' => $actionItem->action_id,
+                            'event_id' => $eventId,
+                            'user_id' => $user->id,
+                            'user_role' => $user->role
+                        ]);
+                        $synced++;
+                        break;
+
+                    case 'updated':
+                        $this->googleCalendar->updateEvent(
+                            $actionItem->google_event_id,
+                            $actionItem,
+                            $user
+                        );
+
+                        Log::info("Google Calendar event updated", [
+                            'action_id' => $actionItem->action_id,
+                            'event_id' => $actionItem->google_event_id,
+                            'user_id' => $user->id,
+                            'user_role' => $user->role
+                        ]);
+                        $synced++;
+                        break;
+
+                    case 'deleted':
+                        $this->googleCalendar->deleteEvent(
+                            $actionItem->google_event_id,
+                            $user
+                        );
+
+                        Log::info("Google Calendar event deleted", [
+                            'action_id' => $actionItem->action_id,
+                            'event_id' => $actionItem->google_event_id,
+                            'user_id' => $user->id,
+                            'user_role' => $user->role
+                        ]);
+                        $synced++;
+                        break;
+                }
+            } catch (\Exception $e) {
+                $failed++;
+                Log::error("Failed to sync action item to user's calendar", [
+                    'action_id' => $actionItem->action_id,
+                    'user_id' => $user->id,
+                    'user_role' => $user->role,
+                    'action' => $action,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
+        Log::info("Sync action completed", [
+            'action_id' => $actionItem->action_id,
+            'action' => $action,
+            'users_attempted' => $usersToSync->count(),
+            'synced' => $synced,
+            'failed' => $failed
+        ]);
     }
 }

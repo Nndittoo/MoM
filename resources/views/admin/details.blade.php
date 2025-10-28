@@ -185,16 +185,21 @@ document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('tindak-lanjut-form');
     const modal = document.getElementById('tindak-lanjut-modal');
 
+    // ✅ Perbaikan: Fungsi close modal yang lebih robust
     const closeModal = () => {
         modal.classList.add('hidden');
+        modal.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('overflow-hidden');
+        // Reset backdrop jika ada
+        const backdrop = document.querySelector('[modal-backdrop]');
+        if (backdrop) backdrop.remove();
     };
 
     // 🗑️ Hapus Item
     window.deleteActionItem = async function (id) {
         const result = await Swal.fire({
             title: 'Hapus Tindak Lanjut?',
-            text: 'Event Google Calendar juga akan dihapus!',
+            text: 'Event Google Calendar juga akan dihapus secara otomatis!',
             icon: 'warning',
             customClass: {
                 popup: 'bg-gray-800 rounded-2xl border border-gray-700',
@@ -239,6 +244,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const data = await response.json();
 
+            // ✅ Perbaikan: Tutup loading terlebih dahulu
+            Swal.close();
+
             if (response.ok) {
                 // Animasi hapus
                 const itemEl = document.getElementById(`action-item-${id}`);
@@ -257,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 Swal.fire({
                     icon: 'success',
                     title: 'Berhasil!',
-                    text: data.message || 'Tindak lanjut dan event Google Calendar berhasil dihapus.',
+                    html: `${data.message}<br><small class="text-gray-500">Event Google Calendar telah dihapus otomatis</small>`,
                     timer: 2000,
                     showConfirmButton: false,
                     customClass: {
@@ -281,6 +289,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         } catch (err) {
             console.error('Delete error:', err);
+            Swal.close(); // ✅ Pastikan loading ditutup
             Swal.fire({
                 icon: 'error',
                 title: 'Error!',
@@ -298,7 +307,57 @@ document.addEventListener('DOMContentLoaded', function () {
     // ➕ Tambah Item
     form.addEventListener('submit', async function (e) {
         e.preventDefault();
+        
+        // ✅ Perbaikan: Validasi form terlebih dahulu
+        const itemInput = form.querySelector('[name="item"]');
+        const dueInput = form.querySelector('[name="due"]');
+        
+        if (!itemInput.value.trim()) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Perhatian!',
+                text: 'Deskripsi tugas tidak boleh kosong.',
+                customClass: {
+                    popup: 'bg-gray-800 rounded-2xl border border-gray-700',
+                    title: 'text-white font-orbitron',
+                    htmlContainer: 'text-gray-400',
+                    confirmButton: 'btn-neon-red text-white font-semibold px-6 py-2 rounded-lg'
+                }
+            });
+            return;
+        }
+
+        if (!dueInput.value) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Perhatian!',
+                text: 'Deadline harus diisi.',
+                customClass: {
+                    popup: 'bg-gray-800 rounded-2xl border border-gray-700',
+                    title: 'text-white font-orbitron',
+                    htmlContainer: 'text-gray-400',
+                    confirmButton: 'btn-neon-red text-white font-semibold px-6 py-2 rounded-lg'
+                }
+            });
+            return;
+        }
+
         const formData = new FormData(form);
+
+        // Tampilkan loading
+        Swal.fire({
+            title: 'Menyimpan...',
+            text: 'Menambahkan tindak lanjut dan sync ke Google Calendar',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            },
+            customClass: {
+                popup: 'bg-gray-800 rounded-2xl border border-gray-700',
+                title: 'text-white font-orbitron',
+                htmlContainer: 'text-gray-400'
+            }
+        });
 
         try {
             const response = await fetch(storeUrl, {
@@ -310,56 +369,91 @@ document.addEventListener('DOMContentLoaded', function () {
                 body: formData,
             });
 
-            const data = await response.json();
+            // ✅ Perbaikan: Cek apakah response valid JSON
+            let data;
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                data = await response.json();
+            } else {
+                throw new Error('Response bukan JSON. Mungkin ada error di backend.');
+            }
 
-            if (response.ok) {
+            // ✅ Tutup loading terlebih dahulu
+            Swal.close();
+
+            if (response.ok && data.action_item) {
                 const item = data.action_item;
-                const formattedDate = new Date(item.due).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+                const formattedDate = new Date(item.due).toLocaleDateString('id-ID', { 
+                    day: '2-digit', 
+                    month: 'short', 
+                    year: 'numeric' 
+                });
 
                 const newEl = document.createElement('div');
                 newEl.id = `action-item-${item.action_id}`;
-                newEl.className = 'p-3 bg-gray-800 dark:bg-dark-body-bg rounded-lg flex justify-between items-center border border-gray-700 hover:border-red-500 transition-all duration-300 opacity-0 translate-y-2';
+                newEl.className = 'p-3 bg-gray-900 rounded-lg border border-gray-700 flex justify-between items-center opacity-0 translate-y-2 transition-all duration-300';
                 newEl.innerHTML = `
                     <div>
-                        <p class="font-semibold text-sm text-gray-100">${item.item}</p>
+                        <p class="font-semibold text-sm text-white">${item.item}</p>
                         <p class="text-xs text-gray-400">Deadline: ${formattedDate}</p>
                     </div>
-                    <button onclick="deleteActionItem(${item.action_id})" class="text-red-500 hover:text-red-400 transition-all">
+                    <button onclick="deleteActionItem(${item.action_id})" class="text-gray-500 hover:text-red-400 transition-colors">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 `;
 
-                const emptyMsg = listContainer.querySelector('p.text-text-secondary');
+                const emptyMsg = listContainer.querySelector('p.text-gray-500');
                 if (emptyMsg) listContainer.innerHTML = '';
                 listContainer.appendChild(newEl);
 
-                // animasi muncul
+                // Animasi muncul
                 setTimeout(() => newEl.classList.remove('opacity-0', 'translate-y-2'), 50);
 
+                // ✅ Reset form dan tutup modal
                 form.reset();
                 closeModal();
 
+                // Success message dengan info sync
                 Swal.fire({
-    icon: 'success',
-    title: 'Berhasil!',
-    text: 'Tindak lanjut berhasil ditambahkan!',
-    timer: 2000,
-    showConfirmButton: false,
-    customClass: {
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    html: `Tindak lanjut berhasil ditambahkan!<br><small class="text-green-400"><i class="fa-solid fa-check-circle"></i> Event telah di-sync ke Google Calendar</small>`,
+                    timer: 3000,
+                    showConfirmButton: false,
+                    customClass: {
+                        popup: 'bg-gray-800 rounded-2xl border border-gray-700',
+                        title: 'text-white font-orbitron',
+                        htmlContainer: 'text-gray-400'
+                    }
+                });
+
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: data.message || 'Validasi gagal atau response tidak sesuai.',
+                    customClass: {
                         popup: 'bg-gray-800 rounded-2xl border border-gray-700',
                         title: 'text-white font-orbitron',
                         htmlContainer: 'text-gray-400',
-                        confirmButton: 'btn-neon-red text-white font-semibold px-6 py-2 mr-4 rounded-lg',
-                        cancelButton: 'bg-gray-700 text-gray-300 font-semibold px-6 py-2 rounded-lg hover:bg-gray-600 border border-gray-600'
-                    },
-}).then(() => {
-    location.reload();
-});
-            } else {
-                Swal.fire('Gagal', data.message || 'Validasi gagal.', 'error');
+                        confirmButton: 'btn-neon-red text-white font-semibold px-6 py-2 rounded-lg'
+                    }
+                });
             }
         } catch (err) {
-            Swal.fire('Error', 'Terjadi kesalahan koneksi.', 'error');
+            console.error('Submit error:', err);
+            Swal.close(); // ✅ Pastikan loading ditutup
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                html: `Terjadi kesalahan koneksi.<br><small class="text-gray-500">${err.message}</small>`,
+                customClass: {
+                    popup: 'bg-gray-800 rounded-2xl border border-gray-700',
+                    title: 'text-white font-orbitron',
+                    htmlContainer: 'text-gray-400',
+                    confirmButton: 'btn-neon-red text-white font-semibold px-6 py-2 rounded-lg'
+                }
+            });
         }
     });
 });

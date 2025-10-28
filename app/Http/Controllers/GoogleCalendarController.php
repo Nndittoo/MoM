@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Services\GoogleCalendarService;
+use App\Models\ActionItem; // ← TAMBAHKAN INI
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class GoogleCalendarController extends Controller
@@ -83,13 +85,37 @@ class GoogleCalendarController extends Controller
     public function disconnect()
     {
         $user = Auth::user();
+
+        // Hapus semua event Google Calendar yang terkait dengan user ini
+        try {
+            $actionItems = ActionItem::whereHas('mom', function($query) use ($user) {
+                $query->where('creator_id', $user->id);
+            })->whereNotNull('google_event_id')->get();
+
+            if ($actionItems->isNotEmpty() && $user->google_access_token) {
+                $eventIds = $actionItems->pluck('google_event_id')->toArray();
+                $deletedCount = $this->googleCalendar->deleteMultipleEvents($user, $eventIds);
+
+                // Hapus google_event_id dari database
+                ActionItem::whereHas('mom', function($query) use ($user) {
+                    $query->where('creator_id', $user->id);
+                })->update(['google_event_id' => null]);
+
+                Log::info("Deleted {$deletedCount} Google Calendar events for user: {$user->id}");
+            }
+        } catch (\Exception $e) {
+            Log::error("Failed to delete Google Calendar events on disconnect: " . $e->getMessage());
+            // Lanjutkan proses disconnect meskipun gagal menghapus event
+        }
+
+        // Hapus token
         $user->google_access_token = null;
         $user->google_refresh_token = null;
         $user->google_token_expires_at = null;
         $user->save();
 
         return redirect()->route('user.calendar')
-            ->with('success', 'Berhasil memutus koneksi dengan Google Calendar.');
+            ->with('success', 'Berhasil memutus koneksi dengan Google Calendar dan menghapus semua event.');
     }
 
     /**

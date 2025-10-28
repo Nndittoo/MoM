@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\GoogleCalendarService;
+use App\Models\ActionItem; // ← TAMBAHKAN INI
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class AdminGoogleCalendarController extends Controller
@@ -84,13 +86,41 @@ class AdminGoogleCalendarController extends Controller
     public function disconnect()
     {
         $user = Auth::user();
+
+        // Hapus semua event Google Calendar yang di-sync oleh admin
+        try {
+            $actionItems = ActionItem::whereHas('mom', function($query) {
+                $query->whereHas('status', function($q) {
+                    $q->where('status', 'Disetujui');
+                });
+            })->whereNotNull('google_event_id')->get();
+
+            if ($actionItems->isNotEmpty() && $user->google_access_token) {
+                $eventIds = $actionItems->pluck('google_event_id')->toArray();
+                $deletedCount = $this->googleCalendar->deleteMultipleEvents($user, $eventIds);
+
+                // Hapus google_event_id dari database
+                ActionItem::whereHas('mom', function($query) {
+                    $query->whereHas('status', function($q) {
+                        $q->where('status', 'Disetujui');
+                    });
+                })->update(['google_event_id' => null]);
+
+                Log::info("Admin deleted {$deletedCount} Google Calendar events");
+            }
+        } catch (\Exception $e) {
+            Log::error("Failed to delete Google Calendar events on disconnect: " . $e->getMessage());
+            // Lanjutkan proses disconnect meskipun gagal menghapus event
+        }
+
+        // Hapus token
         $user->google_access_token = null;
         $user->google_refresh_token = null;
         $user->google_token_expires_at = null;
         $user->save();
 
         return redirect()->route('admin.calendars')
-            ->with('success', 'Berhasil memutus koneksi dengan Google Calendar.');
+            ->with('success', 'Berhasil memutus koneksi dengan Google Calendar dan menghapus semua event.');
     }
 
     /**
