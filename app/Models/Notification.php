@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Services\FcmService;
 
 class Notification extends Model
 {
@@ -74,5 +75,37 @@ class Notification extends Model
             'rejected' => url("/moms/{$this->mom_id}/edit"),
             default => url("/moms/{$this->mom_id}")
         };
+    }
+
+    // Method untuk mengirim FCM ke user tertentu
+    public function sendFcmToUser()
+    {
+        $tokens = \App\Models\DeviceToken::where('user_id', $this->user_id)
+            ->pluck('token')
+            ->unique()
+            ->toArray();
+
+        if (empty($tokens)) {
+            return false;
+        }
+
+        $fcm = app(FcmService::class);
+        return $fcm->sendNotification($tokens, $this->title, $this->message, [
+            'type' => $this->type,
+            'notification_id' => (string) $this->id,
+            'mom_id' => $this->mom_id ? (string) $this->mom_id : '',
+        ]);
+    }
+
+    // Event handler setelah notifikasi dibuat
+    protected static function booted()
+    {
+        static::created(function ($notification) {
+            try {
+                $notification->sendFcmToUser();
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Failed sending FCM for User Notification: ' . $e->getMessage());
+            }
+        });
     }
 }

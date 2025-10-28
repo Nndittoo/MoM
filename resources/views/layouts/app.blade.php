@@ -278,5 +278,70 @@
         }
     });
 </script>
+
+
+        <script type="module">
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+            import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging.js";
+
+            // masukkan config firebase kamu
+            const firebaseConfig = {
+                apiKey: "AIzaSyBnB-TOvyAcjHB2m6tc_5jqy3qHsMOqGLM",
+                authDomain: "momatic-29f49.firebaseapp.com",
+                projectId: "momatic-29f49",
+                messagingSenderId: "108472346001",
+                appId: "1:108472346001:web:8703302d04f20bcb0e6630"
+            };
+
+            const vapidKey = "BNas0zqo5LSAy2hDkGtvrY0j6IsPLaqPtjJreCu17DwkVB9JB1_nzEetl6aYkg0f0qXmGthlWCfa4A4HmtQAvS8"; // VAPID publik
+
+            const app = initializeApp(firebaseConfig);
+            const messaging = getMessaging(app);
+
+            async function registerDeviceForPush() {
+            try {
+                // register service worker
+                const swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+
+                // minta permission
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') return console.log('Permission not granted');
+
+                // ambil token FCM
+                const currentToken = await getToken(messaging, { vapidKey, serviceWorkerRegistration: swRegistration });
+                if (currentToken) {
+                // kirim ke server
+                await fetch("{{ route('device-tokens.store') }}", {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                    },
+                    body: JSON.stringify({ token: currentToken, platform: 'web' })
+                });
+                console.log('FCM token saved on server', currentToken);
+                }
+            } catch (err) {
+                console.error('Unable to get permission to notify.', err);
+            }
+            }
+
+            // optional: handle message while page is in foreground
+            onMessage(messaging, (payload) => {
+            console.log('Message received. ', payload);
+            // you can show a small in-app popup or browser Notification
+            if (Notification.permission === 'granted') {
+                new Notification(payload.notification.title, {
+                body: payload.notification.body
+                });
+            }
+            });
+
+            // panggil function ketika halaman terbuka atau user klik ikon enable
+            if ('serviceWorker' in navigator && 'Notification' in window) {
+            // bisa panggil registerDeviceForPush() dengan tombol "Enable Notifications" atau otomatis setelah login
+            registerDeviceForPush();
+            }
+        </script>
     </body>
 </html>

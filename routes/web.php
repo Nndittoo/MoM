@@ -21,6 +21,7 @@ use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\GoogleCalendarController;
+use App\Http\Controllers\DeviceTokenController;
 
 Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -177,3 +178,19 @@ Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])
 Route::post('/reset-password', [NewPasswordController::class, 'store'])
     ->middleware('guest')
     ->name('password.store');
+
+Route::middleware('auth')->post('/device-tokens', [DeviceTokenController::class, 'store'])->name('device-tokens.store');
+Route::middleware('auth')->delete('/device-tokens', [DeviceTokenController::class, 'destroy'])->name('device-tokens.destroy');
+
+Route::get('/test-fcm', function () {
+    $token = \App\Models\DeviceToken::first()->token ?? null;
+    if (!$token) return 'no token';
+
+    $fcm = app(\App\Services\FcmService::class);
+    $res = $fcm->sendNotification([$token], 'Test Notif', 'This is a test from server', ['foo' => 'bar']);
+    return response()->json($res);
+});
+
+// Notifications
+Route::get('/api/notifications/recent', [NotificationController::class, 'getRecent'])->middleware('auth');
+Route::get('/api/admin/notifications/recent', [AdminNotificationController::class, 'getRecent'])->middleware('auth');

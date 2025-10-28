@@ -14,9 +14,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\URL; 
+use Illuminate\Support\Facades\URL;
 use Throwable;
 use App\Http\Controllers\Admin\AdminNotificationController;
+use App\Models\DeviceToken;
+use App\Services\FcmService;
 
 class MomController extends Controller
 {
@@ -171,9 +173,16 @@ class MomController extends Controller
             // Commit transaksi
             DB::commit();
 
+            // Kirim push notif ke admin (sinkron, bisa dijadikan job nanti)
+            try {
+                $this->afterMomCreated($mom);
+            } catch (\Throwable $e) {
+                Log::error('Failed sending push in afterMomCreated: ' . $e->getMessage());
+            }
+
             // Tentukan URL redirect: Menggunakan rute 'admin.repository'
-            $redirectUrl = route('admin.repository'); 
-            
+            $redirectUrl = route('admin.repository');
+
             return response()->json([
                 'message' => 'Minutes of Meeting berhasil dibuat dan berstatus ' . $statusMessage . '!',
                 'mom_id' => $mom->version_id,
@@ -238,6 +247,7 @@ class MomController extends Controller
         try {
             // Menentukan Role dan Status Baru
             $isAdmin = Auth::check() && Auth::user()->role === 'admin';
+            $oldStatusId = $mom->status_id;
 
             if ($isAdmin) {
                 // Jika Admin, gunakan status_id yang dikirim dari form (diharapkan 2 / Disetujui)
@@ -327,6 +337,39 @@ class MomController extends Controller
 
             DB::commit();
 
+            // === NOTIFIKASI SETELAH UPDATE ===
+
+            // 1. Jika user biasa update MoM (kirim ulang) -> notif ke admin
+            if (!$isAdmin && $newStatusId == 1) {
+                AdminNotificationController::createNotification(
+                    type: 'mom_pending',
+                    title: 'MoM Diperbarui - Menunggu Review',
+                    message: "MoM '{$mom->title}' telah diperbarui oleh {$mom->creator->name} dan menunggu persetujuan Anda.",
+                    relatedId: $mom->version_id
+                );
+            }
+
+            // 2. Jika admin update status dari pending -> approved/rejected -> notif ke creator
+            if ($isAdmin && $oldStatusId != $newStatusId) {
+                if ($newStatusId == 2) { // Disetujui
+                    NotificationController::createNotification(
+                        userId: $mom->creator_id,
+                        momId: $mom->version_id,
+                        type: 'mom_approved',
+                        title: 'MoM Anda Disetujui',
+                        message: "MoM '{$mom->title}' telah disetujui oleh admin."
+                    );
+                } elseif ($newStatusId == 3) { // Ditolak
+                    NotificationController::createNotification(
+                        userId: $mom->creator_id,
+                        momId: $mom->version_id,
+                        type: 'mom_rejected',
+                        title: 'MoM Anda Ditolak',
+                        message: "MoM '{$mom->title}' ditolak. Alasan: {$mom->rejection_comment}"
+                    );
+                }
+            }
+
             return response()->json([
                 'message' => 'MoM berhasil diupdate dan ' . $statusMessage . '!',
                 'mom_id' => $mom->version_id
@@ -397,6 +440,10 @@ class MomController extends Controller
         DB::beginTransaction();
 
         try {
+
+            $creatorId = $mom->creator_id;
+            $momTitle = $mom->title;
+
             // Hapus Lampiran (Attachments) dari Storage
             if ($mom->attachments) {
                 foreach ($mom->attachments as $attachment) {
@@ -410,6 +457,15 @@ class MomController extends Controller
 
             DB::commit();
 
+            // Kirim notifikasi ke creator bahwa MoM mereka dihapus
+            NotificationController::createNotification(
+                userId: $creatorId,
+                momId: null,
+                type: 'mom_deleted',
+                title: 'MoM Dihapus',
+                message: "MoM '{$momTitle}' telah dihapus oleh admin."
+            );
+
             return response()->json(['message' => "MoM '{$mom->title}' berhasil dihapus!"], 200);
 
         } catch (Throwable $e) {
@@ -418,5 +474,25 @@ class MomController extends Controller
 
             return response()->json(['message' => 'Gagal menghapus Minutes of Meeting.', 'error_detail' => $e->getMessage()], 500);
         }
+    }
+
+    public function afterMomCreated($mom)
+    {
+        // Ambil admin yang sudah connect Google Calendar
+        $admins = User::where('role', 'admin')->whereNotNull('google_access_token')
+                    ->whereNotNull('google_access_token')
+                    ->get();
+
+        $tokens = DeviceToken::whereIn('user_id', $admins->pluck('id'))->pluck('token')->unique()->toArray();
+
+        // buat pesan
+        $title = "New MoM created";
+        $body  = "{$mom->title} dibuat oleh {$mom->creator->name}";
+
+        $fcm = app(FcmService::class);
+        $fcm->sendNotification($tokens, $title, $body, [
+            'type' => 'mom_created',
+            'mom_id' => $mom->version_id ?? $mom->id
+        ]);
     }
 }
