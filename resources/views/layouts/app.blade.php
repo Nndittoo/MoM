@@ -278,5 +278,67 @@
         }
     });
 </script>
+
+        <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging.js";
+
+        const firebaseConfig = {
+            apiKey: "{{ config('services.firebase.api_key') }}",
+            authDomain: "{{ config('services.firebase.auth_domain') }}",
+            projectId: "{{ config('services.firebase.project_id') }}",
+            messagingSenderId: "{{ config('services.firebase.messaging_sender_id') }}",
+            appId: "{{ config('services.firebase.app_id') }}"
+        };
+
+        const vapidKey = "{{ config('services.firebase.vapid_key') }}";
+
+        const app = initializeApp(firebaseConfig);
+        const messaging = getMessaging(app);
+
+        async function registerDeviceForPush() {
+        try {
+            // register service worker
+            const swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+
+            // minta permission
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') return console.log('Permission not granted');
+
+            // ambil token FCM
+            const currentToken = await getToken(messaging, { vapidKey, serviceWorkerRegistration: swRegistration });
+            if (currentToken) {
+                // kirim ke server
+                await fetch("{{ route('device-tokens.store') }}", {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                    },
+                    body: JSON.stringify({ token: currentToken, platform: 'web' })
+                });
+            }
+            } catch (err) {
+                console.error('Unable to get permission to notify.', err);
+            }
+            }
+
+            // optional: handle message while page is in foreground
+            onMessage(messaging, (payload) => {
+            console.log('Message received. ', payload);
+            // you can show a small in-app popup or browser Notification
+            if (Notification.permission === 'granted') {
+                new Notification(payload.notification.title, {
+                body: payload.notification.body
+                });
+            }
+            });
+
+            // panggil function ketika halaman terbuka atau user klik ikon enable
+            if ('serviceWorker' in navigator && 'Notification' in window) {
+            // bisa panggil registerDeviceForPush() dengan tombol "Enable Notifications" atau otomatis setelah login
+            registerDeviceForPush();
+            }
+        </script>
     </body>
 </html>

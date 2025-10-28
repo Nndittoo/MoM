@@ -65,4 +65,31 @@ class ActionItem extends Model
                      ->where('due', '<=', now()->addDays($days))
                      ->where('status', 'mendatang');
     }
+
+    /**
+     * Kirim notifikasi ke creator MoM tentang status task
+     */
+    public function notifyCreatorAboutStatus($type, $message)
+    {
+        if (!$this->mom || !$this->mom->creator_id) {
+            return;
+        }
+
+        try {
+            // Buat notifikasi untuk creator
+            \App\Http\Controllers\NotificationController::createNotification(
+                userId: $this->mom->creator_id,
+                momId: $this->mom_id,
+                type: $type,
+                title: $type === 'task_overdue' ? 'Task Anda Terlambat' : 'Task Mendekati Deadline',
+                message: $message
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Failed to notify creator about task status", [
+                'task_id' => $this->action_id,
+                'mom_id' => $this->mom_id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
 }
