@@ -1,13 +1,13 @@
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
 
-// Isi sesuai firebaseConfig dari step 1
+
 firebase.initializeApp({
-    apiKey: "AIzaSyBnB-TOvyAcjHB2m6tc_5jqy3qHsMOqGLM",
-    authDomain: "momatic-29f49.firebaseapp.com",
-    projectId: "momatic-29f49",
-    messagingSenderId: "108472346001",
-    appId: "1:108472346001:web:8703302d04f20bcb0e6630"
+    apiKey: "{{ config('services.firebase.api_key') }}",
+    authDomain: "{{ config('services.firebase.auth_domain') }}",
+    projectId: "{{ config('services.firebase.project_id') }}",
+    messagingSenderId: "{{ config('services.firebase.messaging_sender_id') }}",
+    appId: "{{ config('services.firebase.app_id') }}"
 });
 
 const messaging = firebase.messaging();

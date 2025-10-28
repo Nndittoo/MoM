@@ -150,16 +150,15 @@
             import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
             import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging.js";
 
-            // masukkan config firebase kamu
             const firebaseConfig = {
-                apiKey: "AIzaSyBnB-TOvyAcjHB2m6tc_5jqy3qHsMOqGLM",
-                authDomain: "momatic-29f49.firebaseapp.com",
-                projectId: "momatic-29f49",
-                messagingSenderId: "108472346001",
-                appId: "1:108472346001:web:8703302d04f20bcb0e6630"
+                apiKey: "{{ config('services.firebase.api_key') }}",
+                authDomain: "{{ config('services.firebase.auth_domain') }}",
+                projectId: "{{ config('services.firebase.project_id') }}",
+                messagingSenderId: "{{ config('services.firebase.messaging_sender_id') }}",
+                appId: "{{ config('services.firebase.app_id') }}"
             };
 
-            const vapidKey = "BNas0zqo5LSAy2hDkGtvrY0j6IsPLaqPtjJreCu17DwkVB9JB1_nzEetl6aYkg0f0qXmGthlWCfa4A4HmtQAvS8"; // VAPID publik
+            const vapidKey = "{{ config('services.firebase.vapid_key') }}";
 
             const app = initializeApp(firebaseConfig);
             const messaging = getMessaging(app);
