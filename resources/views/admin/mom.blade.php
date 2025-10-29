@@ -125,13 +125,13 @@
                             @endphp
                             <div x-data="{ actionsOpen: false }" class="card-mom bg-gray-800 rounded-2xl shadow-lg overflow-hidden flex flex-col transition-all duration-300 hover:shadow-2xl hover:shadow-red-500/20 hover:-translate-y-2 border border-gray-700" style="animation-delay: {{ $index * 100 }}ms;">
                                 <div class="relative">
-                                    <a href="{{ route('admin.moms.show', $mom->version_id) }}"><img class="w-full h-48 object-cover" src="{{ $imageUrl }}" alt="Dokumentasi Rapat"></a>
+                                    <a href="{{ route('admin.details', $mom->version_id) }}"><img class="w-full h-48 object-cover" src="{{ $imageUrl }}" alt="Dokumentasi Rapat"></a>
                                     <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
                                     <div class="absolute top-3 right-3"><div class="inline-flex items-center gap-x-2 px-3 py-1 bg-gray-900/50 backdrop-blur-sm rounded-full border border-gray-700"><span class="w-2.5 h-2.5 rounded-full {{ $statusInfo['dot'] }}"></span><span class="text-xs font-medium {{ $statusInfo['text'] }}">{{ $statusInfo['label'] }}</span></div></div>
                                     <div class="absolute bottom-0 left-0 p-4 text-white"><p class="text-xs font-semibold uppercase tracking-wider">{{ $mom->created_at->translatedFormat('F Y') }}</p><p class="text-3xl font-bold">{{ $mom->created_at->format('d') }}</p></div>
                                 </div>
                                 <div class="p-5 flex flex-col flex-grow relative">
-                                    <h3 class="text-xl font-bold text-white mb-2 line-clamp-1" title="{{ $mom->title }}"><a href="{{ route('admin.moms.show', $mom->version_id) }}" class="hover:underline">{{ $mom->title }}</a></h3>
+                                    <h3 class="text-xl font-bold text-white mb-2 line-clamp-1" title="{{ $mom->title }}"><a href="{{ route('admin.details', $mom->version_id) }}" class="hover:underline">{{ $mom->title }}</a></h3>
                                     <div class="flex items-center text-sm text-gray-400 mb-4"><i class="fa-solid fa-user-pen mr-2 text-red-400"></i> Dibuat oleh <span class="ml-1 font-medium text-gray-300">{{ $mom->creator->name ?? 'N/A' }}</span></div>
                                     <div class="pt-4 border-t border-gray-700 flex items-center justify-between mt-auto">
                                         <span class="text-sm text-gray-500"></span>
@@ -139,7 +139,7 @@
                                     </div>
                                     <div x-show="actionsOpen" x-transition @click.outside="actionsOpen = false" class="absolute right-5 bottom-16 z-10 w-48 bg-gray-700 rounded-lg shadow-lg border border-gray-600" style="display: none;">
                                         <ul class="py-2 text-sm text-gray-200">
-                                            <li><a href="{{ route('admin.moms.show', $mom->version_id) }}" class="flex items-center w-full px-4 py-2 hover:bg-gray-600"><i class="fa-solid fa-eye w-6"></i>Lihat Detail</a></li>
+                                            <li><a href="{{ route('admin.details', $mom->version_id) }}" class="flex items-center w-full px-4 py-2 hover:bg-gray-600"><i class="fa-solid fa-eye w-6"></i>Lihat Detail</a></li>
                                             <li><a href="{{ route('admin.moms.edit', $mom->version_id) }}" class="flex items-center w-full px-4 py-2 hover:bg-gray-600"><i class="fa-solid fa-pen-to-square w-6"></i>Edit</a></li>
                                             <li><button @click.prevent="deleteMom({{ $mom->version_id }}, $event)" class="w-full flex items-center px-4 py-2 text-red-400 hover:bg-gray-600"><i class="fa-solid fa-trash-can w-6"></i>Hapus</button></li>
                                         </ul>
@@ -173,13 +173,13 @@
                             @endphp
                                 <div x-data="{ actionsOpen: false }" class="card-mom bg-gray-800 rounded-2xl shadow-lg overflow-hidden flex flex-col transition-all duration-300 hover:shadow-2xl hover:shadow-red-500/20 hover:-translate-y-2 border border-gray-700" style="animation-delay: {{ $index * 100 }}ms;">
                                     <div class="relative">
-                                        <a href="{{ route('admin.moms.show', $mom->version_id) }}"><img class="w-full h-48 object-cover" src="{{ $imageUrl }}" alt="Dokumentasi Rapat"></a>
+                                        <a href="{{ route('admin.details', $mom->version_id) }}"><img class="w-full h-48 object-cover" src="{{ $imageUrl }}" alt="Dokumentasi Rapat"></a>
                                         <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
                                         <div class="absolute top-3 right-3"><div class="inline-flex items-center gap-x-2 px-3 py-1 bg-gray-900/50 backdrop-blur-sm rounded-full border border-gray-700"><span class="w-2.5 h-2.5 rounded-full {{ $statusInfo['dot'] }}"></span><span class="text-xs font-medium {{ $statusInfo['text'] }}">{{ $statusInfo['label'] }}</span></div></div>
                                         <div class="absolute bottom-0 left-0 p-4 text-white"><p class="text-xs font-semibold uppercase tracking-wider">{{ $mom->created_at->translatedFormat('F Y') }}</p><p class="text-3xl font-bold">{{ $mom->created_at->format('d') }}</p></div>
                                     </div>
                                     <div class="p-5 flex flex-col flex-grow relative">
-                                        <h3 class="text-xl font-bold text-white mb-2 line-clamp-1" title="{{ $mom->title }}"><a href="{{ route('admin.moms.show', $mom->version_id) }}" class="hover:underline">{{ $mom->title }}</a></h3>
+                                        <h3 class="text-xl font-bold text-white mb-2 line-clamp-1" title="{{ $mom->title }}"><a href="{{ route('admin.details', $mom->version_id) }}" class="hover:underline">{{ $mom->title }}</a></h3>
                                         <div class="flex items-center text-sm text-gray-400 mb-4"><i class="fa-solid fa-user-pen mr-2 text-red-400"></i> Dibuat oleh <span class="ml-1 font-medium text-gray-300">{{ $mom->creator->name ?? 'N/A' }}</span></div>
                                         <div class="pt-4 border-t border-gray-700 flex items-center justify-between mt-auto">
                                             <span class="text-sm text-gray-500"></span>
@@ -187,7 +187,7 @@
                                         </div>
                                         <div x-show="actionsOpen" x-transition @click.outside="actionsOpen = false" class="absolute right-5 bottom-16 z-10 w-48 bg-gray-700 rounded-lg shadow-lg border border-gray-600" style="display: none;">
                                             <ul class="py-2 text-sm text-gray-200">
-                                                <li><a href="{{ route('admin.moms.show', $mom->version_id) }}" class="flex items-center w-full px-4 py-2 hover:bg-gray-600"><i class="fa-solid fa-eye w-6"></i>Lihat Detail</a></li>
+                                                <li><a href="{{ route('admin.details', $mom->version_id) }}" class="flex items-center w-full px-4 py-2 hover:bg-gray-600"><i class="fa-solid fa-eye w-6"></i>Lihat Detail</a></li>
                                                 <li><a href="{{ route('admin.moms.edit', $mom->version_id) }}" class="flex items-center w-full px-4 py-2 hover:bg-gray-600"><i class="fa-solid fa-pen-to-square w-6"></i>Edit</a></li>
                                                 <li><button @click.prevent="deleteMom({{ $mom->version_id }}, $event)" class="w-full flex items-center px-4 py-2 text-red-400 hover:bg-gray-600"><i class="fa-solid fa-trash-can w-6"></i>Hapus</button></li>
                                             </ul>

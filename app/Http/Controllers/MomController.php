@@ -216,6 +216,12 @@ class MomController extends Controller
         return view('admin/shows', compact('mom'));
     }
 
+    public function show_detail_admin(Mom $mom)
+    {
+        $mom->load(['creator', 'agendas', 'attachments']);
+        return view('admin/details', compact('mom'));
+    }
+
     /**
      * Menampilkan form edit MoM dan mengirim data lama (Untuk Role User).
      */

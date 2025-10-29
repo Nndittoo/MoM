@@ -94,7 +94,7 @@ Route::prefix('admin')->middleware(['auth','role:admin'])->group(function () {
     Route::post('/task/{action_id}/update-status', [AdminTaskController::class, 'updateStatus'])->name('admin.task.update-status');
     Route::get('/task/search', [AdminTaskController::class, 'search'])->name('admin.task.search');
 
-    Route::get('/details/{mom}', [MomController::class, 'show_admin'])->name('admin.details');
+    Route::get('/details/{mom}', [MomController::class, 'show_detail_admin'])->name('admin.details');
     Route::get('/shows', fn () => view('admin.shows'))->name('admin.shows');
     Route::get('/creates', fn () => view('admin.create'))->name('admin.creates');
     Route::get('/mom', [MomController::class, 'repository'])->name('admin.repository');
