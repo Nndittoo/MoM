@@ -138,7 +138,7 @@ class MomController extends Controller
                     }
 
                     if (!$filePath) {
-                           throw new \Exception("Penyimpanan file mengembalikan nilai kosong.");
+                            throw new \Exception("Penyimpanan file mengembalikan nilai kosong.");
                     }
 
                     $attachmentsData[] = [
@@ -217,9 +217,23 @@ class MomController extends Controller
     }
 
     public function show_detail_admin(Mom $mom)
-    {
-        $mom->load(['creator', 'agendas', 'attachments']);
-        return view('admin/details', compact('mom'));
+    { 
+        $mom->load(['creator', 'agendas', 'attachments', 'status', 'actionItems']); // Memastikan relasi status dimuat
+        $statusText = $mom->status->status ?? 'Unknown'; 
+        
+        // Cek Status MoM
+        // Status 1 = Menunggu (Pending)
+        // Status 3 = Ditolak (Rejected)
+        
+        if ($mom->status_id == 1) {
+            // Jika Pending, alihkan ke halaman Review (shows.blade.php)
+            // Menggunakan view() agar route URL tetap di /details, tapi konten yang dirender adalah shows.blade.php
+            return view('admin.shows', compact('mom'));
+        }
+        
+        // Jika Ditolak (status_id = 3) atau Disetujui (status_id = 2), tampilkan halaman details.blade.php
+        // Alasan penolakan akan ditampilkan di details.blade.php (lihat di bawah)
+        return view('admin.details', compact('mom', 'statusText')); 
     }
 
     /**

@@ -57,6 +57,21 @@
         </div>
     </div>
 
+    {{-- BANNER ALASAN PENOLAKAN (Hanya Tampil Jika Status Ditolak) --}}
+    @if ($mom->status_id == 3)
+    <div class="bg-red-900/50 border-l-4 border-red-500 text-red-300 p-4 rounded-lg mb-6 flex items-start gap-4">
+        <i class="fa-solid fa-xmark-circle text-2xl text-red-400 flex-shrink-0 mt-1"></i>
+        <div>
+            <h2 class="text-lg font-bold text-red-300">MoM Ditolak (Rejected)</h2>
+            <p class="mt-1 text-sm text-red-200">
+                Alasan Revisi: {{ $mom->rejection_comment ?? 'Tidak ada alasan penolakan yang dicatat.' }}
+            </p>
+            
+        </div>
+    </div>
+    @endif
+    {{-- END: BANNER ALASAN PENOLAKAN --}}
+
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {{-- Kolom kiri --}}
@@ -142,10 +157,7 @@
             </div>
         </div>
     </div>
-            {{-- Tindak lanjut --}}
-            {{-- Tindak Lanjut --}}
-
-
+    
 {{-- Modal Tambah --}}
 <div id="tindak-lanjut-modal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
     <div class="relative w-full max-w-md bg-gray-900 text-gray-100 rounded-xl shadow-2xl border border-gray-700 animate-fadeIn">
@@ -185,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('tindak-lanjut-form');
     const modal = document.getElementById('tindak-lanjut-modal');
 
-    // ✅ Perbaikan: Fungsi close modal yang lebih robust
+    // Fungsi close modal yang lebih robust
     const closeModal = () => {
         modal.classList.add('hidden');
         modal.setAttribute('aria-hidden', 'true');
@@ -195,7 +207,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (backdrop) backdrop.remove();
     };
 
-    // 🗑️ Hapus Item
+    // Hapus Item
     window.deleteActionItem = async function (id) {
         const result = await Swal.fire({
             title: 'Hapus Tindak Lanjut?',
@@ -244,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const data = await response.json();
 
-            // ✅ Perbaikan: Tutup loading terlebih dahulu
+            
             Swal.close();
 
             if (response.ok) {
@@ -289,7 +301,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         } catch (err) {
             console.error('Delete error:', err);
-            Swal.close(); // ✅ Pastikan loading ditutup
+            Swal.close(); 
             Swal.fire({
                 icon: 'error',
                 title: 'Error!',
@@ -304,11 +316,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
-    // ➕ Tambah Item
+    // Tambah Item
     form.addEventListener('submit', async function (e) {
         e.preventDefault();
         
-        // ✅ Perbaikan: Validasi form terlebih dahulu
+        // Validasi form terlebih dahulu
         const itemInput = form.querySelector('[name="item"]');
         const dueInput = form.querySelector('[name="due"]');
         
@@ -369,7 +381,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 body: formData,
             });
 
-            // ✅ Perbaikan: Cek apakah response valid JSON
+            // Cek apakah response valid JSON
             let data;
             const contentType = response.headers.get("content-type");
             if (contentType && contentType.indexOf("application/json") !== -1) {
@@ -378,7 +390,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error('Response bukan JSON. Mungkin ada error di backend.');
             }
 
-            // ✅ Tutup loading terlebih dahulu
+            // Tutup loading terlebih dahulu
             Swal.close();
 
             if (response.ok && data.action_item) {
@@ -409,7 +421,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Animasi muncul
                 setTimeout(() => newEl.classList.remove('opacity-0', 'translate-y-2'), 50);
 
-                // ✅ Reset form dan tutup modal
+                // Reset form dan tutup modal
                 form.reset();
                 closeModal();
 
@@ -442,7 +454,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         } catch (err) {
             console.error('Submit error:', err);
-            Swal.close(); // ✅ Pastikan loading ditutup
+            Swal.close(); 
             Swal.fire({
                 icon: 'error',
                 title: 'Error!',

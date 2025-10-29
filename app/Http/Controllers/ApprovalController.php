@@ -5,21 +5,19 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Mom;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Session; // Import Session
-use Illuminate\Support\Facades\DB;       // Import DB
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\NotificationController; 
 
 class ApprovalController extends Controller
 {
-    /**
-     * Menampilkan daftar MoM yang menunggu persetujuan (status_id = 1).
-     */
+// Menampilkan daftar MoM yang menunggu persetujuan (status_id = 1).
     public function index()
     {
-        $pendingMoms = Mom::where('status_id', 1)
-                            ->with('creator')
-                            ->latest()
-                            ->get();
+            $pendingMoms = Mom::where('status_id', 1)
+                                ->with('creator')
+                                ->latest()
+                                ->get();
 
         return view('admin.approvals', [
             'pendingMoms' => $pendingMoms,
@@ -27,17 +25,17 @@ class ApprovalController extends Controller
     }
 
     /**
-     * Menyetujui MoM: Mengubah status_id menjadi 2 (Disetujui).
-     */
+     * Menyetujui MoM: Mengubah status_id menjadi 2 (Disetujui).
+     */
     public function approve(Mom $mom)
     {
-        // Gunakan DB Transaction untuk keamanan
-        DB::beginTransaction();
+    // Gunakan DB Transaction untuk keamanan
+    DB::beginTransaction();
 
         try {
             // Logika utama: Update status MoM
             $mom->update(['status_id' => 2]);
-    
+
             // === NOTIFICATION: MoM Disetujui ===
             NotificationController::createNotification(
                 userId: $mom->creator_id,
@@ -49,11 +47,11 @@ class ApprovalController extends Controller
 
             DB::commit();
 
-            // Mengatur Flash Session dan Redirect
+            // Mengatur Flash Session
             Session::flash('success', "MoM '{$mom->title}' berhasil **disetujui**!");
-            
-            // Mengarahkan pengguna kembali ke halaman daftar approval
-            return redirect()->route('admin.approvals.index'); 
+
+            // MENGARAHKAN PENGGUNA KEMBALI KE HALAMAN SEBELUMNYA
+            return redirect()->back(); 
 
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -65,17 +63,17 @@ class ApprovalController extends Controller
     }
 
     /**
-     * Menolak MoM: Mengubah status_id menjadi 3 (Ditolak) dan menyimpan komentar.
-     */
+     * Menolak MoM: Mengubah status_id menjadi 3 (Ditolak) dan menyimpan komentar.
+     */
     public function reject(Request $request, Mom $mom)
     {
         $comment = $request->comment;
-        
+
         // Basic validation: Pastikan komentar ada
         if (empty($comment)) {
             Session::flash('error', 'Komentar penolakan wajib diisi.');
             return redirect()->back();
-        }
+    }
 
         DB::beginTransaction();
 
@@ -85,7 +83,7 @@ class ApprovalController extends Controller
                 'status_id' => 3,
                 'rejection_comment' => $comment,
             ]);
-    
+
             // === NOTIFICATION: MoM Ditolak ===
             NotificationController::createNotification(
                 userId: $mom->creator_id,
@@ -94,14 +92,14 @@ class ApprovalController extends Controller
                 title: 'MoM Ditolak',
                 message: "MoM '{$mom->title}' ditolak. Alasan: {$comment}. Silakan edit dan submit ulang."
             );
-            
+
             DB::commit();
 
-            // Mengatur Flash Session dan Redirect
+            // Mengatur Flash Session
             Session::flash('warning', "MoM '{$mom->title}' berhasil **ditolak**. Notifikasi revisi sudah dikirim.");
 
-            // Mengarahkan pengguna kembali ke halaman daftar approval
-            return redirect()->route('admin.approvals.index'); // <-- SOLUSI
+            // MENGARAHKAN PENGGUNA KEMBALI KE HALAMAN SEBELUMNYA
+            return redirect()->back(); 
 
         } catch (\Throwable $e) {
             DB::rollBack();
