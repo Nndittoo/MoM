@@ -5,11 +5,6 @@
 @push('styles')
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-@endpush
-
-@push('styles')
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
         /* Menyesuaikan Quill Editor dengan tema gelap */
         .ql-toolbar { border-top-left-radius: 0.5rem; border-top-right-radius: 0.5rem; background-color: #1F2937; border-color: #374151 !important; }
@@ -22,9 +17,10 @@
 
 @section('content')
 <div class="pt-2">
-    {{-- Toast Notification --}}
-    <div id="toast" class="hidden fixed top-24 right-5 z-50 items-center gap-3 px-4 py-3 rounded-xl shadow-lg bg-gray-700 border border-gray-600 text-white transition-all duration-500 opacity-0">
-        {{-- Konten diisi oleh JS --}}
+    {{-- Toast Notification (STRUKTUR HTML DIPERBAIKI) --}}
+    <div id="toast" class="hidden fixed top-24 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg bg-gray-700 border border-gray-600 text-white transition-all duration-500 opacity-0">
+        <i class="fa-solid"></i> {{-- Ikon --}}
+        <div class="text-sm font-medium"></div> {{-- Pesan --}}
     </div>
 
     {{-- Header --}}
@@ -125,14 +121,13 @@
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
 <script>
-
     // FUNGSI UTILITY: Tampilkan Toast
     const showToast = (message, isError = false) => {
         const toast = document.getElementById("toast");
         const icon = toast.querySelector('i');
         const messageContainer = toast.querySelector('div.text-sm.font-medium');
 
-        icon.className = isErrorN
+        icon.className = isError 
             ? 'fa-solid fa-circle-xmark text-red-500 text-lg'
             : 'fa-solid fa-circle-check text-green-500 text-lg';
         messageContainer.textContent = message;
@@ -613,15 +608,18 @@
                 const data = isJson ? await response.json() : { message: 'Server error or non-JSON response.', errors: {} };
 
                 if (response.ok) {
-                    showToast('MoM berhasil di submit!', false);
+                    // Tampilkan Toast Sukses
+                    showToast('MoM berhasil di submit!', false); 
 
+                    // LOGIKA REDIRECT DIPASTIKAN BERJALAN DULU
                     if (data.redirect_url) {
                         setTimeout(() => {
                             window.location.href = data.redirect_url;
                         }, 1000);
-                        return;
+                        return; // HENTIKAN eksekusi script di bawahnya
                     }
 
+                    // Jika tidak ada redirect_url (misalnya jika ini bukan form admin), reset form
                     form.reset();
                     dataStorage.internalAttendees = [];
                     dataStorage.agendas = [];
