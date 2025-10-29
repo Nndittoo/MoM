@@ -16,9 +16,20 @@
     .fade-out {
         opacity: 0 !important;
         transform: scale(0.95) !important;
-        transition: opacity 0.5s ease, transform 0.5s ease;
+        transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    /* Style kustom untuk tombol Reject (jika diperlukan) */
+    .btn-neon-red {
+        background-color: #ef4444; /* Merah */
+        box-shadow: 0 0 5px #ef4444, 0 0 10px #ef4444;
+        transition: all 0.3s ease;
+    }
+    .btn-neon-red:hover {
+        background-color: #dc2626;
+        box-shadow: 0 0 10px #dc2626, 0 0 20px #dc2626;
     }
 </style>
+{{-- Pastikan Anda telah menyertakan library SweetAlert2 di layout utama Anda --}}
 @endpush
 
 @section('content')
@@ -114,6 +125,8 @@
 
 @push('scripts')
 <script>
+    // --- UTILITY FUNCTIONS ---
+
     const showToast = (message, isError = false) => {
         const toast = document.getElementById("toast");
         const iconEl = toast.querySelector('i');
@@ -129,8 +142,12 @@
         }, 2500);
     };
 
+    /**
+     * Handles AJAX requests with robust JSON parsing.
+     */
     const handleAjaxAction = async (url, method, data = null) => {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').content; 
+        
         const response = await fetch(url, {
             method,
             headers: {
@@ -141,11 +158,30 @@
             },
             body: data ? JSON.stringify(data) : null,
         });
-        const result = await response.json();
-        if (!response.ok) throw result;
-        return result;
+
+        let result = {};
+        
+        // Coba membaca body sebagai teks dan parse sebagai JSON
+        try {
+            const text = await response.text();
+            result = text ? JSON.parse(text) : {}; // Jika ada teks, coba parse, jika tidak, objek kosong
+        } catch (e) {
+            // Gagal parsing, biarkan result = {} jika status sukses
+            console.warn(`Gagal parsing JSON untuk status ${response.status}`, e);
+        }
+
+        // Periksa status HTTP
+        if (!response.ok) {
+            // Jika status error (4xx/5xx), lempar pesan dari server atau pesan default
+            const errorMessage = result.message || `Aksi gagal. Status: ${response.status}. Respon non-JSON.`;
+            throw { message: errorMessage, status: response.status };
+        }
+        
+        // Jika status sukses (2xx), kembalikan hasilnya (bisa kosong jika body kosong)
+        return result; 
     };
 
+    // --- DOM READY ---
     document.addEventListener('DOMContentLoaded', () => {
         const modal = document.getElementById('rejection-modal');
         const rejectionForm = document.getElementById('rejection-form');
@@ -153,13 +189,17 @@
         const rejectButtons = document.querySelectorAll('.reject-btn');
         const closeButtons = document.querySelectorAll('.close-modal');
 
-        // Memastikan hilangkan overlay hitam setelah modal ditutup manual
-        const clearBodyLock = () => document.body.classList.remove('overflow-hidden');
+        const clearBodyLock = () => {
+            if (document.body.classList.contains('overflow-hidden')) {
+                 document.body.classList.remove('overflow-hidden');
+            }
+        };
 
         closeButtons.forEach(btn => {
             btn.addEventListener('click', clearBodyLock);
         });
-
+        
+        // --- LOGIKA APPROVE ---
         approveButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 const url = btn.dataset.approveUrl;
@@ -183,91 +223,142 @@
                     buttonsStyling: false
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Memproses...',
+                            allowOutsideClick: false,
+                            didOpen: () => { Swal.showLoading() },
+                            customClass: { popup: 'bg-gray-800' },
+                            background: '#1f2937',
+                        });
+                        
                         handleAjaxAction(url, 'POST')
                             .then(response => {
-                                showToast(response.message || 'MoM berhasil disetujui.');
-                                const card = document.getElementById(`mom-card-${momId}`);
-                                if (card) {
-                                    card.classList.add('fade-out');
-                                    setTimeout(() => card.remove(), 500);
-                                }
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Berhasil!',
+                                    // Gunakan pesan dari server, jika ada
+                                    text: response.message || 'MoM berhasil disetujui.', 
+                                    timer: 1500,
+                                    showConfirmButton: false,
+                                    background: '#1f2937',
+                                    color: '#f3f4f6',
+                                    iconColor: '#22c55e',
+                                }).then(() => {
+                                    // Animasi dan reload
+                                    const card = document.getElementById(`mom-card-${momId}`);
+                                    if (card) {
+                                        card.classList.add('fade-out');
+                                        setTimeout(() => {
+                                            card.remove();
+                                            location.reload(); 
+                                        }, 400); 
+                                    } else {
+                                        location.reload();
+                                    }
+                                });
                             })
-                            .catch(() => showToast('Gagal menyetujui MoM.', true));
+                            .catch((error) => {
+                                console.error('Gagal menyetujui MoM:', error);
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Gagal!',
+                                    text: error.message || 'Gagal menyetujui MoM. Silakan coba lagi.',
+                                    confirmButtonColor: '#ef4444', 
+                                    background: '#1f2937',
+                                    color: '#f3f4f6',
+                                });
+                            });
                     }
-                }).then(() =>{
-                    location.reload();
                 });
             });
         });
 
+        // --- LOGIKA REJECT (Menampilkan Modal) ---
         rejectButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 modal.querySelector('#modal-mom-id').value = btn.dataset.momId;
                 modal.querySelector('#modal-mom-title').textContent = btn.dataset.momTitle;
                 rejectionForm.setAttribute('data-url', btn.dataset.rejectUrl);
+                // Pastikan textarea bersih
+                document.getElementById('rejection-comment').value = ''; 
             });
         });
 
+        // --- LOGIKA REJECT (Submit Form) ---
         rejectionForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const url = rejectionForm.getAttribute('data-url');
-    const momId = modal.querySelector('#modal-mom-id').value;
-    const comment = document.getElementById('rejection-comment').value.trim();
+            e.preventDefault();
+            const url = rejectionForm.getAttribute('data-url');
+            const momId = modal.querySelector('#modal-mom-id').value;
+            const comment = document.getElementById('rejection-comment').value.trim();
+            const sendRejectBtn = document.getElementById('sendReject');
 
-    if (!comment) {
-        return Swal.fire({
-            icon: 'warning',
-            title: 'Komentar Kosong!',
-            text: 'Harap isi komentar revisi sebelum menolak MoM.',
-            confirmButtonColor: '#facc15', // kuning
+            if (!comment) {
+                return Swal.fire({
+                    icon: 'warning',
+                    title: 'Komentar Kosong!',
+                    text: 'Harap isi komentar revisi sebelum menolak MoM.',
+                    confirmButtonColor: '#facc15',
+                });
+            }
+            
+            sendRejectBtn.disabled = true;
+            sendRejectBtn.textContent = 'Mengirim...';
+
+            try {
+                const response = await handleAjaxAction(url, 'POST', { comment });
+
+                // Tampilkan SweetAlert sukses
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: response.message || 'MoM berhasil ditolak.',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    background: '#1f2937',
+                    color: '#f3f4f6',
+                    iconColor: '#facc15',
+                });
+                
+                // Tutup modal
+                modal.classList.add('hidden');
+                clearBodyLock();
+                
+                // Animasi dan hapus kartu dari DOM
+                const card = document.getElementById(`mom-card-${momId}`);
+                if (card) {
+                    card.classList.add('fade-out');
+                    // Tunggu sebentar untuk animasi
+                    setTimeout(() => {
+                        card.remove(); 
+                        location.reload(); // Reload setelah card terhapus
+                    }, 400); 
+                } else {
+                    location.reload();
+                }
+
+                // Reset textarea dan tombol
+                document.getElementById('rejection-comment').value = '';
+                sendRejectBtn.disabled = false;
+                sendRejectBtn.textContent = 'Kirim Penolakan';
+
+            } catch (error) {
+                // Tangkap error yang sebenarnya (Status HTTP 4xx/5xx) atau kegagalan fetch
+                console.error('Gagal menolak MoM:', error);
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: error.message || 'Terjadi kesalahan saat menolak MoM. Silakan coba lagi.',
+                    confirmButtonColor: '#ef4444', 
+                    background: '#1f2937',
+                    color: '#f3f4f6',
+                });
+                
+                // Aktifkan kembali tombol
+                sendRejectBtn.disabled = false;
+                sendRejectBtn.textContent = 'Kirim Penolakan';
+            }
         });
-    }
-
-    try {
-        const response = await handleAjaxAction(url, 'POST', { comment });
-
-        await Swal.fire({
-            icon: 'success',
-            title: 'Berhasil!',
-            text: response.message || 'MoM berhasil ditolak.',
-            showConfirmButton: false,
-            timer: 3000,
-            background: '#1f2937', // bg dark gray
-            color: '#f3f4f6', // teks abu muda
-            iconColor: '#facc15', // kuning sesuai tema
-        });
-
-        // Tutup modal dan hilangkan overlay
-        modal.classList.add('hidden');
-        clearBodyLock();
-
-        // Hapus kartu MoM
-        const card = document.getElementById(`mom-card-${momId}`);
-        if (card) {
-            card.classList.add('fade-out');
-            setTimeout(() => card.remove(), 400);
-        }
-
-        // Reset textarea
-        document.getElementById('rejection-comment').value = '';
-
-        // Refresh halaman (tetap di posisi yang sama)
-        const scrollY = window.scrollY;
-        location.reload();
-        window.scrollTo(0, scrollY);
-
-    } catch (error) {
-        console.error('Gagal menolak MoM:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Gagal!',
-            text: 'Terjadi kesalahan saat menolak MoM. Silakan coba lagi.',
-            confirmButtonColor: '#ef4444', // merah
-            background: '#1f2937',
-            color: '#f3f4f6',
-        });
-    }
-});
 
     });
 </script>

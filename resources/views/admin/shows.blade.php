@@ -3,27 +3,24 @@
 @section('title', 'Review MoM | TR1 MoMatic')
 
 @php
-    
+    // --- Logika Pengolahan Peserta (Tetap sama) ---
     $internalData = is_array($mom->nama_peserta ?? null) ? $mom->nama_peserta : json_decode($mom->nama_peserta ?? '[]', true);
     $partnerData = isset($mom->partner_attendees) && is_array($mom->partner_attendees) ? $mom->partner_attendees : json_decode($mom->partner_attendees ?? '[]', true);
 
-    // Gabungkan semua container unit/mitra
     $allAttendeeContainers = array_merge($internalData ?? [], $partnerData ?? []);
-
     $allAttendeeNames = [];
 
-    // Ekstrak hanya nama-nama peserta ke dalam array flat
     foreach ($allAttendeeContainers as $container) {
         if (isset($container['attendees']) && is_array($container['attendees'])) {
-            // Filter untuk memastikan hanya string yang diambil
             $validAttendees = array_filter($container['attendees'], fn($name) => is_string($name) && !empty($name));
             $allAttendeeNames = array_merge($allAttendeeNames, $validAttendees);
         }
     }
-
-    // Hilangkan duplikasi
     $allAttendeeNames = array_unique($allAttendeeNames);
     
+    $currentMomId = $mom->version_id ?? $mom->id ?? 'N/A';
+    // URL Detail MoM (Digunakan untuk redirect setelah Approve/Reject)
+    $momDetailUrl = route('admin.moms.show', $currentMomId); 
 @endphp
 
 @section('content')
@@ -51,7 +48,7 @@
                 <i class="fa-solid fa-check mr-2"></i>Approve
             </button>
             <button data-modal-target="rejection-modal" data-modal-toggle="rejection-modal"
-                    data-mom-id="{{ $mom->version_id ?? 'N/A' }}"
+                    data-mom-id="{{ $currentMomId }}"
                     data-mom-title="{{ $mom->title ?? 'Judul MoM' }}"
                     class="reject-btn w-1/2 sm:w-auto flex justify-center items-center px-4 py-2 text-sm font-semibold text-white btn-neon-red rounded-lg">
                 <i class="fa-solid fa-times mr-2"></i>Reject
@@ -73,7 +70,10 @@
             </div>
             <div class="bg-gray-800 rounded-xl shadow-md p-6 border border-gray-700">
                 <h3 class="text-xl font-bold text-white font-orbitron mb-4 border-b border-gray-700 pb-3">Hasil Pembahasan</h3>
-                <div class="prose prose-sm prose-invert max-w-none text-gray-300">{!! $mom->pembahasan ?? '<p class="italic text-gray-500">Tidak ada pembahasan.</p>' !!}</div>
+                {{-- PERBAIKAN OVERFLOW: Menambahkan kelas break-words --}}
+                <div class="prose prose-sm prose-invert max-w-none text-gray-300 break-words">
+                    {!! $mom->pembahasan ?? '<p class="italic text-gray-500">Tidak ada pembahasan.</p>' !!}
+                </div>
             </div>
             <div class="bg-gray-800 rounded-xl shadow-md p-6 border border-gray-700">
                 <h3 class="text-xl font-bold text-white font-orbitron mb-4 border-b border-gray-700 pb-3">Lampiran</h3>
@@ -150,16 +150,48 @@
 
 @push('scripts')
 <script>
+// --- FUNGSI UTILITY AJAX ---
+const handleAjaxAction = async (url, method, data = null) => {
+    // Ambil CSRF token dari hidden input di form
+    const csrfToken = document.querySelector('input[name="_token"]').value; 
+    
+    const response = await fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        },
+        body: data ? JSON.stringify(data) : null,
+    });
+    
+    let result = {};
+    try {
+        result = await response.json();
+    } catch(e) {
+        throw { message: 'Respon server tidak valid.', status: response.status };
+    }
+
+    if (!response.ok) {
+        throw { message: result.error || result.message || `Aksi gagal. Status: ${response.status}`, status: response.status };
+    }
+    return result;
+};
+
+
 document.addEventListener('DOMContentLoaded', function () {
     const approveBtn = document.querySelector('.approve-btn');
     const rejectBtn = document.querySelector('.reject-btn');
     const rejectionForm = document.getElementById('rejection-form');
+    const modal = document.getElementById('rejection-modal');
 
     const approveUrl = "{{ isset($mom) ? route('admin.approvals.approve', $mom->version_id) : '#' }}";
-    const redirectUrl = "{{ route('admin.approvals.index') }}"; 
     const momTitle = "{{ $mom->title ?? 'Judul MoM' }}";
+    const momDetailUrl = "{{ $momDetailUrl }}"; 
+    const dynamicRejectBaseUrl = "{{ url('admin/approvals/reject') }}"; 
 
-    // Handler untuk tombol Approve
+    // --- LOGIKA APPROVE (Menggunakan form submit) ---
     approveBtn.addEventListener('click', () => {
         Swal.fire({
             title: 'Konfirmasi Persetujuan',
@@ -178,6 +210,14 @@ document.addEventListener('DOMContentLoaded', function () {
             buttonsStyling: false
         }).then((result) => {
             if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Memproses Persetujuan...',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading() },
+                    customClass: { popup: 'bg-gray-800' },
+                    background: '#1f2937',
+                });
+                
                 // Submit form untuk approve
                 const form = document.createElement('form');
                 form.method = 'POST';
@@ -185,49 +225,107 @@ document.addEventListener('DOMContentLoaded', function () {
                 form.innerHTML = '@csrf';
                 document.body.appendChild(form);
                 form.submit();
-
             }
         });
     });
 
-    // Handler untuk tombol Reject (mengisi modal)
+    // --- LOGIKA REJECT (Mengisi Modal) ---
     rejectBtn.addEventListener('click', function() {
         const momId = this.dataset.momId;
         const mTitle = this.dataset.momTitle;
         rejectionForm.querySelector('#modal-mom-id').value = momId;
         rejectionForm.querySelector('#modal-mom-title').textContent = mTitle;
+        rejectionForm.querySelector('#rejection-comment').value = '';
     });
 
-    // Handler untuk submit form penolakan
-    rejectionForm.addEventListener('submit', function(e) {
+    // --- LOGIKA REJECT (AJAX SUBMIT + REDIRECT) ---
+    rejectionForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const momId = rejectionForm.querySelector('#modal-mom-id').value;
         const commentValue = rejectionForm.querySelector('#rejection-comment').value;
+        const rejectSubmitBtn = rejectionForm.querySelector('button[type="submit"]');
 
-        const dynamicRejectUrl = "{{ url('admin/approvals/reject') }}/" + momId; 
+        if (!commentValue.trim()) {
+            return Swal.fire({
+                icon: 'warning',
+                title: 'Komentar Kosong!',
+                text: 'Harap isi komentar revisi sebelum menolak MoM.',
+                confirmButtonColor: '#facc15',
+            });
+        }
         
-        // Buat form yang sebenarnya untuk mengirim POST dengan data modal
-        const tempForm = document.createElement('form');
-        tempForm.method = 'POST'; // Sesuai dengan route Anda
-        tempForm.action = dynamicRejectUrl; 
-        
-        // Copy CSRF token
-        const csrfToken = document.createElement('input');
-        csrfToken.type = 'hidden';
-        csrfToken.name = '_token';
-        // Ambil token dari form modal
-        csrfToken.value = rejectionForm.querySelector('input[name="_token"]').value; 
-        tempForm.appendChild(csrfToken);
-        
-        const comment = document.createElement('input');
-        comment.type = 'hidden';
-        comment.name = 'comment';
-        comment.value = commentValue;
-        tempForm.appendChild(comment);
-        
-        document.body.appendChild(tempForm);
-        tempForm.submit();
+        // Nonaktifkan tombol saat konfirmasi
+        rejectSubmitBtn.disabled = true;
+
+        Swal.fire({
+            title: 'Konfirmasi Penolakan',
+            html: `Anda yakin ingin menolak MoM "<strong>${momTitle}</strong>"?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Tolak!',
+            cancelButtonText: 'Batal',
+            customClass: {
+                popup: 'bg-gray-800 rounded-2xl border border-gray-700',
+                title: 'text-white font-orbitron',
+                htmlContainer: 'text-gray-400',
+                confirmButton: 'bg-red-600 text-white font-semibold px-6 py-2 rounded-lg hover:bg-red-700',
+                cancelButton: 'bg-gray-700 text-gray-300 font-semibold px-6 py-2 rounded-lg hover:bg-gray-600 border border-gray-600'
+            },
+            buttonsStyling: false
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                // Tampilkan SweetAlert loading
+                Swal.fire({
+                    title: 'Memproses Penolakan...',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading() },
+                    customClass: { popup: 'bg-gray-800' },
+                    background: '#1f2937',
+                });
+                
+                try {
+                    const url = `${dynamicRejectBaseUrl}/${momId}`;
+                    
+                    const response = await handleAjaxAction(url, 'POST', {
+                        comment: commentValue,
+                        redirect_to: momDetailUrl // Kirim tujuan redirect
+                    });
+
+                    // Sukses: Tampilkan pesan SweetAlert dan lakukan redirect
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: response.message || 'MoM berhasil ditolak.',
+                        showConfirmButton: false,
+                        timer: 1500,
+                        background: '#1f2937',
+                        color: '#f3f4f6',
+                        iconColor: '#facc15',
+                    });
+                    
+                    // Lakukan redirect yang menjamin navigasi browser
+                    window.location.href = response.redirect_url || momDetailUrl; 
+
+                } catch (error) {
+                    // Tangani error AJAX
+                    console.error('AJAX Reject Gagal:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal!',
+                        text: error.message || 'Terjadi kesalahan saat menolak MoM.',
+                        confirmButtonColor: '#ef4444', 
+                        background: '#1f2937',
+                        color: '#f3f4f6',
+                    });
+                }
+            }
+            
+            // Tutup modal dan aktifkan tombol kembali
+            modal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+            rejectSubmitBtn.disabled = false;
+        });
     });
 });
 </script>

@@ -8,16 +8,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\NotificationController; 
+use Illuminate\Support\Facades\Log;
 
 class ApprovalController extends Controller
 {
-// Menampilkan daftar MoM yang menunggu persetujuan (status_id = 1).
+    // Menampilkan daftar MoM yang menunggu persetujuan (status_id = 1).
     public function index()
     {
-            $pendingMoms = Mom::where('status_id', 1)
-                                ->with('creator')
-                                ->latest()
-                                ->get();
+        $pendingMoms = Mom::where('status_id', 1)
+                            ->with('creator')
+                            ->latest()
+                            ->get();
 
         return view('admin.approvals', [
             'pendingMoms' => $pendingMoms,
@@ -25,15 +26,14 @@ class ApprovalController extends Controller
     }
 
     /**
-     * Menyetujui MoM: Mengubah status_id menjadi 2 (Disetujui).
-     */
+     * Menyetujui MoM: Mengubah status_id menjadi 2 (Disetujui).
+     * Catatan: Approve tetap menggunakan redirect()->back() karena frontend submit form biasa.
+     */
     public function approve(Mom $mom)
     {
-    // Gunakan DB Transaction untuk keamanan
-    DB::beginTransaction();
+        DB::beginTransaction();
 
         try {
-            // Logika utama: Update status MoM
             $mom->update(['status_id' => 2]);
 
             // === NOTIFICATION: MoM Disetujui ===
@@ -47,15 +47,12 @@ class ApprovalController extends Controller
 
             DB::commit();
 
-            // Mengatur Flash Session
             Session::flash('success', "MoM '{$mom->title}' berhasil **disetujui**!");
-
-            // MENGARAHKAN PENGGUNA KEMBALI KE HALAMAN SEBELUMNYA
             return redirect()->back(); 
 
         } catch (\Throwable $e) {
             DB::rollBack();
-            \Illuminate\Support\Facades\Log::error("Approval Failed: " . $e->getMessage());
+            Log::error("Approval Failed: " . $e->getMessage());
 
             Session::flash('error', 'Gagal menyetujui MoM: ' . $e->getMessage());
             return redirect()->back();
@@ -63,22 +60,22 @@ class ApprovalController extends Controller
     }
 
     /**
-     * Menolak MoM: Mengubah status_id menjadi 3 (Ditolak) dan menyimpan komentar.
-     */
+     * Menolak MoM: Mengubah status_id menjadi 3 (Ditolak) dan menyimpan komentar.
+     * Mengembalikan JSON untuk diproses oleh AJAX frontend.
+     */
     public function reject(Request $request, Mom $mom)
     {
         $comment = $request->comment;
+        $redirectTo = $request->redirect_to; // Tangkap URL tujuan
 
-        // Basic validation: Pastikan komentar ada
         if (empty($comment)) {
-            Session::flash('error', 'Komentar penolakan wajib diisi.');
-            return redirect()->back();
-    }
+            // Jika validasi gagal, kembalikan JSON error
+            return response()->json(['error' => 'Komentar penolakan wajib diisi.'], 422);
+        }
 
         DB::beginTransaction();
 
         try {
-            // Update status dan simpan komentar
             $mom->update([
                 'status_id' => 3,
                 'rejection_comment' => $comment,
@@ -95,18 +92,21 @@ class ApprovalController extends Controller
 
             DB::commit();
 
-            // Mengatur Flash Session
-            Session::flash('warning', "MoM '{$mom->title}' berhasil **ditolak**. Notifikasi revisi sudah dikirim.");
-
-            // MENGARAHKAN PENGGUNA KEMBALI KE HALAMAN SEBELUMNYA
-            return redirect()->back(); 
+            // MENGEMBALIKAN RESPON JSON SUKSES
+            return response()->json([
+                'success' => true,
+                'message' => "MoM '{$mom->title}' berhasil ditolak. Notifikasi revisi sudah dikirim.",
+                'redirect_url' => $redirectTo // Kirim URL tujuan redirect ke JS
+            ]);
 
         } catch (\Throwable $e) {
             DB::rollBack();
-            \Illuminate\Support\Facades\Log::error("Rejection Failed: " . $e->getMessage());
+            Log::error("Rejection Failed: " . $e->getMessage());
 
-            Session::flash('error', 'Gagal menolak MoM: ' . $e->getMessage());
-            return redirect()->back();
+            // MENGEMBALIKAN RESPON JSON ERROR
+            return response()->json([
+                'error' => 'Gagal menolak MoM: ' . $e->getMessage()
+            ], 500);
         }
     }
 }
