@@ -46,7 +46,7 @@
 
 @section('content')
 <div class="pt-2">
-    {{-- PERUBAHAN: Header halaman disesuaikan dengan tema --}}
+    {{-- Header halaman disesuaikan dengan tema --}}
     <div class="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between mb-6">
         <div>
             <h1 class="text-3xl font-bold font-orbitron text-neon-red">Detail MoM</h1>
@@ -57,7 +57,7 @@
                 <i class="fa-solid fa-arrow-left mr-2"></i>Kembali
             </a>
             <a href="{{ route('moms.export', $mom->version_id) }}" target="_blank"
-               class="flex-1 sm:flex-initial inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-white btn-neon-red btn-pulse rounded-lg">
+                class="flex-1 sm:flex-initial inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-white btn-neon-red btn-pulse rounded-lg">
                 <i class="fa-solid fa-file-pdf mr-2"></i>Export PDF
             </a>
         </div>
@@ -68,7 +68,7 @@
         {{-- Kolom Kiri: Informasi Utama, Pembahasan & Lampiran --}}
         <div class="lg:col-span-2 space-y-6">
 
-            {{-- PERUBAHAN: Card Informasi Rapat --}}
+            {{-- Card Informasi Rapat --}}
             <div class="bg-gray-800 rounded-xl shadow-md p-6 border border-gray-700">
                 <h3 class="text-xl font-bold text-white font-orbitron mb-4 border-b border-gray-700 pb-3">Informasi Rapat</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-sm text-gray-300">
@@ -79,7 +79,7 @@
                 </div>
             </div>
 
-            {{-- PERUBAHAN: Card Hasil Pembahasan --}}
+            {{-- Card Hasil Pembahasan --}}
             <div class="bg-gray-800 rounded-xl shadow-md p-6 border border-gray-700">
                 <h3 class="text-xl font-bold text-white font-orbitron mb-4 border-b border-gray-700 pb-3">Hasil Pembahasan</h3>
                 {{-- Class 'prose-invert' dari Tailwind akan otomatis menyesuaikan style teks untuk mode gelap --}}
@@ -88,7 +88,7 @@
                 </div>
             </div>
 
-            {{-- PERUBAHAN: Card Lampiran --}}
+            {{-- Card Lampiran --}}
             <div class="bg-gray-800 rounded-xl shadow-md p-6 border border-gray-700">
                 <h3 class="text-xl font-bold text-white font-orbitron mb-4 border-b border-gray-700 pb-3">Lampiran</h3>
                 @if($mom->attachments->isNotEmpty())
@@ -115,7 +115,7 @@
         {{-- Kolom Kanan: Peserta, Agenda, & Tindak Lanjut --}}
         <div class="lg:col-span-1 space-y-6">
 
-            {{-- PERUBAHAN: Card Peserta --}}
+            {{-- Card Peserta --}}
             <div class="bg-gray-800 rounded-xl shadow-md p-6 border border-gray-700">
                 <h3 class="text-xl font-bold text-white font-orbitron mb-4"><i class="fa-solid fa-users mr-2 text-red-400"></i>Peserta ({{ $totalAttendees }})</h3>
                 <ul class="space-y-2 text-sm text-gray-300 list-disc list-inside">
@@ -127,7 +127,7 @@
                 </ul>
             </div>
 
-            {{-- PERUBAHAN: Card Agenda --}}
+            {{-- Card Agenda --}}
             <div class="bg-gray-800 rounded-xl shadow-md p-6 border border-gray-700">
                 <h3 class="text-xl font-bold text-white font-orbitron mb-4"><i class="fa-solid fa-list-check mr-2 text-red-400"></i>Agenda</h3>
                 <ol class="space-y-2 text-sm text-gray-300 list-decimal list-inside">
@@ -139,7 +139,7 @@
                 </ol>
             </div>
 
-            {{-- PERUBAHAN: Card Tindak Lanjut --}}
+            {{-- Card Tindak Lanjut --}}
             <div class="bg-gray-800 rounded-xl shadow-md p-6 border border-gray-700">
                 <h3 class="text-xl font-bold text-white font-orbitron mb-4"><i class="fa-solid fa-bullseye mr-2 text-red-400"></i>Tindak Lanjut</h3>
                 <div id="tindak-lanjut-list" class="space-y-3">
@@ -160,7 +160,7 @@
     </div>
 </div>
 
-{{-- PERUBAHAN: Modal Form Tambah Tindak Lanjut --}}
+{{-- Modal Form Tambah Tindak Lanjut --}}
 <div id="tindak-lanjut-modal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
     <div class="relative p-4 w-full max-w-md max-h-full">
         <div class="relative bg-gray-800 rounded-lg shadow border border-gray-700">
@@ -197,6 +197,11 @@
 
 @push('styles')
 <style>
+    .prose {
+        word-break: break-word; /* Memecah kata panjang agar tidak melebihi container */
+        overflow-wrap: break-word; /* Alias/sinonim untuk break-word */
+    }
+
     /* Tambahkan bullet di dalam pembahasan */
     .prose ul {
         list-style-type: disc;
@@ -268,15 +273,20 @@
                     });
 
                     const newItem = document.createElement('div');
-                    newItem.className = 'p-3 bg-body-bg dark:bg-dark-body-bg rounded-lg';
+                    // Mengganti class agar sesuai dengan tema dark mode yang diterapkan di atas
+                    newItem.className = 'p-3 bg-gray-900 rounded-lg border border-gray-700'; 
                     newItem.innerHTML = `
-                        <p class="font-semibold text-sm">${description}</p>
-                        <p class="text-xs text-text-secondary">Deadline: ${formattedDate}</p>
+                        <p class="font-semibold text-sm text-white">${description}</p>
+                        <p class="text-xs text-gray-400">Deadline: ${formattedDate}</p>
                     `;
 
-                    const emptyMessage = listContainer.querySelector('.text-text-secondary');
-                    if (emptyMessage && listContainer.children.length === 1 && emptyMessage.textContent.includes('Tidak ada tindak lanjut')) {
-                        listContainer.innerHTML = '';
+                    // Cek apakah pesan 'Tidak ada tindak lanjut' ada dan hapus jika menambahkan item baru
+                    const emptyMessage = listContainer.querySelector('.italic.text-gray-500');
+                    if (emptyMessage) {
+                         // Hanya hapus jika betul-betul hanya ada satu elemen (pesan kosong)
+                        if (listContainer.children.length === 1 && emptyMessage.textContent.includes('Tidak ada tindak lanjut')) {
+                            listContainer.innerHTML = '';
+                        }
                     }
 
                     listContainer.appendChild(newItem);
@@ -290,9 +300,9 @@
                     let errorMessage = data.message || 'Error server saat menambahkan tugas.';
                     if (response.status === 422 && data.errors) {
                         errorMessage = 'Validasi Gagal: ' +
-                                            (data.errors.item ? data.errors.item[0] + ' ' : '') +
-                                            (data.errors.due ? data.errors.due[0] + ' ' : '') +
-                                            (data.errors.mom_id ? data.errors.mom_id[0] : '');
+                                             (data.errors.item ? data.errors.item[0] + ' ' : '') +
+                                             (data.errors.due ? data.errors.due[0] + ' ' : '') +
+                                             (data.errors.mom_id ? data.errors.mom_id[0] : '');
                     }
                     alert('Gagal menyimpan tugas: ' + errorMessage);
                 }
