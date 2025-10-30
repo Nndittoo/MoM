@@ -19,8 +19,9 @@
     $allAttendeeNames = array_unique($allAttendeeNames);
     
     $currentMomId = $mom->version_id ?? $mom->id ?? 'N/A';
-    // URL Detail MoM (Digunakan untuk redirect setelah Approve/Reject)
+    // URL Detail MoM (Digunakan untuk redirect setelah Approve/Reject jika tidak ada tujuan lain)
     $momDetailUrl = route('admin.moms.show', $currentMomId); 
+    // URL DAFTAR APPROVAL BARU DITAMBAHKAN di JS
 @endphp
 
 @section('content')
@@ -190,6 +191,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const momTitle = "{{ $mom->title ?? 'Judul MoM' }}";
     const momDetailUrl = "{{ $momDetailUrl }}"; 
     const dynamicRejectBaseUrl = "{{ url('admin/approvals/reject') }}"; 
+    
+    // URL tujuan redirect setelah reject (Daftar Approval)
+    const approvalsIndexUrl = "{{ route('admin.approvals.index') }}"; 
 
     // --- LOGIKA APPROVE (Menggunakan form submit) ---
     approveBtn.addEventListener('click', () => {
@@ -289,7 +293,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     
                     const response = await handleAjaxAction(url, 'POST', {
                         comment: commentValue,
-                        redirect_to: momDetailUrl // Kirim tujuan redirect
+                        // Kirim tujuan redirect ke daftar approvals
+                        redirect_to: approvalsIndexUrl 
                     });
 
                     // Sukses: Tampilkan pesan SweetAlert dan lakukan redirect
@@ -304,8 +309,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         iconColor: '#facc15',
                     });
                     
-                    // Lakukan redirect yang menjamin navigasi browser
-                    window.location.href = response.redirect_url || momDetailUrl; 
+                    window.location.href = response.redirect_url; 
 
                 } catch (error) {
                     // Tangani error AJAX
