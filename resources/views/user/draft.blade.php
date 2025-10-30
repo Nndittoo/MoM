@@ -324,12 +324,18 @@
         </div>
 
         {{-- Paginasi --}}
+        {{-- Paginasi My MoM --}}
         <div class="flex justify-center mt-8 mb-6" id="pagination-my-mom">
-            {{ $myMoms->appends(request()->query())->links() }}
+            @if($myMoms->hasPages())
+                {{ $myMoms->links() }}
+            @endif
         </div>
 
+        {{-- Paginasi All MoM --}}
         <div class="flex justify-center mt-8 mb-6 hidden" id="pagination-all-mom">
-            {{ $allMoms->appends(request()->query())->links() }}
+            @if($allMoms->hasPages())
+                {{ $allMoms->links() }}
+            @endif
         </div>
     </div>
 </div>
@@ -349,6 +355,7 @@ function switchTab(tabId) {
     const paginationMyMom = document.getElementById('pagination-my-mom');
     const paginationAllMom = document.getElementById('pagination-all-mom');
     const tabInput = document.getElementById('tabInput');
+    const filterForm = document.getElementById('filterForm');
 
     // Update hidden input untuk tab
     tabInput.value = tabId;
@@ -358,6 +365,16 @@ function switchTab(tabId) {
         tab.classList.remove('text-red-400', 'border-red-500');
         tab.classList.add('border-transparent', 'hover:text-gray-300', 'hover:border-gray-500');
     });
+
+    // PENTING: Reset pagination saat switch tab
+    // Hapus parameter pagination dari URL
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.delete('my_mom_page');
+    currentUrl.searchParams.delete('all_mom_page');
+    currentUrl.searchParams.set('tab', tabId);
+
+    // Update URL tanpa reload
+    window.history.pushState({}, '', currentUrl);
 
     // Set Active Tab, Content, and Filters
     if (tabId === 'my-mom') {
@@ -376,7 +393,6 @@ function switchTab(tabId) {
         myMomContent.classList.add('hidden');
 
         filterStatus.classList.add('hidden'); // Sembunyikan filter status
-
         paginationAllMom.classList.remove('hidden');
         paginationMyMom.classList.add('hidden');
     }
@@ -390,7 +406,7 @@ function setupAutoFilter() {
     const searchSpinner = document.getElementById('searchSpinner');
     const filterForm = document.getElementById('filterForm');
 
-    // Auto-search dengan delay 5 detik
+    // Auto-search dengan delay 2 detik
     if (searchInput) {
         searchInput.addEventListener('input', function() {
             clearTimeout(searchTimeout);
@@ -418,10 +434,46 @@ function setupAutoFilter() {
     }
 }
 
+// Handle pagination clicks - update tab parameter
+function setupPaginationLinks() {
+    // My MoM pagination links
+    const myMomPagination = document.getElementById('pagination-my-mom');
+    if (myMomPagination) {
+        const myMomLinks = myMomPagination.querySelectorAll('a');
+        myMomLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                const url = new URL(this.href);
+                url.searchParams.set('tab', 'my-mom');
+                this.href = url.toString();
+            });
+        });
+    }
+
+    // All MoM pagination links
+    const allMomPagination = document.getElementById('pagination-all-mom');
+    if (allMomPagination) {
+        const allMomLinks = allMomPagination.querySelectorAll('a');
+        allMomLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                const url = new URL(this.href);
+                url.searchParams.set('tab', 'all-mom');
+                this.href = url.toString();
+            });
+        });
+    }
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     setupAutoFilter();
+    setupPaginationLinks();
     switchTab(activeTab); // Set tab sesuai request
+
+    // Scroll to top jika ada pagination
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('my_mom_page') || urlParams.has('all_mom_page')) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 });
 </script>
 @endpush
