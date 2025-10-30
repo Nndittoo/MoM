@@ -87,6 +87,7 @@
             </div>
             <div class="bg-gray-800 rounded-xl shadow-md p-6 border border-gray-700">
                 <h3 class="text-xl font-bold text-white font-orbitron mb-4 border-b border-gray-700 pb-3">Hasil Pembahasan</h3>
+                {{-- Class 'prose-invert' dari Tailwind akan otomatis menyesuaikan style teks untuk mode gelap --}}
                 <div class="prose prose-sm prose-invert max-w-none text-gray-300">{!! $mom->pembahasan !!}</div>
             </div>
             <div class="bg-gray-800 rounded-xl shadow-md p-6 border border-gray-700">
@@ -187,6 +188,40 @@
     </div>
 </div>
 @endsection
+
+@push('styles')
+<style>
+    .prose {
+        word-break: break-word; /* Memecah kata panjang agar tidak melebihi container */
+        overflow-wrap: break-word; /* Alias/sinonim untuk break-word */
+    }
+
+    /* Tambahkan bullet di dalam pembahasan */
+    .prose ul {
+        list-style-type: disc;
+        margin-left: 1.5rem;
+        padding-left: 1rem;
+    }
+
+    .prose ol {
+        list-style-type: decimal;
+        margin-left: 1.5rem;
+        padding-left: 1rem;
+    }
+
+    .prose li {
+        margin-bottom: 0.25rem;
+    }
+
+    .prose ul li::marker {
+        color: var(--tw-prose-bullets, #6b7280);
+    }
+
+    .dark .prose ul li::marker {
+        color: #d1d5db;
+    }
+</style>
+@endpush
 
 @push('scripts')
 <script>
