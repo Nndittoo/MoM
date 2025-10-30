@@ -35,7 +35,7 @@ Route::get('/reset', [AuthController::class, 'reset'])->name('reset');
  * USER AREA
  */
 Route::middleware(['auth', 'role:user,admin'])->group(function () {
-    Route::get('/api/search-moms', [DashboardController::class, 'searchMoms'])->name('api.search.moms');
+    Route::get('/search-moms', [DashboardController::class, 'searchMoms'])->name('moms.search');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/search', [DashboardController::class, 'searchMoms'])->name('dashboard.search');
 

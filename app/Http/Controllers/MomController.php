@@ -591,4 +591,49 @@ class MomController extends Controller
             Log::error('FCM AfterMomCreated error: ' . $e->getMessage());
         }
     }
+
+    public function search(Request $request)
+    {
+        $query = $request->input('q');
+
+        if (!$query || strlen($query) < 3) {
+            return response()->json([]);
+        }
+
+        $userId = auth()->id();
+
+        // Search dalam MoM user (semua status) + MoM approved dari user lain
+        $moms = Mom::with(['status', 'creator'])
+            ->where(function($q) use ($userId) {
+                // MoM milik user (semua status)
+                $q->where('creator_id', $userId)
+                // ATAU MoM dari user lain yang sudah approved
+                ->orWhereHas('status', function($sq) use ($userId) {
+                    $sq->where('status', 'Disetujui')
+                        ->whereHas('mom', function($mq) use ($userId) {
+                            $mq->where('creator_id', '!=', $userId);
+                        });
+                });
+            })
+            ->where(function($q) use ($query) {
+                $q->where('title', 'like', '%' . $query . '%')
+                ->orWhere('pembahasan', 'like', '%' . $query . '%')
+                ->orWhere('location', 'like', '%' . $query . '%');
+            })
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(function($mom) {
+                return [
+                    'version_id' => $mom->version_id,
+                    'title' => $mom->title,
+                    'location' => $mom->location,
+                    'created_at' => $mom->created_at,
+                    'status' => $mom->status->status ?? 'Unknown',
+                    'creator_name' => $mom->creator->name ?? 'N/A'
+                ];
+            });
+
+        return response()->json($moms);
+    }
 }

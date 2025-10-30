@@ -122,6 +122,216 @@
   </div>
 </nav>
 
+{{-- Search Script --}}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search-navbar');
+    const searchDropdown = document.getElementById('search-dropdown');
+    const searchResults = document.getElementById('search-results');
+    let searchTimeout = null;
+
+    if (searchInput) {
+        // Show dropdown on focus
+        searchInput.addEventListener('focus', function() {
+            if (this.value.trim().length > 0) {
+                searchDropdown.classList.remove('hidden');
+            }
+        });
+
+        // Hide dropdown on click outside
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
+                searchDropdown.classList.add('hidden');
+            }
+        });
+
+        // Search on input with debounce
+        searchInput.addEventListener('input', function() {
+            const query = this.value.trim();
+
+            clearTimeout(searchTimeout);
+
+            if (query.length === 0) {
+                searchDropdown.classList.add('hidden');
+                searchResults.innerHTML = `
+                    <div class="px-4 py-6 text-center text-gray-400">
+                        <p>Mulai mengetik untuk mencari...</p>
+                    </div>`;
+                return;
+            }
+
+            if (query.length < 3) {
+                searchDropdown.classList.remove('hidden');
+                searchResults.innerHTML = `
+                    <div class="px-4 py-6 text-center text-gray-400">
+                        <i class="fa-solid fa-keyboard text-2xl mb-2 text-gray-600"></i>
+                        <p>Ketik minimal 3 karakter...</p>
+                    </div>`;
+                return;
+            }
+
+            // Show loading
+            searchDropdown.classList.remove('hidden');
+            searchResults.innerHTML = `
+                <div class="px-4 py-6 text-center text-gray-400">
+                    <div class="inline-block w-8 h-8 border-4 border-gray-700 border-t-red-500 rounded-full animate-spin"></div>
+                    <p class="mt-2">Mencari...</p>
+                </div>`;
+
+            // Debounce search
+            searchTimeout = setTimeout(() => {
+                performSearch(query);
+            }, 500);
+        });
+
+        // Allow Enter key to search
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const query = this.value.trim();
+                if (query.length >= 3) {
+                    window.location.href = `/draft?search=${encodeURIComponent(query)}`;
+                }
+            }
+        });
+    }
+
+    async function performSearch(query) {
+        try {
+            const response = await fetch(`{{ route('moms.search') }}?q=${encodeURIComponent(query)}`);
+
+            if (!response.ok) {
+                throw new Error('Search failed');
+            }
+
+            const data = await response.json();
+            displayResults(data);
+
+        } catch (error) {
+            console.error('Search error:', error);
+            searchResults.innerHTML = `
+                <div class="px-4 py-6 text-center text-red-400">
+                    <i class="fa-solid fa-exclamation-triangle text-2xl mb-2"></i>
+                    <p>Gagal melakukan pencarian</p>
+                </div>`;
+        }
+    }
+
+    function displayResults(data) {
+        searchResults.innerHTML = '';
+
+        if (data.length === 0) {
+            searchResults.innerHTML = `
+                <div class="px-4 py-6 text-center text-gray-400">
+                    <i class="fa-solid fa-search text-3xl mb-3 text-gray-600"></i>
+                    <p class="font-medium">Tidak ada hasil ditemukan</p>
+                    <p class="text-xs mt-1 text-gray-500">Coba gunakan kata kunci lain</p>
+                </div>`;
+            return;
+        }
+
+        data.forEach(mom => {
+            const createdDate = new Date(mom.created_at).toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric'
+            });
+
+            const createdTime = new Date(mom.created_at).toLocaleTimeString('id-ID', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            // Status badge
+            const statusInfo = getStatusInfo(mom.status);
+
+            const item = document.createElement('a');
+            item.href = `/moms/${mom.version_id}`;
+            item.className = 'block px-4 py-3 hover:bg-gray-700 transition-colors border-b border-gray-700 last:border-b-0';
+            item.innerHTML = `
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                            <i class="fa-solid fa-file-lines text-red-400"></i>
+                        </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between mb-1">
+                            <p class="text-sm font-semibold text-white truncate pr-2">
+                                ${highlightText(mom.title, searchInput.value)}
+                            </p>
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium ${statusInfo.bgClass} ${statusInfo.textClass} rounded-full whitespace-nowrap">
+                                <span class="w-1.5 h-1.5 rounded-full ${statusInfo.dotClass}"></span>
+                                ${statusInfo.label}
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-400 mb-1">
+                            <i class="fa-solid fa-calendar-day mr-1"></i>${createdDate}
+                            <span class="mx-1">•</span>
+                            <i class="fa-solid fa-clock mr-1"></i>${createdTime}
+                        </p>
+                        ${mom.location ? `
+                            <p class="text-xs text-gray-500 truncate">
+                                <i class="fa-solid fa-map-marker-alt mr-1"></i>${mom.location}
+                            </p>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            searchResults.appendChild(item);
+        });
+
+        // Add "View All" link if there are many results
+        if (data.length >= 5) {
+            const viewAllLink = document.createElement('a');
+            viewAllLink.href = `/draft?search=${encodeURIComponent(searchInput.value)}`;
+            viewAllLink.className = 'block px-4 py-3 text-center text-sm font-medium text-red-400 hover:bg-gray-700 hover:text-red-300 transition-colors border-t border-gray-700';
+            viewAllLink.innerHTML = `
+                <i class="fa-solid fa-arrow-right mr-2"></i>Lihat semua hasil
+            `;
+            searchResults.appendChild(viewAllLink);
+        }
+    }
+
+    function getStatusInfo(status) {
+        const statusMap = {
+            'Disetujui': {
+                label: 'Approved',
+                dotClass: 'bg-green-500',
+                bgClass: 'bg-green-500/10',
+                textClass: 'text-green-400'
+            },
+            'Menunggu': {
+                label: 'Pending',
+                dotClass: 'bg-yellow-400',
+                bgClass: 'bg-yellow-500/10',
+                textClass: 'text-yellow-400'
+            },
+            'Ditolak': {
+                label: 'Rejected',
+                dotClass: 'bg-red-500',
+                bgClass: 'bg-red-500/10',
+                textClass: 'text-red-400'
+            }
+        };
+
+        return statusMap[status] || {
+            label: 'Unknown',
+            dotClass: 'bg-gray-500',
+            bgClass: 'bg-gray-500/10',
+            textClass: 'text-gray-400'
+        };
+    }
+
+    function highlightText(text, query) {
+        if (!query) return text;
+
+        const regex = new RegExp(`(${query})`, 'gi');
+        return text.replace(regex, '<mark class="bg-red-500/30 text-red-300 px-1 rounded">$1</mark>');
+    }
+});
+</script>
+
 {{-- ========== NOTIFICATION SCRIPT ========== --}}
 <script>
 document.addEventListener('DOMContentLoaded', function () {

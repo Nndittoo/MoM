@@ -197,39 +197,43 @@ class DashboardController extends Controller
     // API endpoint untuk filter search
     public function searchMoms(Request $request)
     {
-        $query = Mom::with(['status', 'creator']);
+        $query = $request->input('q') ?? $request->input('search');
 
-        // Search by title, pimpinan_rapat, notulen, atau location
-        if ($request->has('search') && $request->search != '') {
-            $search = $request->search;
-            $userId = Auth::id();
+        if (!$query || strlen($query) < 3) {
+            return response()->json([]);
+        }
 
-            $query->where(function($q) use ($search) {
-                $q->where('title', 'like', '%' . $search . '%')
-                ->orWhere('pimpinan_rapat', 'like', '%' . $search . '%')
-                ->orWhere('notulen', 'like', '%' . $search . '%')
-                ->orWhere('location', 'like', '%' . $search . '%');
+        $userId = Auth::id();
+
+        $results = Mom::with(['status', 'creator'])
+            ->where(function($q) use ($query) {
+                $q->where('title', 'like', '%' . $query . '%')
+                ->orWhere('pembahasan', 'like', '%' . $query . '%')
+                ->orWhere('pimpinan_rapat', 'like', '%' . $query . '%')
+                ->orWhere('notulen', 'like', '%' . $query . '%')
+                ->orWhere('location', 'like', '%' . $query . '%');
             })
             ->where(function($q) use ($userId) {
+                // MoM milik user sendiri (semua status)
                 $q->where('creator_id', $userId)
-                ->orWhere('status_id', 2);
-            });
-        }
+                // ATAU MoM dari user lain yang sudah disetujui
+                ->orWhereHas('status', function($sq) {
+                    $sq->where('status', 'Disetujui');
+                });
+            })
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get();
 
-        // Filter by status
-        if ($request->has('status') && $request->status != '') {
-            $query->where('status_id', $request->status);
-        }
-
-        $results = $query->orderBy('created_at', 'desc')->take(10)->get();
-
-        // Format response sesuai dengan yang diharapkan frontend
+        // Format response untuk frontend
         return response()->json($results->map(function($mom) {
             return [
                 'version_id' => $mom->version_id,
                 'title' => $mom->title,
-                'status_id' => $mom->status_id,
-                'created_at' => $mom->created_at->toISOString(), // Format ISO untuk parsing JavaScript
+                'location' => $mom->location,
+                'created_at' => $mom->created_at->toISOString(),
+                'status' => $mom->status->status ?? 'Unknown',
+                'creator_name' => $mom->creator->name ?? 'N/A'
             ];
         }));
     }
