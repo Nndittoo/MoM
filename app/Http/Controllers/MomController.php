@@ -229,8 +229,40 @@ class MomController extends Controller
 
     public function show(Mom $mom)
     {
-        $mom->load(['creator', 'agendas', 'attachments']);
-        return view('user/show', compact('mom'));
+        // Load relasi yang diperlukan
+        $mom->load(['creator', 'agendas', 'attachments', 'status', 'actionItems']);
+
+        // Ambil status text
+        $statusText = $mom->status->status ?? 'Unknown';
+
+        // Validasi: Pastikan user hanya bisa melihat MoM miliknya sendiri (kecuali admin)
+        // Kecuali jika user adalah peserta/mitra meeting
+        $userId = auth()->id();
+        $isCreator = $mom->creator_id == $userId;
+
+        // Jika bukan creator dan bukan participant, return 403
+        if (!$isCreator) {
+            abort(403, 'Anda tidak memiliki akses untuk melihat MoM ini.');
+        }
+
+        // Logika berdasarkan status MoM
+        // Status 1 = Menunggu (Pending)
+        // Status 2 = Disetujui (Approved)
+        // Status 3 = Ditolak (Rejected)
+
+        if ($mom->status_id == 1) {
+            // Jika Pending, tampilkan halaman preview/pending
+            // User bisa melihat tapi dengan info bahwa sedang menunggu approval
+            return view('user.show', compact('mom', 'statusText'));
+        }
+
+        if ($mom->status_id == 3) {
+            // Jika Ditolak, tampilkan halaman dengan info penolakan
+            return view('user.edit', compact('mom', 'statusText'));
+        }
+
+        // Jika Disetujui (status_id = 2), tampilkan halaman detail normal
+        return view('user.show', compact('mom', 'statusText'));
     }
 
     public function show_admin(Mom $mom)
