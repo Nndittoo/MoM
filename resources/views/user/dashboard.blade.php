@@ -350,6 +350,174 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 </script>
+
+{{-- Search & Filter Script --}}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('simple-search');
+    const tableBody = document.getElementById('mom-table-body');
+    const filterButtons = document.querySelectorAll('.filter-status');
+
+    let searchTimeout = null;
+    let currentFilter = '';
+
+    // SEARCH FUNCTIONALITY
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const query = this.value.trim();
+
+            searchTimeout = setTimeout(() => {
+                performSearch(query, currentFilter);
+            }, 500);
+        });
+    }
+
+    // FILTER FUNCTIONALITY
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            const status = this.getAttribute('data-status');
+            currentFilter = status;
+
+            // Update button text
+            const dropdownButton = document.getElementById('dropdownActionButton');
+            const filterText = this.textContent;
+            dropdownButton.innerHTML = `${filterText} <i class="fa-solid fa-chevron-down w-2.5 h-2.5 ms-2.5"></i>`;
+
+            // Close dropdown
+            const dropdown = document.getElementById('dropdownAction');
+            dropdown.classList.add('hidden');
+
+            // Perform search
+            const query = searchInput ? searchInput.value.trim() : '';
+            performSearch(query, status);
+        });
+    });
+
+    // PERFORM SEARCH & FILTER
+    async function performSearch(query, status) {
+        try {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="px-6 py-8 text-center">
+                        <div class="flex flex-col items-center justify-center">
+                            <div class="inline-block w-8 h-8 border-4 border-gray-700 border-t-red-500 rounded-full animate-spin mb-3"></div>
+                            <p class="text-gray-400">Loading...</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+            const params = new URLSearchParams();
+            if (query) params.append('search', query);
+            if (status) params.append('status', status);
+
+            const response = await fetch(`{{ route('moms.search') }}?${params.toString()}`);
+
+            if (!response.ok) throw new Error('Search failed');
+
+            const data = await response.json();
+            displayResults(data);
+
+        } catch (error) {
+            console.error('Search error:', error);
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="px-6 py-8 text-center">
+                        <div class="flex flex-col items-center justify-center text-red-400">
+                            <i class="fa-solid fa-exclamation-triangle text-3xl mb-3"></i>
+                            <p class="font-medium">Gagal memuat data</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+    }
+
+    // DISPLAY RESULTS
+    function displayResults(data) {
+        tableBody.innerHTML = '';
+
+        if (data.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="px-6 py-8 text-center">
+                        <div class="flex flex-col items-center justify-center text-gray-400">
+                            <i class="fa-solid fa-search text-3xl mb-3 text-gray-600"></i>
+                            <p class="font-medium">Tidak ada hasil ditemukan</p>
+                            <p class="text-sm text-gray-500 mt-1">Coba ubah kata kunci pencarian</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        data.forEach((mom, index) => {
+            const row = createTableRow(mom, index + 1);
+            tableBody.appendChild(row);
+        });
+    }
+
+    // CREATE TABLE ROW
+    function createTableRow(mom, number) {
+        const row = document.createElement('tr');
+        row.className = 'border-b border-gray-700 hover:bg-gray-700/50 transition-colors';
+
+        const createdDate = new Date(mom.created_at).toLocaleDateString('id-ID', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+        });
+
+        const statusInfo = getStatusInfo(mom.status_id);
+        const query = searchInput ? searchInput.value.trim() : '';
+        const highlightedTitle = highlightText(mom.title, query);
+
+        row.innerHTML = `
+            <td class="px-6 py-4 text-gray-400">${number}</td>
+            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">
+                <a href="/moms/${mom.version_id}" class="hover:text-red-400 transition-colors">
+                    ${highlightedTitle}
+                </a>
+            </th>
+            <td class="px-6 py-4 text-gray-400">${createdDate}</td>
+            <td class="px-6 py-4">
+                <div class="inline-flex items-center gap-x-2">
+                    <span class="w-2.5 h-2.5 rounded-full ${statusInfo.dot}"></span>
+                    <span class="text-xs font-medium ${statusInfo.text}">${statusInfo.label}</span>
+                </div>
+            </td>
+        `;
+
+        return row;
+    }
+
+    // GET STATUS INFO
+    function getStatusInfo(statusId) {
+        const statusMap = {
+            1: { dot: 'bg-yellow-400', text: 'text-yellow-300', label: 'Pending' },
+            2: { dot: 'bg-green-500', text: 'text-green-400', label: 'Approved' },
+            3: { dot: 'bg-red-500', text: 'text-red-400', label: 'Rejected' }
+        };
+        return statusMap[statusId] || { dot: 'bg-gray-500', text: 'text-gray-400', label: 'Unknown' };
+    }
+
+    // HIGHLIGHT TEXT
+    function highlightText(text, query) {
+        if (!query || query.length < 2) return text;
+        const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
+        return text.replace(regex, '<mark class="bg-red-500/30 text-red-300 px-1 rounded">$1</mark>');
+    }
+
+    function escapeRegex(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+});
+</script>
+
 <script
   src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.8.1/dist/dotlottie-wc.js"
   type="module"

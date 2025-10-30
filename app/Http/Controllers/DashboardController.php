@@ -198,40 +198,56 @@ class DashboardController extends Controller
     public function searchMoms(Request $request)
     {
         $query = $request->input('q') ?? $request->input('search');
+        $statusFilter = $request->input('status');
 
-        if (!$query || strlen($query) < 3) {
-            return response()->json([]);
+        if (!$query && !$statusFilter) {
+            // Jika tidak ada query atau filter, return recent MoMs
+            $userId = Auth::id();
+            $results = Mom::with(['status', 'creator'])
+                ->where('creator_id', $userId)
+                ->orderBy('created_at', 'desc')
+                ->take(10)
+                ->get();
+        } else {
+            $userId = Auth::id();
+
+            $queryBuilder = Mom::with(['status', 'creator'])
+                ->where(function($q) use ($userId) {
+                    $q->where('creator_id', $userId)
+                    ->orWhereHas('status', function($sq) {
+                        $sq->where('status', 'Disetujui');
+                    });
+                });
+
+            // Apply search filter
+            if ($query && strlen($query) >= 2) {
+                $queryBuilder->where(function($q) use ($query) {
+                    $q->where('title', 'like', '%' . $query . '%')
+                    ->orWhere('pembahasan', 'like', '%' . $query . '%')
+                    ->orWhere('pimpinan_rapat', 'like', '%' . $query . '%')
+                    ->orWhere('notulen', 'like', '%' . $query . '%')
+                    ->orWhere('location', 'like', '%' . $query . '%');
+                });
+            }
+
+            // Apply status filter
+            if ($statusFilter) {
+                $queryBuilder->where('status_id', $statusFilter);
+            }
+
+            $results = $queryBuilder->orderBy('created_at', 'desc')
+                ->take(10)
+                ->get();
         }
 
-        $userId = Auth::id();
-
-        $results = Mom::with(['status', 'creator'])
-            ->where(function($q) use ($query) {
-                $q->where('title', 'like', '%' . $query . '%')
-                ->orWhere('pembahasan', 'like', '%' . $query . '%')
-                ->orWhere('pimpinan_rapat', 'like', '%' . $query . '%')
-                ->orWhere('notulen', 'like', '%' . $query . '%')
-                ->orWhere('location', 'like', '%' . $query . '%');
-            })
-            ->where(function($q) use ($userId) {
-                // MoM milik user sendiri (semua status)
-                $q->where('creator_id', $userId)
-                // ATAU MoM dari user lain yang sudah disetujui
-                ->orWhereHas('status', function($sq) {
-                    $sq->where('status', 'Disetujui');
-                });
-            })
-            ->orderBy('created_at', 'desc')
-            ->take(10)
-            ->get();
-
-        // Format response untuk frontend
+        // Format response
         return response()->json($results->map(function($mom) {
             return [
                 'version_id' => $mom->version_id,
                 'title' => $mom->title,
                 'location' => $mom->location,
                 'created_at' => $mom->created_at->toISOString(),
+                'status_id' => $mom->status_id,
                 'status' => $mom->status->status ?? 'Unknown',
                 'creator_name' => $mom->creator->name ?? 'N/A'
             ];
