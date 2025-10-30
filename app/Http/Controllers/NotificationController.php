@@ -53,7 +53,7 @@ class NotificationController extends Controller
         $notifications = Notification::with('mom')
             ->where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
-            ->take(2)
+            ->take(5) // Ambil 5 notifikasi terbaru
             ->get()
             ->map(function($notification) {
                 return [
@@ -63,7 +63,10 @@ class NotificationController extends Controller
                     'type' => $notification->type,
                     'is_read' => $notification->is_read,
                     'created_at' => $notification->created_at->toISOString(),
+                    'created_at_human' => $notification->created_at->diffForHumans(), // ✅ TAMBAHKAN INI
                     'mom_id' => $notification->mom_id,
+                    'icon' => $this->getNotificationIcon($notification->type), // ✅ TAMBAHKAN INI
+                    'color' => $this->getNotificationColor($notification->type), // ✅ TAMBAHKAN INI
                 ];
             });
 
@@ -87,8 +90,7 @@ class NotificationController extends Controller
 
         $notification->update(['is_read' => true]);
 
-        // PERBAIKI LOGIKA REDIRECT:
-        // Arahkan ke halaman detail MoM menggunakan mom_id dari notifikasi.
+        // Redirect ke halaman detail MoM
         return redirect()->route('moms.detail', ['mom' => $notification->mom_id]);
     }
 
@@ -120,5 +122,47 @@ class NotificationController extends Controller
             'message' => $message,
             'is_read' => false
         ]);
+    }
+
+    /**
+     * Get notification icon based on type
+     */
+    private function getNotificationIcon($type)
+    {
+        $icons = [
+            'mom_created' => 'fa-solid fa-file-circle-plus',
+            'mom_updated' => 'fa-solid fa-pen-to-square',
+            'mom_approved' => 'fa-solid fa-check-circle',
+            'mom_rejected' => 'fa-solid fa-times-circle',
+            'task_assigned' => 'fa-solid fa-tasks',
+            'task_reminder' => 'fa-solid fa-clock',
+            'task_completed' => 'fa-solid fa-check-circle',
+            'task_overdue' => 'fa-solid fa-exclamation-triangle',
+            'comment_added' => 'fa-solid fa-comment',
+            'mention' => 'fa-solid fa-at',
+        ];
+
+        return $icons[$type] ?? 'fa-solid fa-bell';
+    }
+
+    /**
+     * Get notification color based on type
+     */
+    private function getNotificationColor($type)
+    {
+        $colors = [
+            'mom_created' => 'green',
+            'mom_updated' => 'blue',
+            'mom_approved' => 'green',
+            'mom_rejected' => 'red',
+            'task_assigned' => 'yellow',
+            'task_reminder' => 'orange',
+            'task_completed' => 'green',
+            'task_overdue' => 'red',
+            'comment_added' => 'purple',
+            'mention' => 'blue',
+        ];
+
+        return $colors[$type] ?? 'red';
     }
 }

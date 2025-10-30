@@ -155,18 +155,39 @@ class MomController extends Controller
                 MomAttachment::insert($attachmentsData);
             }
 
+            // === NOTIFIKASI KE USER: MoM Berhasil Dibuat ===
+            // Kirim notifikasi ke user pembuat MoM
+            try {
+                if (class_exists(NotificationController::class) && method_exists(NotificationController::class, 'createNotification')) {
+                    NotificationController::createNotification(
+                        userId: $creatorId,
+                        momId: $mom->version_id,
+                        type: 'mom_created',
+                        title: 'MoM Berhasil Dibuat',
+                        message: $isAdminSubmission
+                            ? "MoM '{$mom->title}' berhasil dibuat dan langsung disetujui."
+                            : "MoM '{$mom->title}' berhasil dibuat dan sedang menunggu persetujuan admin."
+                    );
+                }
+            } catch (\Throwable $e) {
+                Log::error('Failed creating user notification: ' . $e->getMessage());
+            }
+
             // === NOTIFIKASI ADMIN: MoM Baru Menunggu Persetujuan ===
             // Kirim notifikasi hanya jika bukan admin yang membuat
             if (!$isAdminSubmission) {
                 $creator = auth()->user();
-                // Pastikan AdminNotificationController tersedia
-                if (class_exists(AdminNotificationController::class) && method_exists(AdminNotificationController::class, 'createNotification')) {
-                    AdminNotificationController::createNotification(
-                        type: 'mom_pending',
-                        title: 'MoM Baru Menunggu Persetujuan',
-                        message: "MoM berjudul '{$mom->title}' yang dibuat oleh {$creator->name} menunggu untuk Anda review.",
-                        relatedId: $mom->version_id
-                    );
+                try {
+                    if (class_exists(AdminNotificationController::class) && method_exists(AdminNotificationController::class, 'createNotification')) {
+                        AdminNotificationController::createNotification(
+                            type: 'mom_pending',
+                            title: 'MoM Baru Menunggu Persetujuan',
+                            message: "MoM berjudul '{$mom->title}' yang dibuat oleh {$creator->name} menunggu untuk Anda review.",
+                            relatedId: $mom->version_id
+                        );
+                    }
+                } catch (\Throwable $e) {
+                    Log::error('Failed creating admin notification: ' . $e->getMessage());
                 }
             }
 
@@ -180,14 +201,16 @@ class MomController extends Controller
                 Log::error('Failed sending push in afterMomCreated: ' . $e->getMessage());
             }
 
-            // Tentukan URL redirect: Menggunakan rute 'admin.repository'
-            $redirectUrl = route('admin.repository');
+            // Tentukan URL redirect
+            $redirectUrl = $isAdminSubmission
+                ? route('admin.repository')
+                : route('dashboard'); // Redirect ke dashboard user
 
             return response()->json([
                 'message' => 'Minutes of Meeting berhasil dibuat dan berstatus ' . $statusMessage . '!',
                 'mom_id' => $mom->version_id,
                 'mom' => $mom->load(['attachments', 'agendas']),
-                'redirect_url' => $redirectUrl, // <-- URL redirect
+                'redirect_url' => $redirectUrl,
             ], 201);
 
         } catch (\Exception $e) {
@@ -217,23 +240,23 @@ class MomController extends Controller
     }
 
     public function show_detail_admin(Mom $mom)
-    { 
+    {
         $mom->load(['creator', 'agendas', 'attachments', 'status', 'actionItems']); // Memastikan relasi status dimuat
-        $statusText = $mom->status->status ?? 'Unknown'; 
-        
+        $statusText = $mom->status->status ?? 'Unknown';
+
         // Cek Status MoM
         // Status 1 = Menunggu (Pending)
         // Status 3 = Ditolak (Rejected)
-        
+
         if ($mom->status_id == 1) {
             // Jika Pending, alihkan ke halaman Review (shows.blade.php)
             // Menggunakan view() agar route URL tetap di /details, tapi konten yang dirender adalah shows.blade.php
             return view('admin.shows', compact('mom'));
         }
-        
+
         // Jika Ditolak (status_id = 3) atau Disetujui (status_id = 2), tampilkan halaman details.blade.php
         // Alasan penolakan akan ditampilkan di details.blade.php (lihat di bawah)
-        return view('admin.details', compact('mom', 'statusText')); 
+        return view('admin.details', compact('mom', 'statusText'));
     }
 
     /**
