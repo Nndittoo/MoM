@@ -149,6 +149,10 @@
             .ql-editor.ql-blank::before { color: #9CA3AF !important; font-style: normal !important; }
             .ql-snow .ql-stroke { stroke: #9CA3AF; }
             .ql-snow .ql-picker-label { color: #9CA3AF; }
+
+            .ql-snow .ql-stroke { stroke: #9CA3AF; }
+            .ql-snow .ql-fill { fill: #9CA3AF; }
+            .ql-snow .ql-picker { color: #9CA3AF; }
         </style>
 
         @stack('styles')

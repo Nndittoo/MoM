@@ -8,14 +8,15 @@
 
     <style>
         /* Penyesuaian tema Quill agar sesuai dengan dark mode form */
-        .ql-toolbar { border-top-left-radius: 0.5rem; border-top-right-radius: 0.5rem; background-color: #1F2937; border-color: #374151 !important; }
-        .ql-container { border-bottom-left-radius: 0.5rem; border-bottom-right-radius: 0.5rem; background-color: #374151; border-color: #374151 !important; color: #D1D5DB; }
-        .ql-editor.ql-blank::before { color: #9CA3AF !important; font-style: normal !important; }
-        .ql-snow .ql-stroke { stroke: #9CA3AF; }
-        .ql-snow .ql-picker-label { color: #9CA3AF; }
+        .tox-tinymce {
+            border: 1px solid #374151 !important; /* border-gray-700 */
+            border-radius: 0.5rem !important;
+        }
+        /* Menyembunyikan branding TinyMCE jika versi gratis */
+        .tox-statusbar__branding { display: none !important; }
 
         /* Style Card untuk Unit/Mitra */
-        .unit-card { 
+        .unit-card {
             background-color: #1f2937; /* bg-gray-700 */
             border-color: #4b5563; /* border-gray-600 */
         }
@@ -32,12 +33,12 @@
 
 {{-- Inisialisasi Data dari PHP ke JavaScript --}}
 @php
-    
+
     // Menggunakan $mom->nama_peserta dan mengkonversinya
-    $internalAttendeesData = $mom->nama_peserta ?? []; 
+    $internalAttendeesData = $mom->nama_peserta ?? [];
 
     // Konversi array string lama (jika ada) ke struktur Unit Dinamis baru
-    if (is_array($internalAttendeesData) && count($internalAttendeesData) > 0 && 
+    if (is_array($internalAttendeesData) && count($internalAttendeesData) > 0 &&
         (!isset($internalAttendeesData[0]['unit']) || !is_string($internalAttendeesData[0]['unit']))
     ) {
         $convertedData = [
@@ -63,14 +64,14 @@
                 return ['name' => $mitra, 'attendees' => []];
             }
             if (is_array($mitra) && isset($mitra['name'])) {
-                $mitra['attendees'] = isset($mitra['attendees']) && is_array($mitra['attendees']) 
-                                     ? $mitra['attendees'] 
+                $mitra['attendees'] = isset($mitra['attendees']) && is_array($mitra['attendees'])
+                                     ? $mitra['attendees']
                                      : [];
                 return $mitra;
             }
             return null;
         }, $partnerAttendeesData);
-        
+
         $validatedPartnerAttendees = array_filter($validatedPartnerAttendees);
     }
     // -----------------------------------------------
@@ -137,10 +138,10 @@
                             </div>
                             <button type="button" id="btn-add-internal-unit" class="px-5 py-2.5 text-sm font-medium text-white btn-neon-red rounded-lg w-full md:w-auto flex-shrink-0">Tambah Unit</button>
                         </div>
-                        
+
                         {{-- CONTAINER INI AKAN DIISI OLEH JAVASCRIPT (renderInternalList) --}}
                         <div id="list-internal-attendees-container" class="space-y-4 mt-4"></div>
-                        
+
                         <p class="mt-1 text-xs text-gray-500">Tambah Unit, lalu masukkan nama-nama peserta dari Unit tersebut.</p>
                     </div>
                 </div>
@@ -173,9 +174,11 @@
 
             {{-- Pembahasan (Konten tetap) --}}
             <div>
-                <h2 class="text-lg font-semibold text-white font-orbitron border-b border-gray-700 pb-3 mb-6">Pembahasan</h2>
-                <div id="pembahasan-editor">{!! $mom->pembahasan ?? '' !!}</div>
-                <input type="hidden" name="pembahasan" id="pembahasan-hidden">
+                <h2 class="text-base md:text-lg font-semibold text-white font-orbitron border-b border-gray-700 pb-2 mb-4">Pembahasan</h2>
+                {{-- TinyMCE menggunakan textarea langsung --}}
+                <textarea id="pembahasan-editor" name="pembahasan" class="hidden">
+                    {!! $mom->pembahasan ?? '' !!}
+                </textarea>
             </div>
 
             {{-- Lampiran (Konten tetap) --}}
@@ -199,7 +202,7 @@
 
 @push('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
-<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js" referrerpolicy="origin"></script>
 
 <script>
     // FUNGSI UTILITY: Tampilkan Toast
@@ -239,16 +242,32 @@
         // --- SETUP DATA GLOBAL DENGAN DATA LAMA ---
         const dataStorage = {
             // Menggunakan data yang sudah dikonversi di PHP
-            internalAttendees: JSON.parse('{!! $internalAttendeesJs !!}'), 
+            internalAttendees: JSON.parse('{!! $internalAttendeesJs !!}'),
             agendas: JSON.parse('{!! $agendasJs !!}'),
-            partnerAttendees: JSON.parse('{!! $partnerAttendeesJs !!}'), 
+            partnerAttendees: JSON.parse('{!! $partnerAttendeesJs !!}'),
             filesToUpload: [],
             oldFiles: JSON.parse('{!! $oldAttachmentsJs !!}'),
             filesToDelete: []
         };
-        
+
         // --- Setup Quill JS ---
-        const pembahasanQuill = new Quill('#pembahasan-editor', { theme: 'snow', placeholder: "Tuliskan hasil pembahasan, keputusan, dan poin penting lainnya...", modules: { toolbar: [[{ 'header': [1, 2, false] }], ['bold', 'italic', 'underline'], [{ 'list': 'ordered' }, { 'list': 'bullet' }], ['link'], ['clean']] } });
+        tinymce.init({
+            selector: '#pembahasan-editor', // Target textarea
+            height: 400,
+            skin: 'oxide-dark',             // Tema Gelap Bawaan TinyMCE
+            content_css: 'dark',            // CSS Konten Gelap
+            menubar: true,                  // Tampilkan menu bar (File, Edit, View, dll) ala Word
+            plugins: [
+                'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                'insertdatetime', 'media', 'table', 'help', 'wordcount'
+            ],
+            toolbar: 'undo redo | blocks | ' +
+                'bold italic backcolor | alignleft aligncenter ' +
+                'alignright alignjustify | bullist numlist outdent indent | ' +
+                'removeformat | table help',
+            content_style: 'body { font-family:Inter,sans-serif; font-size:14px }'
+        });
 
         // --- FUNGSI MERENDER DAFTAR FILE (Memasukkan file lama dan baru) ---
         const renderFileList = () => {
@@ -275,7 +294,7 @@
 
                     const fileInfo = document.createElement('span');
                     fileInfo.className = 'flex items-center text-sm font-medium truncate text-gray-300';
-                    const iconColor = file.type === 'old' ? 'text-red-400' : 'text-red-500'; 
+                    const iconColor = file.type === 'old' ? 'text-red-400' : 'text-red-500';
                     const statusText = file.type === 'old' ? '(Lama)' : '(Baru)';
 
                     fileInfo.innerHTML = `<i class="fa-solid fa-file mr-2 ${iconColor}"></i> <span>${file.name}</span> <span class="ml-2 text-xs text-gray-500">(${(file.size / 1024 / 1024).toFixed(2)} MB) ${statusText}</span>`;
@@ -542,7 +561,7 @@
                     const attendeeList = document.createElement('ul');
                     // Menggunakan list-none seperti yang terlihat pada gambar Mitra
                     attendeeList.className = 'mt-2 space-y-1 list-none text-sm text-gray-300';
-                    
+
                     const attendeesArray = Array.isArray(mitra.attendees) ? mitra.attendees : [];
 
                     attendeesArray.forEach((person, personIndex) => {
@@ -590,7 +609,7 @@
                         }
                     });
                 });
-                
+
                 // Tampilkan pesan jika belum ada mitra
                 if (dataStorage.partnerAttendees.length === 0) {
                     listMitraContainer.innerHTML = '<p class="text-sm text-gray-500">Silakan tambahkan Pihak Luar (Mitra) jika ada.</p>';
@@ -646,13 +665,14 @@
             });
 
             // --- VALIDASI DAN PEMBENTUKAN DATA ---
-            const pembahasanContent = pembahasanQuill.root.innerHTML.trim();
-            if (pembahasanContent.length === 0 || pembahasanContent === '<p><br></p>') {
+            const pembahasanContent = tinymce.get('pembahasan-editor').getContent();
+
+            if (!pembahasanContent || pembahasanContent.trim() === '') {
                 showToast('Pembahasan wajib diisi!', true);
                 return;
             }
             formData.append('pembahasan', pembahasanContent);
-            
+
             // Cek Peserta Internal & Tambahkan Array JSON dari dataStorage
             let totalInternalAttendees = 0;
             dataStorage.internalAttendees.forEach(unitData => {
@@ -663,7 +683,7 @@
                 showToast('Peserta Rapat Internal wajib diisi (minimal 1 Unit/Bagian dengan minimal 1 peserta)!', true);
                 return;
             }
-            
+
             // Tambahkan Peserta Internal (Internal Attendees) sebagai JSON string
             formData.append('internal_attendees_json', JSON.stringify(dataStorage.internalAttendees));
 
@@ -709,7 +729,7 @@
                 if (response.ok) {
                     showToast(data.message || 'MoM berhasil diupdate!', false);
                     setTimeout(() => {
-                        window.location.href = `{{ route('draft.index', $mom->version_id) }}`; 
+                        window.location.href = `{{ route('draft.index', $mom->version_id) }}`;
                     }, 1000);
                 } else {
                     let errorMessage = 'Gagal menyimpan MoM.';

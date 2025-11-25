@@ -6,12 +6,13 @@
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
-        /* Menyesuaikan Quill Editor dengan tema gelap */
-        .ql-toolbar { border-top-left-radius: 0.5rem; border-top-right-radius: 0.5rem; background-color: #1F2937; border-color: #374151 !important; }
-        .ql-container { border-bottom-left-radius: 0.5rem; border-bottom-right-radius: 0.5rem; background-color: #374151; border-color: #374151 !important; color: #D1D5DB; }
-        .ql-editor.ql-blank::before { color: #9CA3AF !important; font-style: normal !important; }
-        .ql-snow .ql-stroke { stroke: #9CA3AF; }
-        .ql-snow .ql-picker-label { color: #9CA3AF; }
+        /* Style tambahan untuk TinyMCE di tema gelap */
+        .tox-tinymce {
+            border: 1px solid #374151 !important; /* border-gray-700 */
+            border-radius: 0.5rem !important;
+        }
+        /* Menyembunyikan branding TinyMCE jika versi gratis */
+        .tox-statusbar__branding { display: none !important; }
     </style>
 @endpush
 
@@ -92,9 +93,9 @@
 
             {{-- Pembahasan --}}
             <div>
-                <h2 class="text-lg font-semibold text-white font-orbitron border-b border-gray-700 pb-3 mb-6">Pembahasan</h2>
-                <div id="pembahasan-editor"></div>
-                <input type="hidden" name="pembahasan" id="pembahasan-hidden">
+                <h2 class="text-base md:text-lg font-semibold text-white font-orbitron border-b border-gray-700 pb-2 mb-4">Pembahasan</h2>
+                {{-- TinyMCE menggunakan textarea langsung --}}
+                <textarea id="pembahasan-editor" name="pembahasan" class="hidden"></textarea>
             </div>
 
             {{-- Lampiran --}}
@@ -118,7 +119,7 @@
 
 @push('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
-<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js" referrerpolicy="origin"></script>
 
 <script>
     // FUNGSI UTILITY: Tampilkan Toast
@@ -127,7 +128,7 @@
         const icon = toast.querySelector('i');
         const messageContainer = toast.querySelector('div.text-sm.font-medium');
 
-        icon.className = isError 
+        icon.className = isError
             ? 'fa-solid fa-circle-xmark text-red-500 text-lg'
             : 'fa-solid fa-circle-check text-green-500 text-lg';
         messageContainer.textContent = message;
@@ -527,7 +528,23 @@
 
 
         // --- Inisialisasi Quill JS ---
-        const pembahasanQuill = new Quill('#pembahasan-editor', { theme: 'snow', placeholder: "Tuliskan hasil pembahasan, keputusan, dan poin penting lainnya...", modules: { toolbar: [[{ 'header': [1, 2, false] }], ['bold', 'italic', 'underline'], [{ 'list': 'ordered' }, { 'list': 'bullet' }], ['link'], ['clean']] } });
+        tinymce.init({
+            selector: '#pembahasan-editor', // Target textarea
+            height: 400,
+            skin: 'oxide-dark',             // Tema Gelap Bawaan TinyMCE
+            content_css: 'dark',            // CSS Konten Gelap
+            menubar: true,                  // Tampilkan menu bar (File, Edit, View, dll) ala Word
+            plugins: [
+                'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                'insertdatetime', 'media', 'table', 'help', 'wordcount'
+            ],
+            toolbar: 'undo redo | blocks | ' +
+                'bold italic backcolor | alignleft aligncenter ' +
+                'alignright alignjustify | bullist numlist outdent indent | ' +
+                'removeformat | table help',
+            content_style: 'body { font-family:Inter,sans-serif; font-size:14px }'
+        });
 
 
         // --- FUNGSI SUBMIT UTAMA (AJAX) ---
@@ -551,8 +568,9 @@
             }
 
             // Ambil Konten Pembahasan (dari Quill)
-            const pembahasanContent = pembahasanQuill.root.innerHTML.trim();
-            if (pembahasanContent.length === 0 || pembahasanContent === '<p><br></p>') {
+            const pembahasanContent = tinymce.get('pembahasan-editor').getContent();
+
+            if (!pembahasanContent || pembahasanContent.trim() === '') {
                 showToast('Pembahasan wajib diisi!', true);
                 return;
             }
@@ -609,7 +627,7 @@
 
                 if (response.ok) {
                     // Tampilkan Toast Sukses
-                    showToast('MoM berhasil di submit!', false); 
+                    showToast('MoM berhasil di submit!', false);
 
                     // LOGIKA REDIRECT DIPASTIKAN BERJALAN DULU
                     if (data.redirect_url) {

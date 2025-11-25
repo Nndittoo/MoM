@@ -17,12 +17,25 @@
         }
     }
     $allAttendeeNames = array_unique($allAttendeeNames);
-    
+
     $currentMomId = $mom->version_id ?? $mom->id ?? 'N/A';
     // URL Detail MoM (Digunakan untuk redirect setelah Approve/Reject jika tidak ada tujuan lain)
-    $momDetailUrl = route('admin.moms.show', $currentMomId); 
+    $momDetailUrl = route('admin.moms.show', $currentMomId);
     // URL DAFTAR APPROVAL BARU DITAMBAHKAN di JS
 @endphp
+
+@push('styles')
+<style>
+    /* Styling khusus agar TinyMCE Read-Only terlihat menyatu */
+    .tox-tinymce-readonly {
+        border: 1px solid #4B5563 !important; /* Border abu-abu */
+        border-radius: 0.5rem !important;
+        background-color: #1F2937 !important; /* Background card */
+    }
+    /* Sembunyikan status bar bawah editor */
+    .tox-statusbar { display: none !important; }
+</style>
+@endpush
 
 @section('content')
 <div class="pt-2">
@@ -71,10 +84,11 @@
             </div>
             <div class="bg-gray-800 rounded-xl shadow-md p-6 border border-gray-700">
                 <h3 class="text-xl font-bold text-white font-orbitron mb-4 border-b border-gray-700 pb-3">Hasil Pembahasan</h3>
-                {{-- PERBAIKAN OVERFLOW: Menambahkan kelas break-words --}}
-                <div class="prose prose-sm prose-invert max-w-none text-gray-300 break-words">
-                    {!! $mom->pembahasan ?? '<p class="italic text-gray-500">Tidak ada pembahasan.</p>' !!}
-                </div>
+
+                {{-- Gunakan Textarea yang akan diubah menjadi TinyMCE --}}
+                <textarea id="pembahasan-viewer" class="hidden">
+                    {!! $mom->pembahasan !!}
+                </textarea>
             </div>
             <div class="bg-gray-800 rounded-xl shadow-md p-6 border border-gray-700">
                 <h3 class="text-xl font-bold text-white font-orbitron mb-4 border-b border-gray-700 pb-3">Lampiran</h3>
@@ -150,12 +164,15 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js" referrerpolicy="origin"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
 // --- FUNGSI UTILITY AJAX ---
 const handleAjaxAction = async (url, method, data = null) => {
     // Ambil CSRF token dari hidden input di form
-    const csrfToken = document.querySelector('input[name="_token"]').value; 
-    
+    const csrfToken = document.querySelector('input[name="_token"]').value;
+
     const response = await fetch(url, {
         method: method,
         headers: {
@@ -166,7 +183,7 @@ const handleAjaxAction = async (url, method, data = null) => {
         },
         body: data ? JSON.stringify(data) : null,
     });
-    
+
     let result = {};
     try {
         result = await response.json();
@@ -182,6 +199,39 @@ const handleAjaxAction = async (url, method, data = null) => {
 
 
 document.addEventListener('DOMContentLoaded', function () {
+
+    tinymce.init({
+            selector: '#pembahasan-viewer', // Target textarea
+            skin: 'oxide-dark',            // Tema Gelap
+            content_css: 'dark',
+            menubar: false,                // Sembunyikan Menu
+            toolbar: false,                // Sembunyikan Toolbar
+            readonly: 1,                   // MODE BACA SAJA (PENTING!)
+            height: 400,                   // Tinggi tetap agar rapi
+            plugins: 'table autolink',     // Plugin dasar agar tabel/link ter-render
+            content_style: `
+                body {
+                    font-family: 'Inter', sans-serif;
+                    background-color: #1F2937; /* bg-gray-800 agar menyatu dengan card */
+                    color: #D1D5DB; /* text-gray-300 */
+                    font-size: 0.875rem;
+                    padding: 1rem;
+                }
+                /* Styling Tabel di dalam Viewer */
+                table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+                td, th { border: 1px solid #6B7280; padding: 8px; }
+                a { color: #EF4444; text-decoration: underline; }
+            `,
+            setup: function (editor) {
+                // Hapus border fokus biru saat diklik karena ini cuma viewer
+                editor.on('init', function () {
+                    editor.getBody().setAttribute('contenteditable', false);
+                    // Tambahkan kelas khusus ke container agar bisa distyling CSS tambahan jika perlu
+                    editor.getContainer().classList.add('tox-tinymce-readonly');
+                });
+            }
+        });
+
     const approveBtn = document.querySelector('.approve-btn');
     const rejectBtn = document.querySelector('.reject-btn');
     const rejectionForm = document.getElementById('rejection-form');
@@ -189,11 +239,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const approveUrl = "{{ isset($mom) ? route('admin.approvals.approve', $mom->version_id) : '#' }}";
     const momTitle = "{{ $mom->title ?? 'Judul MoM' }}";
-    const momDetailUrl = "{{ $momDetailUrl }}"; 
-    const dynamicRejectBaseUrl = "{{ url('admin/approvals/reject') }}"; 
-    
+    const momDetailUrl = "{{ $momDetailUrl }}";
+    const dynamicRejectBaseUrl = "{{ url('admin/approvals/reject') }}";
+
     // URL tujuan redirect setelah reject (Daftar Approval)
-    const approvalsIndexUrl = "{{ route('admin.approvals.index') }}"; 
+    const approvalsIndexUrl = "{{ route('admin.approvals.index') }}";
 
     // --- LOGIKA APPROVE (Menggunakan form submit) ---
     approveBtn.addEventListener('click', () => {
@@ -221,7 +271,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     customClass: { popup: 'bg-gray-800' },
                     background: '#1f2937',
                 });
-                
+
                 // Submit form untuk approve
                 const form = document.createElement('form');
                 form.method = 'POST';
@@ -245,7 +295,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- LOGIKA REJECT (AJAX SUBMIT + REDIRECT) ---
     rejectionForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-        
+
         const momId = rejectionForm.querySelector('#modal-mom-id').value;
         const commentValue = rejectionForm.querySelector('#rejection-comment').value;
         const rejectSubmitBtn = rejectionForm.querySelector('button[type="submit"]');
@@ -258,7 +308,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 confirmButtonColor: '#facc15',
             });
         }
-        
+
         // Nonaktifkan tombol saat konfirmasi
         rejectSubmitBtn.disabled = true;
 
@@ -287,14 +337,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     customClass: { popup: 'bg-gray-800' },
                     background: '#1f2937',
                 });
-                
+
                 try {
                     const url = `${dynamicRejectBaseUrl}/${momId}`;
-                    
+
                     const response = await handleAjaxAction(url, 'POST', {
                         comment: commentValue,
                         // Kirim tujuan redirect ke daftar approvals
-                        redirect_to: approvalsIndexUrl 
+                        redirect_to: approvalsIndexUrl
                     });
 
                     // Sukses: Tampilkan pesan SweetAlert dan lakukan redirect
@@ -308,8 +358,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         color: '#f3f4f6',
                         iconColor: '#facc15',
                     });
-                    
-                    window.location.href = response.redirect_url; 
+
+                    window.location.href = response.redirect_url;
 
                 } catch (error) {
                     // Tangani error AJAX
@@ -318,13 +368,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         icon: 'error',
                         title: 'Gagal!',
                         text: error.message || 'Terjadi kesalahan saat menolak MoM.',
-                        confirmButtonColor: '#ef4444', 
+                        confirmButtonColor: '#ef4444',
                         background: '#1f2937',
                         color: '#f3f4f6',
                     });
                 }
             }
-            
+
             // Tutup modal dan aktifkan tombol kembali
             modal.classList.add('hidden');
             document.body.classList.remove('overflow-hidden');
